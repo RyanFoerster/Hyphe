@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+
+  // Le site est un paquet de fichiers, rien d'autre : aucun script ne tourne
+  // à l'exécution (`main` est absent volontairement). Sans ce fichier, la
+  // détection de framework de Cloudflare construit le projet en rendu serveur
+  // — Astro diffère alors l'optimisation des images à un endpoint `/_image`
+  // que personne ne sert, et les planches tombent en 404.
+  "name": "hyphe",
+  "compatibility_date": "2026-08-21",
+
+  "assets": {
+    "directory": "./dist",
+
+    // `build.format: 'file'` écrit `herbier.html` ; l'assets server sert
+    // `/herbier` et redirige les formes `/herbier/` et `/herbier.html`
+    // vers elle — ce que dit aussi `trailingSlash: 'never'`.
+    "html_handling": "auto-trailing-slash",
+
+    // Les URL inconnues reçoivent notre planche « spécimen non répertorié »
+    // plutôt que le 404 générique de Cloudflare.
+    "not_found_handling": "404-page"
+  }
+}
