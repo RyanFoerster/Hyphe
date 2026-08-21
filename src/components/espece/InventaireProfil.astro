@@ -1,0 +1,54 @@
+---
+import BlocLabel from '~/components/specimen/BlocLabel.astro';
+import type { Espece } from '~/types/content';
+
+/** L'inventaire de terrain ⇄ les niveaux mesurés. Deux façons de dire « je sais faire ». */
+interface Props {
+  espece: Espece;
+  accent: string;
+}
+
+const { espece, accent } = Astro.props;
+---
+
+<section class="rule-double mt-20 pt-8">
+  <BlocLabel
+    nat="Régime alimentaire — inventaire de terrain"
+    tel="Profil système — niveaux mesurés"
+    accent={accent}
+    class="mb-7"
+  />
+
+  <div class="stack">
+    <ul class="fade-nat m-0 flex list-none flex-col gap-3 p-0">
+      {
+        espece.inventaire.map((item) => (
+          <li
+            class="border-l border-nat-700 pl-4 font-display text-base italic text-nat-200"
+            style="font-variation-settings:'WONK' 1"
+          >
+            {item}
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="fade-tel flex flex-col gap-4 self-start" aria-hidden="true">
+      {
+        espece.competences.map((c) => (
+          <div class="grid grid-cols-[minmax(120px,180px)_1fr_56px] items-center gap-3.5">
+            <span class="text-2xs tracking-wide uppercase text-nat-300">{c.tel}</span>
+            <span class="block h-1 overflow-hidden rounded-[2px] bg-nat-900">
+              <span
+                class="block h-full bg-tele-cyan transition-[width] duration-600 ease-eco"
+                style={`width:${c.niveau}%`}
+              />
+            </span>
+            <span class="text-right text-2xs text-tele-cyan">{c.niveau} %</span>
+          </div>
+        ))
+      }
+      <div class="mt-2 text-2xs tracking-wide text-tele-green">DISPONIBILITÉ — {espece.dispo}</div>
+    </div>
+  </div>
+</section>

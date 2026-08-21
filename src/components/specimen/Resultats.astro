@@ -1,0 +1,32 @@
+---
+import Card from '~/components/ui/Card.astro';
+import type { Resultat } from '~/types/content';
+
+/** Bloc 6 — les chiffres ne changent pas de camp : identiques dans les deux vues. */
+interface Props {
+  resultats: Resultat[];
+}
+
+const { resultats } = Astro.props;
+---
+
+<Card as="section" class="mt-22 px-10 py-12">
+  <div class="mb-8 text-2xs tracking-wider uppercase text-nat-300">
+    Résultats — invariants au point de vue
+  </div>
+  <div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-8">
+    {
+      resultats.map((r) => (
+        <div>
+          <div
+            class="font-display text-4xl leading-none text-nat-100"
+            style="font-variation-settings:'WONK' 1; font-weight:600"
+          >
+            {r.valeur}
+          </div>
+          <div class="mt-2.5 text-xs tracking-wide uppercase text-nat-300">{r.label}</div>
+        </div>
+      ))
+    }
+  </div>
+</Card>

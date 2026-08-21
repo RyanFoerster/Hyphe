@@ -1,0 +1,98 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import ArbreCollecte from '~/components/herbier/ArbreCollecte.astro';
+import { specimens } from '~/data/specimens';
+import { entreeDepuisSpecimen, type EntreeArbre } from '~/lib/arbre';
+
+/**
+ * Page de recette — à SUPPRIMER après validation de l'étape 1.
+ * Trois silhouettes : la collection réelle (4), puis 12 et 20 projets
+ * factices, pour vérifier que le layout tient sans refonte.
+ */
+const reels = specimens.map((s) => entreeDepuisSpecimen(s));
+
+const TAGS: [string, 'site' | 'app'][] = [
+  ['Site vitrine', 'site'],
+  ['Site e-commerce', 'site'],
+  ['Application SaaS', 'app'],
+  ['App métier', 'app'],
+  ['Portfolio', 'site'],
+  ['Tableau de bord', 'app'],
+];
+const ORDINAUX = [
+  'primus', 'secundus', 'tertius', 'quartus', 'quintus', 'sextus', 'septimus', 'octavus',
+  'nonus', 'decimus', 'undecimus', 'duodecimus', 'tertius decimus', 'quartus decimus',
+  'quintus decimus', 'sextus decimus', 'septimus decimus', 'duodevicesimus',
+  'undevicesimus', 'vicesimus',
+];
+
+const simuler = (n: number, repartition: number[], depuis: number, seed: number): EntreeArbre[] => {
+  let s = seed;
+  const rng = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const entrees: EntreeArbre[] = [];
+  let i = 0;
+  repartition.forEach((parAn, a) => {
+    for (let k = 0; k < parAn && i < n; k++, i++) {
+      const [tag, famille] = TAGS[i % TAGS.length]!;
+      entrees.push({
+        slug: `sim-${i + 1}`,
+        num: String(i + 1).padStart(2, '0'),
+        nom: `Projet simulé ${i + 1}`,
+        latin: `Projectus ${ORDINAUX[i] ?? i + 1}`,
+        tag,
+        famille,
+        client: '[client]',
+        collecte: `[${depuis + a}]`,
+        annee: depuis + a,
+        mois: 1 + Math.floor(rng() * 12),
+        greffe: rng() < 0.5,
+        resume: '[Une phrase : le problème que ce projet résout.]',
+        techs: [],
+        mission: famille === 'site' ? 'design + dev' : 'dev',
+      });
+    }
+  });
+  return entrees;
+};
+
+const douze = simuler(12, [2, 2, 2, 3, 3], 2022, 99);
+const vingt = simuler(20, [1, 1, 2, 3, 3, 4, 6], 2020, 1234);
+---
+
+<BaseLayout
+  title="Recette — arbre de collecte"
+  description="Page de recette interne : silhouettes de l'arbre à 4, 12 et 20 projets."
+  ecoMode="herbier"
+  crumbs={[]}
+>
+  <main class="mx-auto max-w-[1180px] px-6 pt-[150px] pb-40 md:px-16">
+    <h1 class="text-2xl text-nat-100">Recette — silhouettes de l'arbre</h1>
+
+    {/* Vue d'ensemble : les trois silhouettes côte à côte, réduites. */}
+    <div class="mt-12 flex flex-wrap items-start gap-8">
+      <div class="w-[300px]">
+        <h2 class="mb-3 text-base text-nat-100">Réel — 4</h2>
+        <ArbreCollecte entrees={reels} id="a4" />
+      </div>
+      <div class="w-[300px]">
+        <h2 class="mb-3 text-base text-nat-100">Simulé — 12</h2>
+        <ArbreCollecte entrees={douze} id="a12" />
+      </div>
+      <div class="w-[300px]">
+        <h2 class="mb-3 text-base text-nat-100">Simulé — 20</h2>
+        <ArbreCollecte entrees={vingt} id="a20" />
+      </div>
+    </div>
+
+    {/* Lisibilité à l'échelle réelle */}
+    <h2 class="mt-24 mb-6 text-xl text-nat-100">Échelle réelle — 12 spécimens</h2>
+    <ArbreCollecte entrees={douze} id="a12b" />
+
+    {/* Le port mobile, à largeur de poche */}
+    <h2 class="mt-24 mb-6 text-xl text-nat-100">Espalier (mobile) — 4 et 12 spécimens</h2>
+    <div class="flex flex-wrap items-start gap-10">
+      <div class="w-[340px]"><ArbreCollecte entrees={reels} id="e4" mode="espalier" /></div>
+      <div class="w-[340px]"><ArbreCollecte entrees={douze} id="e12" mode="espalier" /></div>
+    </div>
+  </main>
+</BaseLayout>

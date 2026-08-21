@@ -1,0 +1,23 @@
+---
+import BlocLabel from './BlocLabel.astro';
+import type { Specimen } from '~/types/content';
+
+/** Bloc 2 — le même projet raconté par l'œil, puis par la machine. */
+interface Props {
+  specimen: Specimen;
+}
+
+const { specimen } = Astro.props;
+---
+
+<section class="mt-22">
+  <BlocLabel nat="Notes d'observation" tel="Contraintes système" class="mb-4" />
+  <div class="stack">
+    <p class="fade-nat m-0 max-w-[44em] font-text text-base leading-body text-nat-200">
+      {specimen.noteNat}
+    </p>
+    <p class="fade-tel m-0 max-w-[44em] text-sm leading-body text-nat-200" aria-hidden="true">
+      {specimen.noteTel}
+    </p>
+  </div>
+</section>

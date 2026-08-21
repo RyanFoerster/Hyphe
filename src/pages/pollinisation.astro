@@ -1,0 +1,46 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Eyebrow from '~/components/ui/Eyebrow.astro';
+import DualText from '~/components/ui/DualText.astro';
+import ContactForm from '~/components/contact/ContactForm.astro';
+import SiteFooter from '~/components/chrome/SiteFooter.astro';
+import { site, mailto } from '~/data/site';
+---
+
+<BaseLayout
+  title="Demander un devis"
+  description="Demandez un devis pour votre site web, votre application ou votre mission design : décrivez le projet, réponse sous 24 h ouvrées."
+  ecoMode="contact"
+  crumbs={[{ href: '#', nat: 'Contact — pollinisation', tel: 'net.broadcast' }]}
+  footer={false}
+>
+  <main
+    class="flex min-h-screen animate-route-in flex-col items-center justify-center px-6 pt-[150px] pb-30 text-center"
+  >
+    <Eyebrow class="mb-5">Contact — pollinisation</Eyebrow>
+
+    <h1 class="max-w-[12em] text-[clamp(44px,7vw,84px)] text-nat-100">
+      Semons quelque chose ensemble.
+    </h1>
+
+    <p class="mt-6 mb-0 max-w-[32em] font-mono text-base leading-body text-nat-200">
+      Demandez un devis pour un site web, une application ou une mission design —
+      réponse sous 24 h ouvrées.
+    </p>
+    <DualText
+      as="block"
+      nat="Un mail suffit. On s'occupe de la germination."
+      tel="Canal ouvert. Latence de réponse observée : < 24 h."
+      nowrap={false}
+      class="mt-3 w-full justify-items-center text-sm text-nat-300"
+    />
+
+    <ContactForm />
+
+    <p class="mt-5 text-2xs tracking-wide text-nat-400">
+      OU DIRECTEMENT : <a href={mailto}>{site.email}</a>
+    </p>
+
+    <SiteFooter />
+  </main>
+</BaseLayout>

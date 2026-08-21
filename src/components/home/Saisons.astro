@@ -1,0 +1,40 @@
+---
+import Section from './Section.astro';
+import Eyebrow from '~/components/ui/Eyebrow.astro';
+import SectionTitle from '~/components/ui/SectionTitle.astro';
+import SaisonsWheel from './SaisonsWheel.astro';
+import { saisons } from '~/data/seasons';
+---
+
+<Section
+  id="saisons"
+  stage={5}
+  label="Saisons"
+  class="mx-auto grid max-w-[1060px] items-center gap-16 px-6 pt-30 pb-40 md:px-16 lg:grid-cols-[minmax(280px,1fr)_minmax(300px,380px)]"
+>
+  <div>
+    <Eyebrow class="mb-4">Notre méthode — stade VI · saisons</Eyebrow>
+    <SectionTitle class="text-2xl md:text-3xl">Un projet ne s'arrête jamais vraiment</SectionTitle>
+
+    <dl class="mt-10 flex flex-col gap-6">
+      {
+        saisons.map((saison) => (
+          <div class="flex items-baseline gap-3.5">
+            <span
+              class="size-2 flex-none -translate-y-px rounded-full"
+              style={`background:${saison.color}`}
+            />
+            <div>
+              <dt class="inline text-xs uppercase tracking-wide text-nat-100">
+                {saison.nat} <span class="text-nat-400">— {saison.tel}</span>
+              </dt>
+              <dd class="m-0 mt-1 max-w-[30em] text-sm text-nat-300">{saison.desc}</dd>
+            </div>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+
+  <SaisonsWheel />
+</Section>

@@ -1,0 +1,23 @@
+---
+import type { Livrable } from '~/types/content';
+
+/**
+ * L'étiquette de collection au nom commun : « Site e-commerce », « App
+ * métier »… Le libellé littéral du livrable, dans la voix des annotations.
+ */
+interface Props {
+  livrable: Livrable;
+  class?: string;
+}
+
+const { livrable, class: className = '' } = Astro.props;
+---
+
+<span
+  class:list={[
+    'inline-flex items-center rounded-input border border-nat-700 px-2 py-0.5 text-2xs tracking-wide uppercase text-nat-200',
+    className,
+  ]}
+>
+  {livrable.label}
+</span>

@@ -1,0 +1,39 @@
+---
+import { cycle } from '~/data/seasons';
+
+/** La roue des saisons : une spore en orbite sur un cercle pointillé. */
+const positions: Record<(typeof cycle)[number]['pos'], string> = {
+  top: 'top-[2%] left-1/2 -translate-x-1/2',
+  right: 'top-1/2 -right-[2%] -translate-y-1/2',
+  bottom: 'bottom-[2%] left-1/2 -translate-x-1/2',
+  left: 'top-1/2 -left-[2%] -translate-y-1/2',
+};
+---
+
+<div aria-hidden="true" class="relative aspect-square w-full max-w-[380px] justify-self-center">
+  <div class="absolute inset-[10%] rounded-full border border-dashed border-nat-700"></div>
+
+  <div class="absolute inset-[10%] animate-orbit">
+    <span
+      class="absolute -top-1 left-1/2 size-2 -translate-x-1/2 rounded-full"
+      style="background:color-mix(in oklab, var(--color-tele-cyan) var(--mixp), var(--color-spore)); box-shadow:0 0 10px var(--glow-a)"
+    ></span>
+  </div>
+
+  {
+    cycle.map((c) => (
+      <span
+        class:list={['absolute text-2xs tracking-wider uppercase', positions[c.pos]]}
+        style={`color:${c.color}`}
+      >
+        {c.label}
+      </span>
+    ))
+  }
+
+  <span
+    class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-2xs tracking-wide text-nat-400"
+  >
+    cycle complet<br />∞
+  </span>
+</div>

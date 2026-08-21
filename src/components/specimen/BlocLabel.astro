@@ -1,0 +1,16 @@
+---
+/** Étiquette de bloc : le naturaliste nomme, l'instrument mesure. */
+interface Props {
+  nat: string;
+  tel: string;
+  accent?: string;
+  class?: string;
+}
+
+const { nat, tel, accent = 'var(--color-spore)', class: className = '' } = Astro.props;
+---
+
+<div class:list={['stack inline-grid text-2xs tracking-wider uppercase', className]}>
+  <span class="fade-nat whitespace-nowrap" style={`color:${accent}`}>{nat}</span>
+  <span class="fade-tel whitespace-nowrap text-tele-cyan" aria-hidden="true">{tel}</span>
+</div>

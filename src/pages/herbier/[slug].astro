@@ -1,0 +1,60 @@
+---
+import type { GetStaticPaths } from 'astro';
+
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import CartoucheEnTete from '~/components/specimen/CartoucheEnTete.astro';
+import SpecimenHeader from '~/components/specimen/SpecimenHeader.astro';
+import NotesObservation from '~/components/specimen/NotesObservation.astro';
+import Morphologie from '~/components/specimen/Morphologie.astro';
+import PigmentsEmpreinte from '~/components/specimen/PigmentsEmpreinte.astro';
+import RejetsMigrations from '~/components/specimen/RejetsMigrations.astro';
+import Resultats from '~/components/specimen/Resultats.astro';
+import Temoignage from '~/components/specimen/Temoignage.astro';
+import Filament from '~/components/specimen/Filament.astro';
+import CarteSuivante from '~/components/specimen/CarteSuivante.astro';
+import { specimens, nextSpecimen } from '~/data/specimens';
+import { herbierCrumb } from '~/lib/nav';
+
+export const getStaticPaths = (() =>
+  specimens.map((specimen) => ({
+    params: { slug: specimen.slug },
+    props: { specimen },
+  }))) satisfies GetStaticPaths;
+
+const { specimen } = Astro.props;
+const suivant = nextSpecimen(specimen.slug);
+
+const crumbs = [
+  herbierCrumb,
+  { href: '#', nat: `Spécimen ${specimen.num}`, tel: `svc.${specimen.slug}` },
+];
+---
+
+<BaseLayout
+  title={`${specimen.livrable.label} — ${specimen.nom.replace(/^\[|\]$/g, '')}`}
+  description={`${specimen.livrable.label} conçu et développé par studio Hyphe pour ${specimen.client} : étude de cas, choix techniques et résultats mesurés.`}
+  ecoMode="specimen"
+  crumbs={crumbs}
+>
+  <main class="mx-auto max-w-[1000px] animate-route-in px-6 pt-[150px] pb-50 md:px-16">
+    <CartoucheEnTete specimen={specimen} />
+    <SpecimenHeader specimen={specimen} />
+    <NotesObservation specimen={specimen} />
+    <Morphologie specimen={specimen} />
+    <PigmentsEmpreinte specimen={specimen} />
+    <RejetsMigrations specimen={specimen} />
+    <Resultats resultats={specimen.resultats} />
+    <Temoignage temoignage={specimen.temoignage} />
+
+    <Filament />
+    <CarteSuivante
+      href={`/herbier/${suivant.slug}`}
+      eyebrow="Spécimen suivant"
+      titre={suivant.latin}
+    />
+
+    <div class="mt-8">
+      <a href="/herbier" class="text-xs tracking-wide no-underline">← reposer dans l'herbier</a>
+    </div>
+  </main>
+</BaseLayout>

@@ -1,0 +1,29 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import HeroSpore from '~/components/home/HeroSpore.astro';
+import Germination from '~/components/home/Germination.astro';
+import Cultures from '~/components/home/Cultures.astro';
+import Symbiose from '~/components/home/Symbiose.astro';
+import SpecimenPlanches from '~/components/home/SpecimenPlanches.astro';
+import Saisons from '~/components/home/Saisons.astro';
+import Pollinisation from '~/components/home/Pollinisation.astro';
+import { site } from '~/data/site';
+---
+
+<BaseLayout
+  title={`${site.nom} — Sites web & applications sur mesure, Liège`}
+  description="Studio de création numérique à Liège : un duo designer UX/UI + développeur fullstack qui conçoit, développe et maintient des sites web et des applications sur mesure."
+  ecoMode="home"
+  rail="stades"
+  footer={false}
+>
+  <main>
+    <HeroSpore />
+    <Germination />
+    <Cultures />
+    <Symbiose />
+    <SpecimenPlanches />
+    <Saisons />
+    <Pollinisation />
+  </main>
+</BaseLayout>

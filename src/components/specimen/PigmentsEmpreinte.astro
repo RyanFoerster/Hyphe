@@ -1,0 +1,63 @@
+---
+import BlocLabel from './BlocLabel.astro';
+import type { Specimen } from '~/types/content';
+
+/** Bloc 4 — les pigments relevés à l'œil ⇄ l'empreinte mesurée. */
+interface Props {
+  specimen: Specimen;
+}
+
+const { specimen } = Astro.props;
+
+const empreinte = [
+  { dt: 'Bundle', dd: specimen.bundle, tone: 'text-tele-cyan' },
+  { dt: 'Lighthouse', dd: specimen.lighthouse, tone: 'text-tele-green' },
+  { dt: 'TTFB', dd: specimen.ttfb, tone: 'text-tele-cyan' },
+  { dt: 'Requêtes', dd: specimen.requetes, tone: 'text-tele-cyan' },
+  { dt: 'Hébergement', dd: specimen.cout, tone: 'text-tele-cyan' },
+];
+---
+
+<section class="rule-double mt-22 pt-8">
+  <BlocLabel nat="Pigments relevés" tel="Empreinte système" class="mb-8" />
+
+  <div class="stack">
+    <div class="fade-nat flex flex-col gap-6">
+      <div class="flex gap-3">
+        {
+          specimen.pigments.map((p) => (
+            <span
+              class="size-14 rounded-input border border-nat-800 shadow-card"
+              style={`background:${p.hex}`}
+              title={p.hex}
+            />
+          ))
+        }
+      </div>
+      <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-x-8 gap-y-4">
+        <div>
+          <dt class="mb-1 text-2xs tracking-wider uppercase text-nat-300">Typographies</dt>
+          <dd class="m-0 text-sm text-nat-200">{specimen.typo}</dd>
+        </div>
+        <div>
+          <dt class="mb-1 text-2xs tracking-wider uppercase text-nat-300">Espacement</dt>
+          <dd class="m-0 text-sm text-nat-200">{specimen.espacement}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <dl
+      class="fade-tel m-0 grid content-start grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-5"
+      aria-hidden="true"
+    >
+      {
+        empreinte.map((e) => (
+          <div>
+            <dt class="mb-1 text-2xs tracking-wider uppercase text-nat-400">{e.dt}</dt>
+            <dd class:list={['m-0 text-lg', e.tone]}>{e.dd}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>

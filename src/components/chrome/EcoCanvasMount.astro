@@ -1,0 +1,12 @@
+---
+/**
+ * L'organisme de fond. Persisté d'une navigation à l'autre : il ne doit
+ * jamais repousser depuis zéro quand on change de page.
+ */
+---
+
+<eco-canvas
+  transition:persist
+  aria-hidden="true"
+  class="fixed inset-0 z-0 block pointer-events-none"
+></eco-canvas>

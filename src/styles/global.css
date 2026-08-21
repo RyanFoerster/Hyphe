@@ -1,0 +1,341 @@
+@import "tailwindcss";
+
+/* ──────────────────────────────────────────────────────────────
+   Écosystème — design system « studio Hyphe »
+   Les valeurs ci-dessous sont le régime NUIT (t = 1). Le régime
+   PAPIER (t = 0) et tous les états intermédiaires sont appliqués
+   à l'exécution par src/scripts/mix.ts, qui réécrit ces mêmes
+   variables en style inline sur <html>.
+   ────────────────────────────────────────────────────────────── */
+@theme {
+  /* Fond — le socle commun aux deux vues */
+  --color-bg-0: #0e1410; /* humus profond */
+  --color-bg-1: #1a2119; /* terreau */
+  --color-bg-2: #232c21; /* surface élevée */
+
+  /* Rampe principale — naturaliste */
+  --color-nat-100: #e8e4d9;
+  --color-nat-200: #c9cdb8;
+  --color-nat-300: #a8b89a;
+  --color-nat-400: #8aa372;
+  --color-nat-500: #6b8f4e;
+  --color-nat-600: #56753d;
+  --color-nat-700: #42592e;
+  --color-nat-800: #2e3d20;
+  --color-nat-900: #1c2614;
+
+  /* Accents */
+  --color-spore: #d4a24c; /* spore ocre */
+  --color-bloom: #e0507e; /* floraison */
+
+  /* Rampe secondaire — télémétrie */
+  --color-tele-cyan: #4df0d0; /* bioluminescence */
+  --color-tele-green: #9cff57; /* phosphore */
+  --color-tele-coral: #ff6b5a; /* alerte corail */
+
+  /* Typographies */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-text: "Figtree", system-ui, sans-serif;
+
+  /* Échelle typographique */
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 18px;
+  --text-xl: 24px;
+  --text-2xl: 34px;
+  --text-3xl: 52px;
+  --text-4xl: 76px;
+
+  --leading-tight: 1.05;
+  --leading-snug: 1.25;
+  --leading-body: 1.6;
+
+  --tracking-wide: 0.08em; /* labels mono, nomenclature */
+  --tracking-wider: 0.16em; /* eyebrows en majuscules */
+
+  /* Coins — les planches de gravure sont carrées */
+  --radius-input: 2px;
+  --radius-plate: 4px;
+
+  /* Ombres */
+  --shadow-card: 0 1px 0 rgb(232 228 217 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35);
+  --shadow-raised: 0 1px 0 rgb(232 228 217 / 0.06) inset, 0 16px 40px rgb(0 0 0 / 0.5);
+  --shadow-glow: 0 0 0 1px var(--color-tele-cyan), 0 0 16px rgb(77 240 208 / 0.35);
+
+  /* Mouvement — rare et sec */
+  --ease-eco: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+
+  --animate-spore-pulse: sporePulse 3.2s var(--ease-eco) infinite;
+  --animate-nutrient-up: nutrientUp 2.6s linear infinite;
+  --animate-nutrient-down: nutrientDown 2.2s linear infinite;
+  --animate-orbit: orbit 26s linear infinite;
+  --animate-route-in: routeIn 400ms var(--ease-eco) both;
+}
+
+@keyframes sporePulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.35;
+  }
+}
+@keyframes nutrientUp {
+  0% {
+    transform: translateY(26px);
+    opacity: 0;
+  }
+  25%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-26px);
+    opacity: 0;
+  }
+}
+@keyframes nutrientDown {
+  0% {
+    transform: translateY(-26px);
+    opacity: 0;
+  }
+  25%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(26px);
+    opacity: 0;
+  }
+}
+@keyframes orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes routeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Variables d'exécution non colorimétriques ─────────────────
+   `--mix` : 0 = naturaliste, 1 = télémétrie (courbe d'encre raide).
+   `--mixp` : idem, exprimé en pourcentage pour color-mix().
+   Les autres suivent le régime papier ⇄ nuit.
+   ────────────────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    --mix: 0;
+    --mixp: 0%;
+    --glow-a: rgb(77 240 208 / 0.7);
+    --scrim-a: rgb(14 20 16 / 0.92);
+    --scrim-b: rgb(14 20 16 / 0.75);
+    --img-filter: grayscale(0.85) sepia(0.3) hue-rotate(55deg) brightness(0.72) contrast(1.05);
+    --loupe-track: linear-gradient(90deg, #12100e, #4df0d0);
+    --rule-double: 3px double var(--color-nat-700);
+
+    color-scheme: dark light;
+  }
+
+  html {
+    background: var(--color-bg-0);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    overflow-x: hidden;
+    background: transparent;
+    color: var(--color-nat-100);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: var(--leading-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-variation-settings: "WONK" 1, "SOFT" 0;
+    font-weight: 560;
+    line-height: var(--leading-tight);
+    margin: 0;
+  }
+
+  a {
+    color: var(--color-nat-300);
+    transition: color var(--duration-base) var(--ease-eco);
+  }
+  a:hover {
+    color: var(--color-nat-100);
+  }
+
+  /* Focus — jamais l'outline bleu navigateur, mais toujours un indicateur
+     au clavier : seul :focus-visible est stylé, le focus au clic reste nu. */
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-glow);
+    border-radius: var(--radius-input);
+  }
+
+  /* Le flash bleu/gris du tap mobile n'existe pas en gravure. */
+  a,
+  button,
+  [role='button'] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Les liens SVG de l'arbre : focables au clic seulement (tabindex -1) —
+     le clavier passe par la liste sémantique, qui allume l'anneau DA sur le
+     fruit. Aucun anneau système ne doit apparaître au clic. */
+  svg a:focus {
+    outline: none;
+  }
+  svg a {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  ::selection {
+    background: var(--color-nat-700);
+    color: var(--color-nat-100);
+  }
+}
+
+@layer components {
+  /* Filet double — motif de gravure séparant les grandes sections */
+  .rule-double {
+    border-top: var(--rule-double);
+  }
+
+  /* Traitement bichrome des planches (suit le régime via --img-filter) */
+  .plate-img {
+    filter: var(--img-filter);
+    transition: filter var(--duration-base) var(--ease-eco);
+  }
+
+  /*
+   * Superposition des deux régimes : les enfants occupent la même cellule,
+   * la loupe décide lequel est lisible. C'est le motif signature du site.
+   */
+  .stack {
+    display: grid;
+  }
+  .stack > * {
+    grid-area: 1 / 1;
+  }
+  /*
+   * Quand les deux vues empilées ont des hauteurs très différentes (l'arbre
+   * de l'herbier ~1300 px, le tableau de télémétrie ~430), la plus haute
+   * impose son scroll à l'autre : un grand vide sous la vue lisible. Celle
+   * qui est effacée sort donc du flux — repli piloté par `herbier.ts`, et
+   * seulement aux extrêmes du fondu, quand son opacité est déjà nulle.
+   * Le conteneur doit être `relative` pour que la cellule reste le cadre.
+   */
+  .vue-repliee {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  /*
+   * Symbiose — isoler un spécimen au survol : l'autre s'efface, comme sous
+   * la loupe. La règle vit ici parce qu'elle relie deux composants : la
+   * section qui groupe et les cartes qu'elle contient.
+   */
+  .symbiose:has([data-espece]:hover) [data-espece]:not(:hover) {
+    opacity: 0.35;
+  }
+
+  .fade-nat {
+    opacity: calc(1 - var(--mix));
+    transition: opacity 300ms var(--ease-eco);
+  }
+  .fade-tel {
+    opacity: var(--mix);
+    transition: opacity 300ms var(--ease-eco);
+  }
+}
+
+/* ── Loupe de terrain ──────────────────────────────────────── */
+.loupe-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 110px;
+  height: 2px;
+  background: var(--loupe-track);
+  outline: none;
+  cursor: ew-resize;
+}
+.loupe-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-nat-100);
+  border: 1px solid var(--color-bg-0);
+  box-shadow: 0 0 0 1px var(--color-nat-100);
+  cursor: ew-resize;
+}
+.loupe-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--color-bg-0);
+  border-radius: 50%;
+  background: var(--color-nat-100);
+  box-shadow: 0 0 0 1px var(--color-nat-100);
+  cursor: ew-resize;
+}
+.loupe-range:focus-visible {
+  box-shadow: none;
+}
+.loupe-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: var(--shadow-glow);
+}
+
+@media (min-width: 640px) {
+  .loupe-range {
+    width: 180px;
+  }
+}
+
+/* La View Transition native ne fait pas de crossfade : chaque route pose sa
+   propre entrée (`animate-route-in`). Deux fondus superposés se voient. */
+::view-transition-old(root) {
+  display: none;
+}
+::view-transition-new(root) {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

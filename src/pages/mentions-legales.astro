@@ -1,0 +1,16 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import PageLegale from '~/components/legal/PageLegale.astro';
+import { pagesLegales } from '~/data/legal';
+
+const page = pagesLegales['mentions-legales'];
+---
+
+<BaseLayout
+  title={page.titre}
+  description="Mentions légales de studio Hyphe — station d'observation, Liège."
+  ecoMode="legal"
+  crumbs={[{ href: '#', nat: 'Mentions', tel: 'sys.legal' }]}
+>
+  <PageLegale page={page} />
+</BaseLayout>

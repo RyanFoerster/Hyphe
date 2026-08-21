@@ -1,0 +1,111 @@
+---
+import { ClientRouter } from 'astro:transitions';
+
+import mixRuntime from '~/scripts/mix-runtime.js?inline-script';
+import dormanceRuntime from '~/scripts/dormance-runtime.js?inline-script';
+import '~/styles/global.css';
+
+import EcoCanvasMount from '~/components/chrome/EcoCanvasMount.astro';
+import SiteHeader from '~/components/chrome/SiteHeader.astro';
+import SiteFooter from '~/components/chrome/SiteFooter.astro';
+import LoupeControl from '~/components/chrome/LoupeControl.astro';
+import StageRail from '~/components/chrome/StageRail.astro';
+import type { Crumb } from '~/data/navigation';
+import { crumbsFor } from '~/lib/nav';
+import { site } from '~/data/site';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Recomposition du canevas de fond selon la route. */
+  ecoMode: 'home' | 'herbier' | 'specimen' | 'espece-designer' | 'espece-dev' | 'contact' | 'legal';
+  /** Rail de gauche : les stades sur l'accueil, le fil d'Ariane ailleurs. */
+  rail?: 'stades' | 'crumbs';
+  /** Segments du fil d'Ariane, sans la racine — elle est ajoutée ici. */
+  crumbs?: Crumb[];
+  /** Les pages qui rendent leur propre pied (home, contact) le désactivent. */
+  footer?: boolean;
+}
+
+const {
+  title,
+  description,
+  ecoMode,
+  rail = 'crumbs',
+  crumbs = [],
+  footer = true,
+} = Astro.props;
+
+const fullTitle = title.includes(site.nom) ? title : `${title} — ${site.nom}`;
+
+/** Qui on est et ce qu'on vend, dit aux machines aussi. */
+const organisation = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: site.nom,
+  description:
+    'Studio de création numérique à Liège : design UX/UI et développement de sites web et d’applications sur mesure.',
+  url: Astro.site?.href,
+  email: site.email,
+  address: { '@type': 'PostalAddress', addressLocality: 'Liège', addressCountry: 'BE' },
+  knowsAbout: ['Sites web', 'E-commerce', 'Applications web', 'SaaS', 'Design UX/UI', 'Design systems'],
+  makesOffer: [
+    { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Conception et développement de sites web' } },
+    { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Développement d’applications web sur mesure' } },
+    { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Design UX/UI et design systems' } },
+  ],
+};
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.nom} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content="fr_BE" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,100..900,0..100,0..1;1,9..144,100..900,0..100,0..1&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Figtree:ital,wght@0,300..900;1,300..900&display=swap"
+    />
+
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(organisation)} />
+
+    {/* Le régime doit être posé avant le premier rendu — sinon la page clignote. */}
+    <script is:inline set:html={mixRuntime} />
+
+    <ClientRouter />
+  </head>
+
+  <body data-eco-mode={ecoMode} class="relative">
+    {/* Dormance — montée avant que quoi que ce soit ne soit peint ; jamais
+        ré-exécutée par les échanges de vue (chargement initial uniquement). */}
+    <script is:inline set:html={dormanceRuntime} />
+
+    <EcoCanvasMount />
+
+    <div class="relative z-10 min-h-screen">
+      <SiteHeader />
+      <StageRail variant={rail} crumbs={crumbsFor(crumbs)} />
+      <slot />
+      {footer && <SiteFooter class="px-6 pb-10" />}
+      <LoupeControl />
+    </div>
+
+    <script>
+      import '~/scripts/app';
+    </script>
+  </body>
+</html>

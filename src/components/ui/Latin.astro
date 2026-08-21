@@ -1,0 +1,12 @@
+---
+/** Nomenclature binomiale — Fraunces italique, comme sur l'étiquette d'herbier. */
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+---
+
+<span class:list={['font-display italic text-nat-300', className]} style="font-variation-settings:'WONK' 1">
+  <slot />
+</span>

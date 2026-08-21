@@ -1,0 +1,46 @@
+---
+import SectionTitle from '~/components/ui/SectionTitle.astro';
+import Latin from '~/components/ui/Latin.astro';
+import type { Espece } from '~/types/content';
+
+interface Props {
+  espece: Espece;
+  accent: string;
+}
+
+const { espece, accent } = Astro.props;
+
+const releves = [
+  { dt: 'Habitat', dd: espece.habitat },
+  { dt: 'Régime alimentaire', dd: espece.regime },
+  { dt: 'Comportement observé', dd: espece.comportement },
+  { dt: 'Période d’activité', dd: espece.activite },
+];
+---
+
+<header>
+  <div class="mb-4 text-2xs tracking-wider uppercase" style={`color:${accent}`}>
+    {espece.eyebrow}
+  </div>
+  <SectionTitle as="h1" class="text-2xl md:text-3xl">{espece.nom}</SectionTitle>
+  <div class="mt-2">
+    <Latin class="text-xl">{espece.latin}</Latin>{' '}
+    <span class="font-mono text-2xs not-italic text-nat-400">{espece.annee}</span>
+  </div>
+
+  {/* Le rôle en toutes lettres — la première lecture de la fiche. */}
+  <p class="mt-5 mb-0 max-w-[38em] font-mono text-base leading-body text-nat-200">
+    {espece.role}
+  </p>
+
+  <dl class="mt-12 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-x-10 gap-y-6">
+    {
+      releves.map((r) => (
+        <div>
+          <dt class="mb-1.5 text-2xs tracking-wider uppercase text-nat-300">{r.dt}</dt>
+          <dd class="m-0 text-nat-200">{r.dd}</dd>
+        </div>
+      ))
+    }
+  </dl>
+</header>

@@ -1,0 +1,106 @@
+---
+import { sparkline } from '~/lib/telemetry';
+import { statutColor } from '~/data/specimens';
+import type { Specimen } from '~/types/content';
+
+interface Props {
+  specimens: Specimen[];
+}
+
+const { specimens } = Astro.props;
+
+const colonnes = [
+  { key: 'id', label: 'ID' },
+  { key: 'type', label: 'Type' },
+  { key: 'client', label: 'Client' },
+  { key: 'stack', label: 'Stack' },
+  { key: 'prod', label: 'Prod' },
+  { key: 'uptime', label: 'Uptime' },
+  { key: 'bundle', label: 'Bundle' },
+  { key: 'lh', label: 'LH' },
+  { key: 'statut', label: 'Statut' },
+];
+---
+
+<table class="w-full border-collapse text-2xs tracking-[0.04em]">
+  <caption class="sr-only">Services en production, triables par colonne</caption>
+  <thead>
+    <tr>
+      {
+        colonnes.map((col) => (
+          <th scope="col" aria-sort="none" class="border-b border-nat-800 p-0 text-left">
+            <button
+              type="button"
+              data-sort-key={col.key}
+              data-sort-label={col.label}
+              class="cursor-pointer border-0 bg-transparent py-2.5 pl-0 pr-3.5 font-mono text-2xs uppercase tracking-wider text-nat-400"
+            >
+              {col.label}
+            </button>
+          </th>
+        ))
+      }
+      <th
+        scope="col"
+        class="border-b border-nat-800 px-0 py-2.5 text-left text-2xs font-normal uppercase tracking-wider text-nat-400"
+      >
+        Charge 30 j
+      </th>
+    </tr>
+  </thead>
+  <tbody data-rows>
+    {
+      specimens.map((s) => (
+        <tr
+          data-specimen
+          data-techs={s.techs.join('|')}
+          data-mission={s.mission}
+          data-livrable={s.livrable.famille}
+          data-sort-id={s.slug}
+          data-sort-type={s.livrable.label}
+          data-sort-client={s.client}
+          data-sort-stack={s.techs.join()}
+          data-sort-prod={s.prod}
+          data-sort-uptime={s.uptime}
+          data-sort-bundle={s.bundle}
+          data-sort-lh={s.lighthouse}
+          data-sort-statut={s.statut}
+          class="row border-b border-nat-900"
+        >
+          <td class="whitespace-nowrap py-3 pl-0 pr-3.5 text-tele-cyan">
+            <a href={`/herbier/${s.slug}`} class="text-inherit no-underline hover:text-inherit">
+              {s.slug}
+            </a>
+          </td>
+          <td class="whitespace-nowrap py-3 pl-0 pr-3.5 text-nat-200">{s.livrable.label}</td>
+          <td class="py-3 pl-0 pr-3.5 text-nat-200">{s.client}</td>
+          <td class="py-3 pl-0 pr-3.5 text-nat-300">{s.techs.join(' · ')}</td>
+          <td class="whitespace-nowrap py-3 pl-0 pr-3.5 text-nat-300">{s.prod}</td>
+          <td class="whitespace-nowrap py-3 pl-0 pr-3.5 text-tele-green">{s.uptime}</td>
+          <td class="whitespace-nowrap py-3 pl-0 pr-3.5 text-nat-300">{s.bundle}</td>
+          <td class="py-3 pl-0 pr-3.5 text-tele-green">{s.lighthouse}</td>
+          <td class="whitespace-nowrap py-3 pl-0 pr-3.5" style={`color:${statutColor[s.statut]}`}>
+            ● {s.statut}
+          </td>
+          <td class="px-0 py-3">
+            <svg width="72" height="18" viewBox="0 0 72 18" aria-hidden="true">
+              <polyline
+                points={sparkline(s.slug)}
+                fill="none"
+                stroke="var(--color-tele-cyan)"
+                stroke-width="1"
+                opacity="0.8"
+              />
+            </svg>
+          </td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>
+
+<style>
+  .row:hover {
+    background: rgb(77 240 208 / 0.04);
+  }
+</style>

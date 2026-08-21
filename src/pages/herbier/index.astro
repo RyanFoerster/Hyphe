@@ -1,0 +1,66 @@
+---
+import { getImage } from 'astro:assets';
+
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Eyebrow from '~/components/ui/Eyebrow.astro';
+import SectionTitle from '~/components/ui/SectionTitle.astro';
+import ArbreCollecte from '~/components/herbier/ArbreCollecte.astro';
+import ListeSpecimens from '~/components/herbier/ListeSpecimens.astro';
+import TelemetryTable from '~/components/herbier/TelemetryTable.astro';
+import { specimens } from '~/data/specimens';
+import { entreeDepuisSpecimen } from '~/lib/arbre';
+import { herbierCrumb } from '~/lib/nav';
+
+/* Les fruits portent le visuel du projet, à la définition du cartouche. */
+const entrees = await Promise.all(
+  specimens.map(async (s) =>
+    entreeDepuisSpecimen(s, (await getImage({ src: s.planche, width: 480 })).src),
+  ),
+);
+---
+
+<BaseLayout
+  title="Nos projets — sites web & applications"
+  description="Les projets livrés par studio Hyphe : sites vitrines, e-commerce, applications SaaS et outils métier — avec leurs mesures en production."
+  ecoMode="herbier"
+  crumbs={[herbierCrumb]}
+>
+  <main
+    data-herbier
+    class="mx-auto max-w-[1180px] animate-route-in px-6 pt-[150px] pb-50 md:px-16"
+  >
+    <Eyebrow class="mb-4">L'herbier — spécimens répertoriés</Eyebrow>
+    <SectionTitle as="h1" class="text-2xl md:text-3xl">Nos projets livrés</SectionTitle>
+    <p class="mt-4 mb-10 max-w-[44em] text-nat-300">
+      Sites web et applications, en production.{' '}
+      <span data-herbier-count>{specimens.length}</span> relevés — chaque fruit s'ouvre par
+      prélèvement. La loupe redresse l'arbre en tableau de bord.
+    </p>
+
+    <div class="stack relative" data-vues>
+      <!-- Vue naturaliste — l'arbre de collecte, en deux ports -->
+      <div data-view="nat" class="fade-nat">
+        <ListeSpecimens entrees={entrees} />
+        <ArbreCollecte entrees={entrees} id="arbre" class="hidden md:block" />
+        <ArbreCollecte entrees={entrees} id="espalier" mode="espalier" class="md:hidden" />
+      </div>
+
+      <!-- Vue télémétrie — tableau de bord -->
+      <div data-view="tel" class="fade-tel self-start overflow-x-auto">
+        <TelemetryTable specimens={specimens} />
+        <p class="mt-3.5 text-2xs tracking-wide text-nat-400">
+          TRI — <span data-sort-label>ID ASC</span> · <span data-herbier-count>{specimens.length}</span
+          > SERVICES · DONNÉES [PLACEHOLDERS]
+        </p>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  /* La loupe décide laquelle des deux vues est cliquable. */
+  :global([data-regime='night']) [data-view='nat'],
+  :global([data-regime='paper']) [data-view='tel'] {
+    pointer-events: none;
+  }
+</style>

@@ -1,0 +1,25 @@
+---
+interface Props {
+  name: string;
+  options: { value: string; label: string }[];
+  value?: string;
+}
+
+const { name, options, value } = Astro.props;
+---
+
+<span class="relative inline-flex w-full">
+  <select
+    name={name}
+    class="w-full appearance-none font-mono text-sm text-nat-100 bg-nat-900 border border-nat-700 rounded-input pl-2.5 pr-7 py-2 outline-none cursor-pointer transition-shadow duration-fast ease-eco focus:border-tele-cyan focus:shadow-glow"
+  >
+    {
+      options.map((o) => (
+        <option value={o.value} selected={o.value === value}>
+          {o.label}
+        </option>
+      ))
+    }
+  </select>
+  <span aria-hidden="true" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-nat-400 pointer-events-none">▼</span>
+</span>

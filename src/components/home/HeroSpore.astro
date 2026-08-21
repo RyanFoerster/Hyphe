@@ -1,0 +1,61 @@
+---
+import Section from './Section.astro';
+import DualText from '~/components/ui/DualText.astro';
+import Button from '~/components/ui/Button.astro';
+import { site } from '~/data/site';
+---
+
+<Section
+  id="spore"
+  stage={0}
+  label="Accueil"
+  class="relative flex min-h-screen flex-col items-center justify-center px-6 text-center"
+>
+  <span
+    aria-hidden="true"
+    data-hero-spore
+    class="mb-10 size-2.5 rounded-full animate-spore-pulse"
+    style="background:color-mix(in oklab, var(--color-tele-cyan) var(--mixp), var(--color-spore)); box-shadow:0 0 24px var(--glow-a)"
+  ></span>
+
+  <DualText
+    as="block"
+    nat={`Planche Nº 001 — spécimen vivant · ${site.station.split(',')[0]}`}
+    tel={`SYS.BOOT — organisme en ligne · ${site.coords}`}
+    nowrap={false}
+    class="mb-5 justify-items-center text-2xs tracking-wider uppercase text-nat-300"
+  />
+
+  <h1
+    class="text-[clamp(72px,12vw,150px)] tracking-[-0.02em] text-nat-100"
+    style="font-weight:600; font-variation-settings:'WONK' 1,'SOFT' 0,'opsz' 144"
+  >
+    {site.nom}
+  </h1>
+
+  {/* L'ancre littérale : la première lecture, identique dans les deux régimes. */}
+  <p class="mt-7 mb-0 max-w-[34em] font-mono text-base leading-body text-nat-200">
+    Studio de création numérique — on conçoit et développe des sites web et des
+    applications. {site.station}.
+  </p>
+
+  {/* La ligne d'ambiance : la seconde lecture, celle qui suit la loupe. */}
+  <DualText
+    as="block"
+    nat={site.baseline.nat}
+    tel={site.baseline.tel}
+    nowrap={false}
+    class="mt-3 w-full justify-items-center text-base"
+    natClass="font-display italic text-nat-300"
+    telClass="text-tele-cyan"
+  />
+
+  <div class="mt-9 flex flex-wrap items-center justify-center gap-4">
+    <Button href="/herbier" variant="secondary">Voir nos projets</Button>
+    <Button href="/pollinisation">Demander un devis</Button>
+  </div>
+
+  <div class="absolute bottom-16 text-2xs tracking-wider uppercase text-nat-400 sm:bottom-24">
+    germination au scroll ▼
+  </div>
+</Section>

@@ -1,0 +1,36 @@
+---
+import Card from '~/components/ui/Card.astro';
+
+/** Carte « suite » — spécimen suivant, ou l'autre moitié de l'organisme. */
+interface Props {
+  href: string;
+  eyebrow: string;
+  titre: string;
+  accent?: string;
+  compact?: boolean;
+}
+
+const { href, eyebrow, titre, accent = 'var(--color-spore)', compact = false } = Astro.props;
+---
+
+<a href={href} class="block no-underline">
+  <Card
+    as="article"
+    interactive
+    class:list={[
+      'flex items-center justify-between gap-6',
+      compact ? 'px-8 py-7' : 'px-9 py-8',
+    ]}
+  >
+    <div>
+      <div class="mb-2 text-2xs tracking-wider uppercase" style={`color:${accent}`}>{eyebrow}</div>
+      <div
+        class="font-display text-xl italic text-nat-100"
+        style="font-variation-settings:'WONK' 1"
+      >
+        {titre}
+      </div>
+    </div>
+    <span class="text-xl text-nat-300">→</span>
+  </Card>
+</a>

@@ -1,0 +1,59 @@
+---
+import type { GetStaticPaths } from 'astro';
+
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import EspeceHeader from '~/components/espece/EspeceHeader.astro';
+import InventaireProfil from '~/components/espece/InventaireProfil.astro';
+import FriseCroissance from '~/components/espece/FriseCroissance.astro';
+import SpecimensCollectes from '~/components/espece/SpecimensCollectes.astro';
+import Filament from '~/components/specimen/Filament.astro';
+import CarteSuivante from '~/components/specimen/CarteSuivante.astro';
+import { especes, especeList, especeAccent, especeHalo } from '~/data/especes';
+import { getSpecimen } from '~/data/specimens';
+
+export const getStaticPaths = (() =>
+  especeList.map((espece) => ({
+    params: { slug: espece.slug },
+    props: { espece },
+  }))) satisfies GetStaticPaths;
+
+const { espece } = Astro.props;
+
+const accent = especeAccent(espece.slug);
+const autre = especes[espece.autre];
+const collectes = espece.specimens.map(getSpecimen).filter((s) => s !== undefined);
+
+const crumbs = [
+  {
+    href: '#',
+    nat: espece.slug === 'dev' ? 'Le dev' : 'La designer',
+    tel: espece.slug === 'dev' ? 'proc.rhizo' : 'proc.canopy',
+  },
+];
+---
+
+<BaseLayout
+  title={espece.slug === 'dev' ? 'Le développeur du studio' : 'La designer du studio'}
+  description={espece.role}
+  ecoMode={espece.slug === 'dev' ? 'espece-dev' : 'espece-designer'}
+  crumbs={crumbs}
+>
+  <main
+    class="mx-auto max-w-[860px] animate-route-in px-6 pt-[150px] pb-50 md:px-16"
+    style={`background:${especeHalo(espece.slug)}`}
+  >
+    <EspeceHeader espece={espece} accent={accent} />
+    <InventaireProfil espece={espece} accent={accent} />
+    <FriseCroissance frise={espece.frise} accent={accent} />
+    <SpecimensCollectes specimens={collectes} accent={accent} />
+
+    <Filament height="72px" />
+    <CarteSuivante
+      href={`/espece/${autre.slug}`}
+      eyebrow="L'autre moitié de l'organisme — symbiose obligatoire"
+      titre={autre.latin}
+      accent={especeAccent(autre.slug)}
+      compact
+    />
+  </main>
+</BaseLayout>

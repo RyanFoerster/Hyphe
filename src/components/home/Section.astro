@@ -1,0 +1,15 @@
+---
+/** Enveloppe de section de la page d'accueil : ancre + stade observé par le rail. */
+interface Props {
+  id: string;
+  stage: number;
+  label: string;
+  class?: string;
+}
+
+const { id, stage, label, class: className = '' } = Astro.props;
+---
+
+<section id={id} data-stage={stage} aria-label={label} class:list={[className]}>
+  <slot />
+</section>

@@ -1,0 +1,35 @@
+---
+/**
+ * La loupe de terrain — le seul contrôle persistant du site.
+ * À gauche : la planche imprimée. À droite : la station de nuit.
+ */
+---
+
+<div
+  class="fixed bottom-4 right-4 z-40 flex max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-plate border border-nat-800 bg-bg-1 px-3 py-2.5 shadow-raised sm:bottom-6 sm:right-6 sm:px-4 sm:py-3"
+>
+  <div class="text-2xs tracking-wider uppercase text-nat-300">Loupe de terrain</div>
+  <div class="flex items-center gap-2.5">
+    <span
+      class="text-2xs tracking-wide uppercase"
+      style="color:color-mix(in oklab, var(--color-nat-300) calc(100% - var(--mixp)), var(--color-nat-500))"
+    >
+      Naturaliste
+    </span>
+    <input
+      data-loupe
+      class="loupe-range"
+      type="range"
+      min="0"
+      max="100"
+      value="0"
+      aria-label="Basculer entre vue naturaliste et vue télémétrie"
+    />
+    <span
+      class="text-2xs tracking-wide uppercase"
+      style="color:color-mix(in oklab, var(--color-tele-cyan) var(--mixp), var(--color-nat-700))"
+    >
+      Télémétrie
+    </span>
+  </div>
+</div>

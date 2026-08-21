@@ -1,0 +1,60 @@
+---
+import { Image } from 'astro:assets';
+
+/**
+ * Planche gravée — traitée en bichromie par `--img-filter`, donc elle suit
+ * la loupe : sépia-vert la nuit, noir et blanc sur papier.
+ */
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  /** Légende posée sur un scrim, en bas à gauche. */
+  caption?: string;
+  /** Classe de ratio, ex. `aspect-[16/10]`. */
+  ratio?: string;
+  position?: 'center' | 'top';
+  class?: string;
+  /** Style inline — sert aux bordures qui suivent la loupe via color-mix(). */
+  style?: string;
+  widths?: number[];
+  sizes?: string;
+  loading?: 'lazy' | 'eager';
+}
+
+const {
+  src,
+  alt,
+  caption,
+  ratio = 'aspect-[16/10]',
+  position = 'center',
+  class: className = '',
+  style,
+  widths = [480, 720, 1080],
+  sizes = '(max-width: 900px) 100vw, 720px',
+  loading = 'lazy',
+} = Astro.props;
+---
+
+<figure class:list={['relative m-0 overflow-hidden bg-bg-2', ratio, className]} style={style}>
+  <Image
+    src={src}
+    alt={alt}
+    widths={widths}
+    sizes={sizes}
+    loading={loading}
+    class:list={[
+      'plate-img h-full w-full object-cover',
+      position === 'top' ? 'object-top' : 'object-center',
+    ]}
+  />
+  {
+    caption && (
+      <figcaption
+        class="absolute bottom-2.5 left-3 px-2 py-1 text-2xs tracking-wide text-nat-200"
+        style="background:var(--scrim-b)"
+      >
+        {caption}
+      </figcaption>
+    )
+  }
+</figure>

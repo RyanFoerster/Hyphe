@@ -1,0 +1,25 @@
+---
+import Section from './Section.astro';
+import Eyebrow from '~/components/ui/Eyebrow.astro';
+import SectionTitle from '~/components/ui/SectionTitle.astro';
+import PlancheRow from './PlancheRow.astro';
+import { specimens } from '~/data/specimens';
+---
+
+<Section
+  id="specimens"
+  stage={4}
+  label="Spécimens"
+  class="mx-auto max-w-[1180px] px-6 pt-30 pb-40 md:px-16"
+>
+  <Eyebrow class="mb-4">Nos projets — stade V · spécimens collectés</Eyebrow>
+  <SectionTitle class="text-2xl md:text-3xl">Planches d'herbier</SectionTitle>
+  <p class="mt-4 mb-18 max-w-[44em] text-nat-300">
+    Quatre projets livrés — sites web et applications. La loupe révèle leur
+    système interne. <a href="/herbier">Voir tous les projets — l'herbier →</a>
+  </p>
+
+  <div class="flex flex-col gap-22">
+    {specimens.map((specimen) => <PlancheRow specimen={specimen} />)}
+  </div>
+</Section>
