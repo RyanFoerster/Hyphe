@@ -415,6 +415,12 @@
       /* tant pis : la prochaine visite rejouera la dormance */
     }
     html.removeAttribute('aria-busy');
+    // Le signal « on peut animer », source de vérité unique du site. Il part
+    // d'ici parce que `revealSite` est l'entonnoir des DEUX chemins : handoff
+    // joué, et loader jamais montré. `visible` dit lequel — l'entrée du hero
+    // enchaîne sans pause dans le premier cas, après un souffle dans l'autre.
+    window.__ecoPret = true;
+    dispatchEvent(new CustomEvent('eco:pret', { detail: { loader: visible } }));
     // Le site est peint depuis le début sous le voile opaque (le LCP reste
     // mesuré sur le vrai contenu) : révéler = laisser le voile s'effacer.
     if (instant) overlay.style.transition = 'none';

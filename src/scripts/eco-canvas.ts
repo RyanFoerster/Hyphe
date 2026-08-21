@@ -9,6 +9,8 @@
  *  · `eco:route`  — la route courante, qui recompose la disposition.
  */
 
+import gsap from 'gsap';
+
 type Mode = 'home' | 'herbier' | 'specimen' | 'espece-designer' | 'espece-dev' | 'contact' | 'legal';
 
 interface Node {
@@ -96,7 +98,6 @@ export class EcoCanvas extends HTMLElement {
 
   private reduced = false;
   private announced = false;
-  private raf = 0;
   private still: ReturnType<typeof setInterval> | undefined;
   private ready = false;
 
@@ -116,6 +117,7 @@ export class EcoCanvas extends HTMLElement {
     if (this.trail.length > 24) this.trail.shift();
   };
   private onResize = () => this.build();
+  private tick = () => this.step(performance.now(), false);
 
   connectedCallback(): void {
     if (this.ready) return;
@@ -150,18 +152,19 @@ export class EcoCanvas extends HTMLElement {
         this.step(performance.now(), true);
       }, 250);
     } else {
-      const loop = (now: number) => {
-        this.raf = requestAnimationFrame(loop);
-        this.step(now, false);
-      };
-      this.raf = requestAnimationFrame(loop);
+      /* Le battement est celui de GSAP, partagé avec Lenis et les timelines :
+         un second rAF en parallèle est la cause classique du jank qu'on ne
+         sait pas expliquer. `performance.now()` reste la référence de temps —
+         le ticker compte depuis son propre départ, et la traînée du pointeur
+         est horodatée sur `performance.now()`. */
+      gsap.ticker.add(this.tick);
     }
   }
 
   disconnectedCallback(): void {
     this.ready = false;
     this.innerHTML = '';
-    cancelAnimationFrame(this.raf);
+    gsap.ticker.remove(this.tick);
     if (this.still) clearInterval(this.still);
     removeEventListener('eco:mix', this.onMix);
     removeEventListener('eco:growth', this.onGrowth);

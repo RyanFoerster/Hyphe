@@ -18,6 +18,14 @@ interface Window {
   __ecoReady?: boolean;
   /** La dormance a déjà eu lieu dans cette fenêtre — jamais deux fois. */
   __okgDormance?: boolean;
+  /** Le site a le droit d'animer. Posé avec `eco:pret`, pour qui arrive après. */
+  __ecoPret?: boolean;
+  /** Poignée de recette, en développement seulement. */
+  __ecoMotion?: {
+    scenes(): { page: number; durables: number; total: number };
+    battements(): number;
+    lenis(): boolean;
+  };
 }
 
 interface WindowEventMap {
@@ -30,6 +38,9 @@ interface WindowEventMap {
   'eco:route': CustomEvent<{ mode: string }>;
   /** Premier frame du canevas dessiné — la dormance s'y accroche. */
   'eco:ready': CustomEvent;
+  /** Fin de la dormance : le site peut animer. `loader` dit si elle a été vue —
+      montrée, l'entrée enchaîne sans pause ; sautée, après un bref souffle. */
+  'eco:pret': CustomEvent<{ loader: boolean }>;
 }
 
 /** Voir le plugin `inlineScript` dans astro.config.mjs. */

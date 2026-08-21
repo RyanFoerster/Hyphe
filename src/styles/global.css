@@ -156,6 +156,15 @@
 
   html {
     background: var(--color-bg-0);
+  }
+
+  /*
+   * Le lissage natif et Lenis se disputeraient le même geste : deux courbes
+   * sur un seul défilement, ce qui se sent immédiatement. Lenis pose `.lenis`
+   * sur <html> quand il prend la main — le natif ne sert donc que quand il
+   * n'est pas là (mouvement réduit, JS en échec, ancres avant hydratation).
+   */
+  html:not(.lenis) {
     scroll-behavior: smooth;
   }
 

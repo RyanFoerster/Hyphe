@@ -21,6 +21,8 @@
  * caler le seuil en recette).
  */
 
+import gsap from 'gsap';
+
 interface Foyer {
   fruit: SVGGElement;
   corps: SVGGElement;
@@ -47,7 +49,8 @@ interface Foyer {
 
 let foyer: Foyer | null = null;
 let mourants: Foyer[] = [];
-let raf = 0;
+/** La boucle tourne-t-elle ? Elle vit sur le ticker GSAP, pas sur son propre rAF. */
+let actif = false;
 let desactive = false;
 
 /**
@@ -270,8 +273,14 @@ export const initSporulation = (): (() => void) => {
     if (!f.night && f.donnee) f.donnee.setAttribute('opacity', '0');
   };
 
-  const boucle = (now: number) => {
-    raf = 0;
+  const arreter = () => {
+    if (!actif) return;
+    actif = false;
+    gsap.ticker.remove(boucle);
+  };
+
+  const boucle = () => {
+    const now = performance.now();
     const dt = Math.min(80, now - derniere);
     derniere = now;
     /* Frame budget : si ça rame, on dégrade l'effet avant la fluidité. */
@@ -279,6 +288,7 @@ export const initSporulation = (): (() => void) => {
     if (lourdeur > 0.5) {
       desactive = true;
       calmerSporulation(true);
+      arreter();
       return;
     }
 
@@ -286,6 +296,7 @@ export const initSporulation = (): (() => void) => {
        bon, on rend la planche nette plutôt que de la déformer de travers. */
     if (foyer && foyer.night !== (document.documentElement.dataset.regime === 'night')) {
       calmerSporulation(true);
+      arreter();
       return;
     }
 
@@ -303,18 +314,18 @@ export const initSporulation = (): (() => void) => {
       foyer = null;
     }
 
-    if (foyer || mourants.length) {
-      raf = requestAnimationFrame(boucle);
-      return;
-    }
+    /* Encore quelqu'un : le ticker rappellera de lui-même. */
+    if (foyer || mourants.length) return;
     /* Plus personne sur la planche : les organes partagés retombent à zéro. */
     if (porteur) eteindrePartage(porteur);
+    arreter();
   };
 
   const relancer = () => {
-    if (raf) return;
+    if (actif) return;
+    actif = true;
     derniere = performance.now();
-    raf = requestAnimationFrame(boucle);
+    gsap.ticker.add(boucle);
   };
 
   const onOver = (e: Event) => {
@@ -339,7 +350,6 @@ export const initSporulation = (): (() => void) => {
     conteneur.removeEventListener('pointerover', onOver);
     conteneur.removeEventListener('pointerout', onOut);
     calmerSporulation(true);
-    cancelAnimationFrame(raf);
-    raf = 0;
+    arreter();
   };
 };

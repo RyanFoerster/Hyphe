@@ -3,6 +3,7 @@
  * seule fois par navigation — `astro:page-load` couvre aussi le premier rendu.
  */
 import { registerEcoCanvas } from './eco-canvas';
+import { initMotion } from './motion';
 import { initLoupe } from './loupe';
 import { initGrowth } from './growth';
 import { initStageRail } from './stage-rail';
@@ -35,6 +36,9 @@ const mount = () => {
 };
 
 registerEcoCanvas();
+/* Le socle du mouvement se pose une fois par fenêtre, pas par navigation :
+   il porte le ticker, Lenis et la discipline d'échange de vue. */
+initMotion();
 document.addEventListener('astro:page-load', mount);
 
 // L'échange de vue remplace les attributs de <html> : on repose le régime
