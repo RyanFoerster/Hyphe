@@ -21,7 +21,7 @@
  * caler le seuil en recette).
  */
 
-import gsap from 'gsap';
+import { battre, cesser } from './motion/battement';
 
 interface Foyer {
   fruit: SVGGElement;
@@ -276,7 +276,7 @@ export const initSporulation = (): (() => void) => {
   const arreter = () => {
     if (!actif) return;
     actif = false;
-    gsap.ticker.remove(boucle);
+    cesser(boucle);
   };
 
   const boucle = () => {
@@ -325,7 +325,7 @@ export const initSporulation = (): (() => void) => {
     if (actif) return;
     actif = true;
     derniere = performance.now();
-    gsap.ticker.add(boucle);
+    battre(boucle);
   };
 
   const onOver = (e: Event) => {

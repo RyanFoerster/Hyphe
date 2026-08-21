@@ -22,9 +22,10 @@ interface Window {
   __ecoPret?: boolean;
   /** Poignée de recette, en développement seulement. */
   __ecoMotion?: {
-    scenes(): { page: number; durables: number; total: number };
-    battements(): number;
-    lenis(): boolean;
+    battement(): { abonnes: number; source: 'propre' | 'moteur' | 'arrete' };
+    moteurCharge(): boolean;
+    pret(): boolean;
+    scenes(): { page: number; durables: number; total: number } | null;
   };
 }
 

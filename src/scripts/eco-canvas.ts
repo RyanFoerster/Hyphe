@@ -9,7 +9,7 @@
  *  · `eco:route`  — la route courante, qui recompose la disposition.
  */
 
-import gsap from 'gsap';
+import { battre, cesser } from './motion/battement';
 
 type Mode = 'home' | 'herbier' | 'specimen' | 'espece-designer' | 'espece-dev' | 'contact' | 'legal';
 
@@ -152,19 +152,17 @@ export class EcoCanvas extends HTMLElement {
         this.step(performance.now(), true);
       }, 250);
     } else {
-      /* Le battement est celui de GSAP, partagé avec Lenis et les timelines :
-         un second rAF en parallèle est la cause classique du jank qu'on ne
-         sait pas expliquer. `performance.now()` reste la référence de temps —
-         le ticker compte depuis son propre départ, et la traînée du pointeur
-         est horodatée sur `performance.now()`. */
-      gsap.ticker.add(this.tick);
+      /* Le battement partagé du site — jamais un rAF à soi. Il tourne seul
+         tant que le moteur d'animation n'est pas là, puis lui cède la main
+         sans que le canevas ait à le savoir. */
+      battre(this.tick);
     }
   }
 
   disconnectedCallback(): void {
     this.ready = false;
     this.innerHTML = '';
-    gsap.ticker.remove(this.tick);
+    cesser(this.tick);
     if (this.still) clearInterval(this.still);
     removeEventListener('eco:mix', this.onMix);
     removeEventListener('eco:growth', this.onGrowth);

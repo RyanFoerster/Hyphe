@@ -1,89 +1,65 @@
 /**
- * Le socle du mouvement — un seul battement pour tout le site.
+ * Le socle du mouvement — la partie qui part avec la page.
  *
- * Trois choses, et rien d'autre :
- *  · les plugins et les courbes enregistrés une fois ;
- *  · Lenis branché sur le ticker GSAP — donc UN seul rAF, jamais deux ;
- *  · la discipline de navigation : les scènes de la page meurent, celles du
- *    layout survivent, et on recalcule quand les métriques ont bougé.
- *
- * Aucune animation n'est déclenchée ici.
+ * Volontairement minuscule : elle ne contient ni GSAP ni Lenis. Elle branche
+ * l'écoute du signal `eco:pret`, puis va chercher le moteur **après le premier
+ * paint**, en parallèle de la dormance. Rien de ce qui est vital ne l'attend :
+ * si le site est prêt avant le moteur, on révèle, et les entrées s'accrochent
+ * quand il arrive.
  */
-import gsap from 'gsap';
-import ScrollTrigger from 'gsap/ScrollTrigger';
-import SplitText from 'gsap/SplitText';
-import CustomEase from 'gsap/CustomEase';
-import Lenis from 'lenis';
-/* `html.lenis{height:auto}` et les gardes `data-lenis-prevent` : sans cette
-   feuille, un conteneur défilant interne renvoie son geste à la page. */
-import 'lenis/dist/lenis.css';
+import { ecouterPret, estPret, quandPret } from './pret';
+import { etatBattement } from './battement';
 
-import { enregistrerEases } from './eases';
-import { ecouterPret, quandPret } from './pret';
-import { compterScenes, rafraichir, rafraichirApresImages, viderScenes } from './scene';
+type Moteur = typeof import('./moteur');
 
-let lenis: Lenis | null = null;
-let monte = false;
+let promesse: Promise<Moteur> | null = null;
+let moteur: Moteur | null = null;
 
-/** Le défilement adouci, s'il est en service (jamais en mouvement réduit). */
-export const defilement = (): Lenis | null => lenis;
+/** Va chercher le moteur, une seule fois. */
+const chargerMoteur = (): Promise<Moteur> => {
+  promesse ??= import('./moteur').then((m) => {
+    m.demarrerMoteur();
+    moteur = m;
+    return m;
+  });
+  return promesse;
+};
+
+/**
+ * Ce qui a besoin du moteur s'inscrit ici. Le rappel part dès qu'il est là —
+ * immédiatement s'il l'est déjà. C'est le point d'accroche des étapes
+ * suivantes : aucune animation n'importe GSAP directement.
+ */
+export const quandMoteur = (fn: (m: Moteur) => void): void => {
+  void chargerMoteur().then(fn);
+};
 
 export const initMotion = (): void => {
-  if (monte) return;
-  monte = true;
-
-  gsap.registerPlugin(ScrollTrigger, SplitText, CustomEase);
-  enregistrerEases();
-
-  /* Un onglet en arrière-plan rend des deltas énormes au retour. On plafonne
-     plutôt que de laisser les timelines sauter d'un bloc. */
-  gsap.ticker.lagSmoothing(500, 33);
-
-  const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (!reduit) {
-    /* `autoRaf: false` est le point important : Lenis ne bat pas de son côté,
-       c'est le ticker GSAP qui l'avance. Un second rAF parallèle est la cause
-       classique du jank qu'on ne sait pas expliquer. */
-    lenis = new Lenis({ autoRaf: false, duration: 1.05, gestureOrientation: 'vertical' });
-    lenis.on('scroll', ScrollTrigger.update);
-    gsap.ticker.add((temps) => lenis?.raf(temps * 1000));
-  }
-
   ecouterPret();
 
-  /* Poignée de recette — comptage des scènes et du battement. Retirée du
-     paquet de production par le remplacement de `import.meta.env.DEV`. */
+  /* Deux frames : on laisse le premier paint se faire, puis on demande le
+     moteur. `fetchpriority` bas via le repli d'inactivité — la dormance et les
+     planches passent devant, elles, elles se voient. */
+  const reclamer = () => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => void chargerMoteur(), { timeout: 1200 });
+    } else {
+      setTimeout(() => void chargerMoteur(), 200);
+    }
+  };
+  requestAnimationFrame(() => requestAnimationFrame(reclamer));
+
   if (import.meta.env.DEV) {
     window.__ecoMotion = {
-      scenes: compterScenes,
-      /* Nombre de fonctions branchées sur l'unique ticker du site. */
-      battements: () => (gsap.ticker as unknown as { _listeners: unknown[] })._listeners.length,
-      lenis: () => !!lenis,
+      battement: etatBattement,
+      moteurCharge: () => moteur !== null,
+      pret: estPret,
+      /* `scene.ts` importe ScrollTrigger : on passe par le moteur pour ne pas
+         retomber GSAP dans le paquet de départ. */
+      scenes: () => moteur?.compterScenes() ?? null,
     };
   }
-
-  /* Les positions ne valent rien tant que les typographies ne sont pas posées :
-     Fraunces est variable et change les hauteurs de ligne en arrivant. */
-  quandPret(() => {
-    document.fonts.ready.then(() => {
-      rafraichir();
-      rafraichirApresImages();
-    });
-  });
-
-  /* ── Navigation ── */
-  document.addEventListener('astro:before-swap', viderScenes);
-
-  document.addEventListener('astro:page-load', () => {
-    /* Le layout est persistant : Lenis garde ses métriques de la page
-       précédente tant qu'on ne le lui dit pas. */
-    lenis?.resize();
-    quandPret(() => {
-      document.fonts.ready.then(() => {
-        rafraichir();
-        rafraichirApresImages();
-      });
-    });
-  });
 };
+
+/* Réexport pour les étapes suivantes — elles n'importent jamais GSAP. */
+export { quandPret };
