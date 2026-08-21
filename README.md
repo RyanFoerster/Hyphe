@@ -123,9 +123,6 @@ recalculée : un seul endroit la définit, `mix-runtime.js`.
 Au passage de la loupe, la **charpente** (`scripts/charpente.ts`) redresse le même graphe vers les lignes du tableau
 de télémétrie — une source topologique, deux rendus.
 
-La page `/dev/arbre` (hors navigation) montre les silhouettes à 4, 12 et
-20 projets, portrait et espalier — l'outil de recette du layout.
-
 ### La dormance — le loader d'entrée
 
 Avant la spore du hero, le stade zéro : une graine germe pendant que le site
@@ -205,11 +202,50 @@ npm run check
 Le site est entièrement statique : `npm run build` produit `dist/` (format
 fichier, sans slash final).
 
+## Déploiement
+
+Rien à faire tourner : pas d'adaptateur, pas de fonction, pas de secret. Le
+formulaire de pollinisation compose un `mailto:` dans le navigateur. Sur
+Cloudflare Pages :
+
+| | |
+| --- | --- |
+| Build command | `npm run build` |
+| Output directory | `dist` |
+| Node | `22.12.0` — voir `.nvmrc` |
+
+La version de Node **n'est pas optionnelle** : Astro 7 exige `>= 22.12.0`,
+au-dessus de l'image de build par défaut. Sans le pin, le build échoue.
+
+`build.format: 'file'` écrit `herbier.html` ; l'hébergeur sert `/herbier` et
+redirige la forme `.html` vers la forme nue, ce que dit aussi
+`trailingSlash: 'never'`. Les canoniques et le sitemap annoncent tous deux la
+forme nue — `BaseLayout` nettoie l'extension que `Astro.url.pathname` porte
+au build.
+
+### Le domaine, en un seul endroit
+
+`src/data/site.ts` porte deux champs dont tout le reste découle :
+
+- `url` — `astro.config.mjs` en tire `site:`, donc les canoniques et le
+  sitemap. Rien d'autre n'écrit le domaine en dur.
+- `indexable` — `false` tant qu'on est sur un sous-domaine d'attente : le
+  `robots.txt` (généré par `src/pages/robots.txt.ts`) ferme la porte et
+  `BaseLayout` pose un `noindex`. Le robots seul ne suffirait pas : une page
+  déjà connue d'un moteur continue d'être servie dans les résultats.
+
+Passer au domaine définitif = changer ces deux valeurs, rien d'autre.
+
 ## Reste à faire
 
 - Remplacer les placeholders `[entre crochets]` de `src/data/`.
 - Remplacer les planches de `src/assets/plates/` par les visuels projet
   (les gravures de Haeckel sont provisoires — domaine public).
 - Compléter les textes légaux avec votre conseil.
+- Fixer l'adresse de contact (`site.email`) : `hello@studiohyphe.be` est un
+  nom de travail, la boîte n'existe pas — le formulaire écrit dans le vide.
+- Basculer `site.url` et `site.indexable` le jour du domaine définitif.
+- Ajouter une image de partage (`og:image`) : les partages sortent sans
+  visuel.
 - Auto-héberger les trois familles typographiques (Fraunces, JetBrains Mono,
   Figtree) si vous voulez couper la dépendance à Google Fonts.

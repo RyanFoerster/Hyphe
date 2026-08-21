@@ -55,7 +55,15 @@ const organisation = {
     { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Design UX/UI et design systems' } },
   ],
 };
-const canonical = new URL(Astro.url.pathname, Astro.site);
+/**
+ * `build.format: 'file'` écrit `herbier.html`, donc `Astro.url.pathname` vaut
+ * `/herbier.html` au build — alors que l'adresse servie est `/herbier`
+ * (`trailingSlash: 'never'`, et l'hébergeur redirige la forme `.html` vers la
+ * forme nue). Sans ce nettoyage la canonique désigne une redirection, et
+ * contredit le sitemap qui, lui, annonce déjà la forme nue.
+ */
+const servie = Astro.url.pathname.replace(/(?:index)?\.html$/, '').replace(/\/$/, '') || '/';
+const canonical = new URL(servie, Astro.site);
 ---
 
 <!doctype html>
@@ -67,6 +75,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {/* Le robots.txt seul ne suffit pas : une page déjà connue d'un moteur
+        continue d'être servie dans les résultats. Le meta la retire vraiment. */}
+    {!site.indexable && <meta name="robots" content="noindex, nofollow" />}
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={site.nom} />

@@ -65,7 +65,8 @@ export const initContactForm = (): void => {
       '',
       message,
       '',
-      '— envoyé depuis studiohyphe.be/pollinisation',
+      /* D'où part le message — lu sur la page, jamais à re-régler. */
+      `— envoyé depuis ${location.host}${location.pathname}`,
     ].join('\n');
 
     location.href = `mailto:${email}?subject=${encodeURIComponent(`Pollinisation — ${nom}`)}&body=${encodeURIComponent(corps)}`;

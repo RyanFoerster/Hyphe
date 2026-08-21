@@ -2,8 +2,11 @@
 import { readFile } from 'node:fs/promises';
 
 import { defineConfig } from 'astro/config';
+import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import { transform } from 'esbuild';
+
+import { site } from './src/data/site.ts';
 
 /**
  * `import source from './x.js?inline-script'` → le code de `x.js`, minifié,
@@ -25,9 +28,10 @@ const inlineScript = () => ({
 });
 
 export default defineConfig({
-  site: 'https://studiohyphe.be',
+  site: site.url,
   trailingSlash: 'never',
   build: { format: 'file' },
+  integrations: [sitemap()],
   vite: {
     plugins: [tailwindcss(), inlineScript()],
   },
