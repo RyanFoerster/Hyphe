@@ -16,13 +16,18 @@
  */
 import gsap from 'gsap';
 
-import { quandPret } from './pret';
+import { quandPret, type Cas } from './pret';
 import { revelerGroupe, revelerTexte, type Revelation } from './texte';
-import { SOUFFLE_SANS_LOADER, voixCourante } from './tokens';
+import { RETOUR_FACTEUR, SOUFFLE_SANS_LOADER, duree, voixCourante } from './tokens';
 
 /**
- * Les départs, en secondes. Réglés pour que deux blocs au plus soient en
- * mouvement à un instant donné — la règle de densité, tenue au chronomètre.
+ * Les départs, en secondes, exprimés dans la voix naturaliste — ils passent
+ * par `duree()` comme tout le reste. Sans quoi la télémétrie raccourcirait ses
+ * gestes sans resserrer son scénario : des blocs plus vifs séparés par les
+ * mêmes silences, ce qui n'est plus la même voix mais un hybride.
+ *
+ * Réglés pour que deux blocs au plus soient en mouvement à un instant donné —
+ * la règle de densité, tenue au chronomètre.
  */
 const SCENARIO = {
   sourcil: 0,
@@ -32,22 +37,37 @@ const SCENARIO = {
   actions: 1.95,
 } as const;
 
+/**
+ * L'entrée a-t-elle déjà eu lieu dans cette fenêtre ? Portée fenêtre, pas
+ * portée page : une navigation interne conserve ce module, un rechargement dur
+ * en crée un neuf. Le visiteur qui recharge revient vraiment, celui qui navigue
+ * ne fait que repasser — même règle que la dormance.
+ */
+let dejaEntre = false;
+
+/** Recette : le cas effectivement joué par le hero, `retour` compris. */
+export let casHero: Cas | null = null;
+
 export const monterHero = (): (() => void) => {
   const racine = document.querySelector<HTMLElement>('[data-hero-entree]');
   if (!racine) return () => {};
 
   const voix = voixCourante();
+  const retour = dejaEntre;
   const prise = (nom: string) => racine.querySelector<HTMLElement>(`[data-hero="${nom}"]`);
 
   /* La voix est lue une fois, à la construction. Basculer la loupe pendant
      l'entrée ne réécrit pas ce qui est déjà en route. */
+  /* Au retour, l'encre ne remonte pas : c'est le geste du premier contact. */
+  const encre = !retour;
+  const a = (t: number) => duree(t, voix);
   const parties: Array<[Revelation | null, number]> = [
-    [revelerTexte(prise('sourcil'), { voix, decoupe: 'bloc' }), SCENARIO.sourcil],
-    [revelerTexte(prise('titre'), { voix, decoupe: 'mots' }), SCENARIO.titre],
-    [revelerTexte(prise('ancre'), { voix, decoupe: 'lignes' }), SCENARIO.ancre],
-    [revelerTexte(prise('baseline'), { voix, decoupe: 'bloc' }), SCENARIO.baseline],
+    [revelerTexte(prise('sourcil'), { voix, decoupe: 'bloc', encre }), a(SCENARIO.sourcil)],
+    [revelerTexte(prise('titre'), { voix, decoupe: 'mots', encre }), a(SCENARIO.titre)],
+    [revelerTexte(prise('ancre'), { voix, decoupe: 'lignes', encre }), a(SCENARIO.ancre)],
+    [revelerTexte(prise('baseline'), { voix, decoupe: 'bloc', encre }), a(SCENARIO.baseline)],
     [revelerGroupe([...racine.querySelectorAll<HTMLElement>('[data-hero="actions"] > *')], voix),
-      SCENARIO.actions],
+      a(SCENARIO.actions)],
   ];
 
   const vivantes = parties.filter((p): p is [Revelation, number] => p[0] !== null);
@@ -65,16 +85,24 @@ export const monterHero = (): (() => void) => {
   const tl = gsap.timeline({ paused: true, onComplete: rendre });
   for (const [r, position] of vivantes) tl.add(r.timeline, position);
 
+  /* Un retour se POSE, il ne pousse pas : la même timeline, resserrée d'un
+     seul facteur — durées et staggers ensemble, donc le rapport entre les
+     blocs ne bouge pas. Il n'existe toujours qu'une timeline. */
+  if (retour) tl.timeScale(RETOUR_FACTEUR);
+
   let appel: gsap.core.Tween | null = null;
   quandPret((c) => {
-    if (c.cas === 'instantane') {
+    const cas: Cas = retour ? 'retour' : c.cas;
+    casHero = cas;
+    if (cas === 'instantane') {
       /* Veille déclenchée : tout est posé d'un coup. Personne n'attend deux fois. */
       tl.progress(1, true);
       rendre();
       return;
     }
-    /* Le seul écart entre les deux cas tient dans cette ligne. */
-    const souffle = c.cas === 'loader' ? 0 : SOUFFLE_SANS_LOADER;
+    dejaEntre = true;
+    /* Le seul écart entre les points d'entrée tient dans cette ligne. */
+    const souffle = cas === 'rapide' ? SOUFFLE_SANS_LOADER : 0;
     appel = souffle ? gsap.delayedCall(souffle, () => tl.play()) : (tl.play(), null);
   });
 

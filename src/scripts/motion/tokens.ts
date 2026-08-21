@@ -58,6 +58,15 @@ export const DECLENCHEMENT = 'top 85%';
  */
 export const SOUFFLE_SANS_LOADER = 0.08;
 
+/**
+ * Le retour n'est pas une arrivée : le hero se pose au lieu de pousser.
+ * La timeline est la même, jouée 2,5 fois plus vite — durées et staggers se
+ * resserrent ensemble, donc le rapport entre les blocs est conservé. 2,85 s
+ * deviennent 1,14 s en naturaliste, 2,14 s deviennent 0,86 s en télémétrie :
+ * le ratio des deux voix tient de lui-même.
+ */
+export const RETOUR_FACTEUR = 2.5;
+
 /** Parallaxe : fonds et éléments décoratifs seulement, jamais le texte. */
 export const PARALLAXE_MAX = 0.08;
 

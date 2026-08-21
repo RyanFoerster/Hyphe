@@ -63,12 +63,16 @@ const enmasquer = (el: HTMLElement): (() => void) => {
   };
 };
 
-/** L'état de départ, sous le masque. La voix ne change que la densité. */
-const depart = (voix: Voix): gsap.TweenVars => ({
+/**
+ * L'état de départ, sous le masque. La voix ne change que la densité — et
+ * l'encre ne pâlit que si elle a le droit de monter : au retour, le texte
+ * arrive à sa densité finale, le geste du premier contact ne se répète pas.
+ */
+const depart = (voix: Voix, encre: boolean): gsap.TweenVars => ({
   yPercent: 100,
   rotate: voix === 'tel' ? REDRESSEMENT.rotation * 0.4 : REDRESSEMENT.rotation,
   transformOrigin: '0% 100%',
-  opacity: voix === 'tel' ? 1 : REDRESSEMENT.encreDepart,
+  opacity: voix === 'nat' && encre ? REDRESSEMENT.encreDepart : 1,
   ...(voix === 'tel' ? { backgroundColor: SURLIGNE } : {}),
   willChange: 'transform',
 });
@@ -79,7 +83,8 @@ const depart = (voix: Voix): gsap.TweenVars => ({
  */
 export const revelerTexte = (
   cible: Element | null,
-  { voix, decoupe = 'lignes' }: { voix: Voix; decoupe?: 'lignes' | 'mots' | 'bloc' },
+  { voix, decoupe = 'lignes', encre = true }:
+    { voix: Voix; decoupe?: 'lignes' | 'mots' | 'bloc'; encre?: boolean },
 ): Revelation | null => {
   /* La porte se consulte AVANT de toucher au DOM : découper une page déjà lue
      provoquerait un reflux visible pour rien. */
@@ -109,12 +114,14 @@ export const revelerTexte = (
     defaire.push(() => split.revert());
   }
 
-  if (!morceaux.length || !preparer(morceaux, depart(voix))) {
+  if (!morceaux.length || !preparer(morceaux, depart(voix, encre))) {
     for (const undo of defaire) undo();
     return null;
   }
 
-  const ecart = decoupe === 'mots' ? STAGGER.mot : STAGGER.ligne;
+  /* Le stagger suit la voix comme la durée : un seul squelette temporel,
+     joué 25 % plus vite en télémétrie — pas un squelette à deux vitesses. */
+  const ecart = duree(decoupe === 'mots' ? STAGGER.mot : STAGGER.ligne, voix);
   const d = duree(decoupe === 'mots' ? DUREE.mot : DUREE.ligne, voix);
   const tl = gsap.timeline();
 
@@ -126,7 +133,7 @@ export const revelerTexte = (
     stagger: ecart,
   }, 0);
 
-  if (voix === 'nat') {
+  if (voix === 'nat' && encre) {
     /* La montée d'encre : elle rattrape la fin de la course, pas son début. */
     tl.to(morceaux, {
       opacity: 1,
@@ -134,7 +141,7 @@ export const revelerTexte = (
       ease: SETTLE,
       stagger: ecart,
     }, Math.max(0, d - DUREE.encre));
-  } else {
+  } else if (voix === 'tel') {
     /* Le surlignage s'éteint presque aussitôt — une trace, pas un effet. */
     tl.to(morceaux, {
       backgroundColor: 'rgba(77,240,208,0)',
@@ -173,7 +180,7 @@ export const revelerGroupe = (
     opacity: 1,
     duration: duree(DUREE.ligne, voix),
     ease: easeApparition(voix),
-    stagger: STAGGER.carte,
+    stagger: duree(STAGGER.carte, voix),
   }, 0);
   return {
     timeline: tl,

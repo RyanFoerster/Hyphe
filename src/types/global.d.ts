@@ -26,7 +26,8 @@ interface Window {
     moteurCharge(): boolean;
     pret(): boolean;
     revele(): boolean;
-    cas(): 'loader' | 'rapide' | 'instantane' | null;
+    cas(): 'loader' | 'rapide' | 'instantane' | 'retour' | null;
+    casHero(): 'loader' | 'rapide' | 'instantane' | 'retour' | null;
     scenes(): { page: number; durables: number; total: number } | null;
     masquageAutorise(): boolean | null;
     masques(): number | null;

@@ -19,6 +19,7 @@ import 'lenis/dist/lenis.css';
 import { cederLeBattement } from './battement';
 import { figerAutorisation } from './masque';
 import { monterHero } from './hero';
+export { casHero } from './hero';
 import { enregistrerEases } from './eases';
 import { quandPret } from './pret';
 import { rafraichir, rafraichirApresImages, viderScenes } from './scene';

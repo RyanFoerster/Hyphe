@@ -42,8 +42,13 @@ const VEILLE_AVEC_DORMANCE_MS = 9500;
  *                  d'un très court souffle pour ne pas partir avant le paint.
  * · `instantane` — veille déclenchée, ou mouvement réduit : tout est posé,
  *                  rien ne bouge, y compris si le moteur arrive ensuite.
+ * · `retour`     — l'entrée a déjà eu lieu dans cette fenêtre et le visiteur
+ *                  revient par une navigation interne. Ce cas ne vient PAS du
+ *                  signal, qui ne se produit qu'une fois : c'est le hero qui le
+ *                  décide au montage. Un rechargement dur ouvre une nouvelle
+ *                  fenêtre, donc une nouvelle arrivée — comme la dormance.
  */
-export type Cas = 'loader' | 'rapide' | 'instantane';
+export type Cas = 'loader' | 'rapide' | 'instantane' | 'retour';
 
 export interface Contexte {
   cas: Cas;
