@@ -19,7 +19,7 @@
 import gsap from 'gsap';
 import SplitText from 'gsap/SplitText';
 
-import { easeApparition, SETTLE } from './eases';
+import { easeApparition, SETTLE, TRACE } from './eases';
 import { masquageAutorise, oublier, preparer } from './masque';
 import { DUREE, REDRESSEMENT, STAGGER, duree, type Voix } from './tokens';
 
@@ -187,6 +187,58 @@ export const revelerGroupe = (
     rendre: () => {
       oublier(cibles);
       gsap.set(cibles, { clearProps: 'all' });
+    },
+  };
+};
+
+/**
+ * Un filet se trace, d'un bord à l'autre — un trait de plume, pas un fondu.
+ * L'origine est à gauche : le trait part d'où commence la lecture.
+ */
+export const revelerFilet = (cible: Element | null, voix: Voix): Revelation | null => {
+  if (!cible || !preparer(cible, { scaleX: 0, transformOrigin: '0% 50%', willChange: 'transform' })) {
+    return null;
+  }
+  const tl = gsap.timeline();
+  tl.to(cible, { scaleX: 1, duration: duree(DUREE.filet, voix), ease: TRACE }, 0);
+  return {
+    timeline: tl,
+    rendre: () => {
+      oublier(cible);
+      gsap.set(cible, { clearProps: 'all' });
+    },
+  };
+};
+
+/**
+ * Une planche se lève depuis le bas de son cadre, avec un très léger
+ * recentrage interne (1,06 → 1) : sans lui, l'image donne l'impression d'une
+ * vitre qu'on fait coulisser plutôt que d'une matière qui se pose.
+ *
+ * Le cadre porte déjà `overflow:hidden` — c'est lui le masque, on n'en ajoute
+ * pas un second.
+ */
+export const revelerPlanche = (cadre: Element | null, voix: Voix): Revelation | null => {
+  const image = cadre?.querySelector<HTMLElement>('.plate-img, img');
+  if (!image || !preparer(image, { yPercent: 100, scale: 1.06, willChange: 'transform' })) {
+    return null;
+  }
+  const tl = gsap.timeline();
+  tl.to(image, {
+    yPercent: 0,
+    duration: duree(DUREE.masque, voix),
+    ease: easeApparition(voix),
+  }, 0);
+  tl.to(image, {
+    scale: 1,
+    duration: duree(DUREE.masque, voix) * 1.15,
+    ease: SETTLE,
+  }, 0);
+  return {
+    timeline: tl,
+    rendre: () => {
+      oublier(image);
+      gsap.set(image, { clearProps: 'all' });
     },
   };
 };

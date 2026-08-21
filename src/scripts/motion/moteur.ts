@@ -18,6 +18,8 @@ import 'lenis/dist/lenis.css';
 
 import { cederLeBattement } from './battement';
 import { figerAutorisation } from './masque';
+import { monterCatalogue } from './catalogue';
+export { phrasesEnCours } from './catalogue';
 import { monterHero } from './hero';
 export { casHero } from './hero';
 import { enregistrerEases } from './eases';
@@ -87,11 +89,14 @@ export const demarrerMoteur = (): void => {
 
   /* ── Les entrées de page ── */
   let demonterHero: (() => void) | null = null;
+  let demonterCatalogue: (() => void) | null = null;
   const monterPage = () => {
     demonterHero?.();
+    demonterCatalogue?.();
     /* Le hero est au-dessus de la ligne de flottaison : il appartient à la
        timeline d'entrée et n'aura jamais de ScrollTrigger d'apparition. */
     demonterHero = monterHero();
+    demonterCatalogue = monterCatalogue();
   };
   monterPage();
 

@@ -39,11 +39,17 @@ export const viderScenes = (): void => {
  * Comptage pour la recette : si `page` ne revient pas à son étiage après une
  * navigation, c'est qu'un déclencheur fuit.
  */
-export const compterScenes = (): { page: number; durables: number; total: number } => ({
-  page: page.length,
-  durables: durables.length,
-  total: ScrollTrigger.getAll().length,
-});
+export const compterScenes = (): { page: number; durables: number; total: number } => {
+  /* `once: true` fait mourir un déclencheur après son passage : il reste dans
+     nos tableaux mais n'observe plus rien. On ne compte que les vivants, sinon
+     la recette lit une fuite là où il n'y a qu'un travail fini. */
+  const vivant = (st: ScrollTrigger) => ScrollTrigger.getAll().includes(st);
+  return {
+    page: page.filter(vivant).length,
+    durables: durables.filter(vivant).length,
+    total: ScrollTrigger.getAll().length,
+  };
+};
 
 /**
  * Recalcule les positions. À appeler quand les métriques ont pu bouger :

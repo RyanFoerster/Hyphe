@@ -12,6 +12,7 @@ const { class: className = '', tone = 'var(--color-spore)' } = Astro.props;
 <div
   class:list={['text-2xs tracking-wider uppercase', className]}
   style={`color:${tone}`}
+  data-reveler="texte"
 >
   <slot />
 </div>

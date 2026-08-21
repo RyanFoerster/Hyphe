@@ -14,12 +14,12 @@ import { offres } from '~/data/offres';
 >
   <Eyebrow class="mb-4">Nos offres — stade III · cultures</Eyebrow>
   <SectionTitle class="text-2xl md:text-3xl">Ce qu'on cultive</SectionTitle>
-  <p class="mt-4 mb-14 max-w-[44em] text-nat-300">
+  <p data-reveler="texte" class="mt-4 mb-14 max-w-[44em] text-nat-300">
     Trois façons de travailler avec nous. Chaque variété mène aux projets déjà
     livrés dans cette famille.
   </p>
 
-  <div class="grid gap-6 md:grid-cols-3">
+  <div class="grid gap-6 md:grid-cols-3" data-reveler="groupe">
     {
       offres.map((offre) => (
         <a href={offre.href} class="block no-underline">
@@ -33,7 +33,7 @@ import { offres } from '~/data/offres';
             <h3 class="text-xl text-nat-100">{offre.titre}</h3>
             <div class="text-xs tracking-wide uppercase text-nat-300">{offre.detail}</div>
 
-            <p class="m-0 flex-1 text-sm leading-body text-nat-200">{offre.phrase}</p>
+            <p data-reveler="texte" class="m-0 flex-1 text-sm leading-body text-nat-200">{offre.phrase}</p>
 
             <div class="stack mt-2 border-t border-nat-800 pt-3 text-2xs tracking-wide">
               <span class="fade-nat text-nat-400">

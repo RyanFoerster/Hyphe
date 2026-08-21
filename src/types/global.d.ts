@@ -28,6 +28,7 @@ interface Window {
     revele(): boolean;
     cas(): 'loader' | 'rapide' | 'instantane' | 'retour' | null;
     casHero(): 'loader' | 'rapide' | 'instantane' | 'retour' | null;
+    phrases(): number;
     scenes(): { page: number; durables: number; total: number } | null;
     masquageAutorise(): boolean | null;
     masques(): number | null;

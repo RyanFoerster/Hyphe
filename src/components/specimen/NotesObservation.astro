@@ -13,10 +13,10 @@ const { specimen } = Astro.props;
 <section class="mt-22">
   <BlocLabel nat="Notes d'observation" tel="Contraintes système" class="mb-4" />
   <div class="stack">
-    <p class="fade-nat m-0 max-w-[44em] font-text text-base leading-body text-nat-200">
+    <p data-reveler="texte" class="fade-nat m-0 max-w-[44em] font-text text-base leading-body text-nat-200">
       {specimen.noteNat}
     </p>
-    <p class="fade-tel m-0 max-w-[44em] text-sm leading-body text-nat-200" aria-hidden="true">
+    <p data-reveler="texte" class="fade-tel m-0 max-w-[44em] text-sm leading-body text-nat-200" aria-hidden="true">
       {specimen.noteTel}
     </p>
   </div>

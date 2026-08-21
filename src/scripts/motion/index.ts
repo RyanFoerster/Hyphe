@@ -66,6 +66,7 @@ export const initMotion = (): void => {
       revele: estRevele,
       cas: () => (estPret() ? contextePret().cas : null),
       casHero: () => moteur?.casHero ?? null,
+      phrases: () => moteur?.phrasesEnCours() ?? 0,
       /* `scene.ts` et `masque.ts` importent GSAP : on passe par le moteur pour
          ne pas le faire retomber dans le paquet de départ. */
       scenes: () => moteur?.compterScenes() ?? null,
