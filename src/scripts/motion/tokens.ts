@@ -51,6 +51,13 @@ export const STAGGER = {
  */
 export const DECLENCHEMENT = 'top 85%';
 
+/**
+ * Le souffle avant l'entrée quand la dormance a été sautée : juste de quoi
+ * laisser le premier paint se stabiliser. Dans le cas `loader`, il vaut zéro —
+ * l'entrée doit chevaucher la pose de la spore, pas lui succéder.
+ */
+export const SOUFFLE_SANS_LOADER = 0.08;
+
 /** Parallaxe : fonds et éléments décoratifs seulement, jamais le texte. */
 export const PARALLAXE_MAX = 0.08;
 

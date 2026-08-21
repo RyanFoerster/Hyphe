@@ -31,6 +31,7 @@ interface Window {
     masquageAutorise(): boolean | null;
     masques(): number | null;
     essaiMasque(sel: string): boolean | null;
+    ralentir(facteur: number): void;
   };
 }
 

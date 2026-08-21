@@ -75,7 +75,7 @@
 
   /* ── CSS critique — tout est déjà dans les variables posées sur <html> ── */
   var CSS =
-    '#okg-dormance{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:var(--color-bg-0);font-family:var(--font-mono);transition:opacity 450ms var(--ease-eco)}' +
+    '#okg-dormance{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:var(--color-bg-0);font-family:var(--font-mono);transition:opacity 450ms var(--ease-growth)}' +
     '#okg-dormance.okg-d-clear{opacity:0;pointer-events:none}' +
     '#okg-dormance.okg-d-veiled .okg-d-stage,#okg-dormance.okg-d-veiled .okg-d-notes{opacity:0}' +
     '.okg-d-stage,.okg-d-notes{transition:opacity 300ms var(--ease-eco)}' +
@@ -96,7 +96,7 @@
     '.okg-d-root{stroke-dasharray:100;stroke-dashoffset:100}' +
     '.okg-d-br{stroke-dasharray:100;stroke-dashoffset:100;stroke-width:1;transition:stroke-dashoffset 900ms var(--ease-eco)}' +
     '.okg-d-br.okg-d-on{stroke-dashoffset:0}' +
-    '.okg-d-rootg{transition:transform 520ms var(--ease-eco),opacity 520ms var(--ease-eco)}' +
+    '.okg-d-rootg{transition:transform 520ms var(--ease-growth),opacity 520ms var(--ease-growth)}' +
     '#okg-dormance.okg-d-plunge .okg-d-rootg{transform:translateY(46px);opacity:0}' +
     '#okg-dormance.okg-d-plunge .okg-d-notes,#okg-dormance.okg-d-plunge .okg-d-husk{opacity:0}' +
     '.okg-d-husk{transition:opacity 400ms var(--ease-eco)}' +
@@ -108,7 +108,7 @@
     '.okg-d-log{display:flex;flex-direction:column;gap:4px;text-align:left;text-transform:none;letter-spacing:.08em}' +
     '.okg-d-log b{color:var(--color-tele-green);font-weight:400}' +
     '.okg-d-counter{color:var(--color-tele-cyan);font-size:12px}' +
-    '.okg-d-dot{position:fixed;border-radius:50%;background:color-mix(in oklab,var(--color-tele-cyan) var(--mixp),var(--color-spore));box-shadow:0 0 24px var(--glow-a);transform:translate(-50%,-50%);transition:transform 450ms var(--ease-eco)}' +
+    '.okg-d-dot{position:fixed;border-radius:50%;background:color-mix(in oklab,var(--color-tele-cyan) var(--mixp),var(--color-spore));box-shadow:0 0 24px var(--glow-a);transform:translate(-50%,-50%);transition:transform 450ms var(--ease-growth)}' +
     '.okg-d-dot.okg-d-beat{animation:okgDBeat 240ms var(--ease-eco)}' +
     '@keyframes okgDBeat{0%,100%{scale:1}45%{scale:.8}}' +
     '.okg-d-bar{display:none}' +

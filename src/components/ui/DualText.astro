@@ -3,7 +3,7 @@
  * Le motif signature : le même fait, dit deux fois.
  * La loupe fait passer de la voix du naturaliste à celle de l'instrument.
  */
-interface Props {
+interface Props extends astroHTML.JSX.HTMLAttributes {
   nat: string;
   tel: string;
   /** `inline` pour un fondu au fil du texte, `block` pour occuper la ligne. */
@@ -23,13 +23,14 @@ const {
   natClass = '',
   telClass = 'text-tele-cyan',
   nowrap = true,
+  ...reste
 } = Astro.props;
 
 const Tag = as === 'block' ? 'div' : 'span';
 const wrap = nowrap ? 'whitespace-nowrap' : '';
 ---
 
-<Tag class:list={['stack', as === 'inline' && 'inline-grid', className]}>
+<Tag class:list={['stack', as === 'inline' && 'inline-grid', className]} {...reste}>
   <span class:list={['fade-nat', wrap, natClass]}>{nat}</span>
   <span class:list={['fade-tel', wrap, telClass]} aria-hidden="true">{tel}</span>
 </Tag>

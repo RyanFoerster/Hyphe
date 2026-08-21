@@ -73,6 +73,7 @@ export const initMotion = (): void => {
       /* Siège de test : tente un masque et dit s'il a été accepté. C'est la
          porte elle-même qu'on éprouve, pas une imitation. */
       essaiMasque: (sel: string) => moteur?.preparer(sel, { autoAlpha: 0 }) ?? null,
+      ralentir: (f: number) => moteur?.ralentir(f),
     };
   }
 };

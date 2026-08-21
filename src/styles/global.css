@@ -67,6 +67,14 @@
 
   /* Mouvement — rare et sec */
   --ease-eco: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /*
+   * `eco.growth`, à l'identique — la courbe de croissance du moteur GSAP,
+   * écrite ici pour que le dernier geste de la dormance et le premier du hero
+   * partagent littéralement le même mouvement. `--ease-eco` reste le réflexe
+   * de l'interface (départ franc, bon pour un survol) ; celle-ci est la voix
+   * du vivant (départ lent, arrivée très douce).
+   */
+  --ease-growth: cubic-bezier(0.34, 0, 0.1, 1);
   --duration-fast: 120ms;
   --duration-base: 200ms;
 

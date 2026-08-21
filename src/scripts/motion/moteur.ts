@@ -18,6 +18,7 @@ import 'lenis/dist/lenis.css';
 
 import { cederLeBattement } from './battement';
 import { figerAutorisation } from './masque';
+import { monterHero } from './hero';
 import { enregistrerEases } from './eases';
 import { quandPret } from './pret';
 import { rafraichir, rafraichirApresImages, viderScenes } from './scene';
@@ -26,6 +27,11 @@ import { rafraichir, rafraichirApresImages, viderScenes } from './scene';
    `scene.ts` ou `masque.ts` depuis le paquet de départ y ferait retomber GSAP. */
 export { compterScenes, scene, sceneDurable } from './scene';
 export { compterMasques, liberer, masquageAutorise, oublier, preparer } from './masque';
+
+/** Recette : ralentit tout le mouvement du site, pour filmer une entrée. */
+export const ralentir = (facteur: number): void => {
+  gsap.globalTimeline.timeScale(facteur);
+};
 
 let lenis: Lenis | null = null;
 
@@ -78,12 +84,23 @@ export const demarrerMoteur = (): void => {
   };
   recaler();
 
+  /* ── Les entrées de page ── */
+  let demonterHero: (() => void) | null = null;
+  const monterPage = () => {
+    demonterHero?.();
+    /* Le hero est au-dessus de la ligne de flottaison : il appartient à la
+       timeline d'entrée et n'aura jamais de ScrollTrigger d'apparition. */
+    demonterHero = monterHero();
+  };
+  monterPage();
+
   /* ── Navigation ── */
   document.addEventListener('astro:before-swap', viderScenes);
   document.addEventListener('astro:page-load', () => {
     /* Le layout est persistant : Lenis garde les métriques de la page
        précédente tant qu'on ne le lui dit pas. */
     lenis?.resize();
+    monterPage();
     recaler();
   });
 };
