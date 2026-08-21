@@ -25,7 +25,12 @@ interface Window {
     battement(): { abonnes: number; source: 'propre' | 'moteur' | 'arrete' };
     moteurCharge(): boolean;
     pret(): boolean;
+    revele(): boolean;
+    cas(): 'loader' | 'rapide' | 'instantane' | null;
     scenes(): { page: number; durables: number; total: number } | null;
+    masquageAutorise(): boolean | null;
+    masques(): number | null;
+    essaiMasque(sel: string): boolean | null;
   };
 }
 

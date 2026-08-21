@@ -7,7 +7,7 @@
  * si le site est prêt avant le moteur, on révèle, et les entrées s'accrochent
  * quand il arrive.
  */
-import { ecouterPret, estPret, quandPret } from './pret';
+import { contextePret, ecouterPret, estPret, estRevele, quandPret } from './pret';
 import { etatBattement } from './battement';
 
 type Moteur = typeof import('./moteur');
@@ -15,13 +15,22 @@ type Moteur = typeof import('./moteur');
 let promesse: Promise<Moteur> | null = null;
 let moteur: Moteur | null = null;
 
+/**
+ * Recette : `?moteur=lent` retarde l'arrivée du moteur pour forcer le cas où
+ * il débarque APRÈS le signal — celui où il ne doit plus rien masquer. Même
+ * esprit que `?loader=slow` et `?loader=force` de la dormance.
+ */
+const RETARD_MS = new URLSearchParams(location.search).get('moteur') === 'lent' ? 3000 : 0;
+
 /** Va chercher le moteur, une seule fois. */
 const chargerMoteur = (): Promise<Moteur> => {
-  promesse ??= import('./moteur').then((m) => {
-    m.demarrerMoteur();
-    moteur = m;
-    return m;
-  });
+  promesse ??= (RETARD_MS ? new Promise<void>((r) => setTimeout(r, RETARD_MS)) : Promise.resolve())
+    .then(() => import('./moteur'))
+    .then((m) => {
+      m.demarrerMoteur();
+      moteur = m;
+      return m;
+    });
   return promesse;
 };
 
@@ -54,9 +63,16 @@ export const initMotion = (): void => {
       battement: etatBattement,
       moteurCharge: () => moteur !== null,
       pret: estPret,
-      /* `scene.ts` importe ScrollTrigger : on passe par le moteur pour ne pas
-         retomber GSAP dans le paquet de départ. */
+      revele: estRevele,
+      cas: () => (estPret() ? contextePret().cas : null),
+      /* `scene.ts` et `masque.ts` importent GSAP : on passe par le moteur pour
+         ne pas le faire retomber dans le paquet de départ. */
       scenes: () => moteur?.compterScenes() ?? null,
+      masquageAutorise: () => moteur?.masquageAutorise() ?? null,
+      masques: () => moteur?.compterMasques() ?? null,
+      /* Siège de test : tente un masque et dit s'il a été accepté. C'est la
+         porte elle-même qu'on éprouve, pas une imitation. */
+      essaiMasque: (sel: string) => moteur?.preparer(sel, { autoAlpha: 0 }) ?? null,
     };
   }
 };

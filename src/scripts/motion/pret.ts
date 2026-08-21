@@ -1,13 +1,20 @@
 /**
  * Le signal « le site peut animer » — source de vérité unique.
  *
- * Il est émis par la dormance, dans `revealSite()`, qui est l'entonnoir des
- * DEUX chemins : loader montré (fin du handoff) et loader jamais montré
- * (chargement sous la grâce de 300 ms). Il n'y a donc pas deux variantes à
- * tenir, juste deux instants d'arrivée.
+ * Émis par la dormance dans `revealSite()`, entonnoir de ses deux chemins :
+ * loader montré (fin du handoff) et loader jamais montré (chargement sous la
+ * grâce de 300 ms). Il ne dépend d'aucun paquet — la dormance est inlinée et
+ * n'attend rien.
  *
- * Il ne dépend d'aucun paquet : la dormance est inlinée et n'attend rien. Le
- * moteur d'animation peut arriver après — les entrées s'accrocheront à lui.
+ * Deux notions distinctes vivent ici, et il ne faut pas les confondre :
+ *
+ *  · `pret`   — on a le droit de jouer une entrée ;
+ *  · `revele` — le contenu est DÉJÀ sous les yeux du visiteur.
+ *
+ * Le second est le garde-fou du moteur différé. Sur cache chaud, le signal
+ * peut partir avant que GSAP soit là : le moteur arrive alors devant une page
+ * déjà lue. Il ne doit rien masquer rétroactivement — on ne reprend jamais ce
+ * qui a été donné.
  */
 
 /**
@@ -20,8 +27,8 @@
  *  · 2 s quand la dormance **n'a pas démarré** (script absent, erreur avant sa
  *    première ligne). Rien ne viendra jamais : on n'a aucune raison d'attendre.
  *
- *  · 9,5 s quand elle tourne. Mesuré : sous un processeur bridé 4×, la dormance
- *    normale rend la main à ~2,65 s — une veille à 2 s la doublerait et
+ *  · 9,5 s quand elle tourne. Mesuré : sous un processeur bridé 6×, la dormance
+ *    normale rend la main à ~2,77 s — une veille à 2 s la doublerait et
  *    couperait toutes les animations précisément sur les appareils lents, ceux
  *    qu'on cherche à ménager. Sa propre veille est à 8 s ; la nôtre se place
  *    après, pour le seul cas où `revealSite()` ne serait jamais atteint.
@@ -29,21 +36,29 @@
 const VEILLE_SANS_DORMANCE_MS = 2000;
 const VEILLE_AVEC_DORMANCE_MS = 9500;
 
+/**
+ * · `loader`     — la dormance a été vue : l'entrée enchaîne sans pause.
+ * · `rapide`     — elle a été sautée (cache chaud) : même timeline, précédée
+ *                  d'un très court souffle pour ne pas partir avant le paint.
+ * · `instantane` — veille déclenchée, ou mouvement réduit : tout est posé,
+ *                  rien ne bouge, y compris si le moteur arrive ensuite.
+ */
+export type Cas = 'loader' | 'rapide' | 'instantane';
+
 export interface Contexte {
-  /** La dormance a-t-elle été vue ? Décide de l'enchaînement de l'entrée. */
-  loader: boolean;
-  /** Tout doit être posé immédiatement, sans mouvement. */
-  instantane: boolean;
+  cas: Cas;
 }
 
 let pret = false;
-let contexte: Contexte = { loader: false, instantane: false };
+let revele = false;
+let contexte: Contexte = { cas: 'rapide' };
 let attentes: Array<(c: Contexte) => void> = [];
 
-const declencher = (c: Contexte) => {
+const declencher = (cas: Cas) => {
   if (pret) return;
   pret = true;
-  contexte = c;
+  revele = true;
+  contexte = { cas };
   const file = attentes;
   attentes = [];
   for (const fn of file) fn(contexte);
@@ -52,8 +67,21 @@ const declencher = (c: Contexte) => {
 /** Vrai dès que l'entrée a le droit de jouer. */
 export const estPret = (): boolean => pret;
 
-/** Le contexte d'arrivée du signal — valable seulement une fois `pret`. */
+/** Le cas d'arrivée du signal — valable seulement une fois `pret`. */
 export const contextePret = (): Contexte => contexte;
+
+/**
+ * Le contenu est-il déjà à l'écran ? On consulte aussi le drapeau posé par la
+ * dormance elle-même : entre sa révélation et l'initialisation de ce module,
+ * la page est visible alors que notre propre `revele` ne l'est pas encore.
+ */
+export const estRevele = (): boolean => revele || window.__ecoPret === true;
+
+/**
+ * La porte du moteur. Fausse dès que le contenu est à l'écran : plus aucun
+ * `gsap.set` masquant n'est permis au-dessus de la ligne de flottaison.
+ */
+export const peutMasquer = (): boolean => !estRevele();
 
 /** Exécute maintenant si le signal est déjà passé, sinon à son arrivée. */
 export const quandPret = (fn: (c: Contexte) => void): void => {
@@ -67,16 +95,17 @@ export const quandPret = (fn: (c: Contexte) => void): void => {
  * suivantes animent donc sans rien attendre.
  */
 export const ecouterPret = (): void => {
-  /* Mouvement réduit : le site est prêt tout de suite, et sans mouvement. */
+  /* Mouvement réduit : prêt tout de suite, et sans mouvement. */
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    declencher({ loader: false, instantane: true });
+    declencher('instantane');
     return;
   }
+  /* La dormance a déjà rendu la main avant que ce module ne se branche. */
   if (window.__ecoPret) {
-    declencher({ loader: false, instantane: false });
+    declencher('rapide');
     return;
   }
-  addEventListener('eco:pret', (e) => declencher({ loader: e.detail.loader, instantane: false }), {
+  addEventListener('eco:pret', (e) => declencher(e.detail.loader ? 'loader' : 'rapide'), {
     once: true,
   });
 
@@ -84,5 +113,5 @@ export const ecouterPret = (): void => {
      synchrone ; ce module, lui, est différé. Si le drapeau manque ici, c'est
      qu'elle ne s'exécutera pas du tout. */
   const veille = window.__okgDormance ? VEILLE_AVEC_DORMANCE_MS : VEILLE_SANS_DORMANCE_MS;
-  setTimeout(() => declencher({ loader: false, instantane: true }), veille);
+  setTimeout(() => declencher('instantane'), veille);
 };

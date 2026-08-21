@@ -17,12 +17,15 @@ import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
 
 import { cederLeBattement } from './battement';
+import { figerAutorisation } from './masque';
 import { enregistrerEases } from './eases';
 import { quandPret } from './pret';
 import { rafraichir, rafraichirApresImages, viderScenes } from './scene';
 
-/* Recette : le comptage des scènes vit derrière le moteur, jamais devant. */
+/* Recette : ce qui compte vit derrière le moteur, jamais devant — importer
+   `scene.ts` ou `masque.ts` depuis le paquet de départ y ferait retomber GSAP. */
 export { compterScenes, scene, sceneDurable } from './scene';
+export { compterMasques, liberer, masquageAutorise, oublier, preparer } from './masque';
 
 let lenis: Lenis | null = null;
 
@@ -30,6 +33,11 @@ let lenis: Lenis | null = null;
 export const defilement = (): Lenis | null => lenis;
 
 export const demarrerMoteur = (): void => {
+  /* Tout premier geste, avant le moindre `gsap.set` : le moteur décide une
+     fois pour toutes s'il est arrivé à temps pour masquer quoi que ce soit.
+     Sur cache chaud sans loader, le signal peut l'avoir précédé. */
+  figerAutorisation();
+
   gsap.registerPlugin(ScrollTrigger, SplitText, CustomEase);
   enregistrerEases();
 
