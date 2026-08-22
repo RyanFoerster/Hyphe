@@ -20,7 +20,7 @@ import gsap from 'gsap';
 import SplitText from 'gsap/SplitText';
 
 import { easeApparition, SETTLE, TRACE } from './eases';
-import { masquageAutorise, oublier, preparer } from './masque';
+import { oublier, peutPreparer, preparer } from './masque';
 import { DUREE, REDRESSEMENT, STAGGER, duree, type Voix } from './tokens';
 
 /** Le surlignage de télémétrie, éteint. */
@@ -121,7 +121,7 @@ export const revelerTexte = (
 ): Revelation | null => {
   /* La porte se consulte AVANT de toucher au DOM : découper une page déjà lue
      provoquerait un reflux visible pour rien. */
-  if (!cible || !masquageAutorise()) return null;
+  if (!cible || !peutPreparer(cible)) return null;
 
   const morceaux: HTMLElement[] = [];
   const defaire: Array<() => void> = [];
