@@ -18,7 +18,7 @@ import gsap from 'gsap';
 
 import { scene } from './scene';
 import { revelerFilet, revelerGroupe, revelerPlanche, revelerTexte, type Revelation } from './texte';
-import { DECLENCHEMENT, STAGGER, duree, voixCourante, type Voix } from './tokens';
+import { DECLENCHEMENT, SEPARATION_PHRASE, STAGGER, duree, voixCourante, type Voix } from './tokens';
 
 type Geste = 'texte' | 'titre' | 'filet' | 'planche' | 'groupe';
 
@@ -77,12 +77,33 @@ export const monterCatalogue = (): (() => void) => {
   const cibles = [...document.querySelectorAll<HTMLElement>('[data-reveler]')]
     .filter((el) => !el.closest('[data-hero-entree]'));
 
-  const phrases = new Map<Element, HTMLElement[]>();
+  /*
+   * Une section, puis la proximité. Grouper toute une section haute en une
+   * seule phrase ferait jouer ses membres du bas hors de l'écran — mesuré
+   * jusqu'à 2,2 hauteurs d'écran sous le haut de section sur l'accueil. On
+   * coupe donc dès qu'un membre sort de la bande visible au déclenchement.
+   */
+  const hautAbsolu = (el: HTMLElement) => el.getBoundingClientRect().top + scrollY;
+  const separation = SEPARATION_PHRASE * innerHeight;
+
+  const phrases: HTMLElement[][] = [];
+  const parSection = new Map<Element, HTMLElement[]>();
   for (const el of cibles) {
     const cle = sectionDe(el);
-    const liste = phrases.get(cle);
+    const liste = parSection.get(cle);
     if (liste) liste.push(el);
-    else phrases.set(cle, [el]);
+    else parSection.set(cle, [el]);
+  }
+  for (const membres of parSection.values()) {
+    let courante: HTMLElement[] = [];
+    let ancre = 0;
+    for (const el of membres) {
+      const y = hautAbsolu(el);
+      if (!courante.length) { courante = [el]; ancre = y; continue; }
+      if (y - ancre > separation) { phrases.push(courante); courante = [el]; ancre = y; }
+      else courante.push(el);
+    }
+    if (courante.length) phrases.push(courante);
   }
 
   const revelations: Revelation[] = [];
@@ -91,7 +112,10 @@ export const monterCatalogue = (): (() => void) => {
   const enAttente: Array<() => void> = [];
   let enVol = 0;
 
-  for (const [section, membres] of phrases) {
+  for (const membres of phrases) {
+    /* Le déclencheur est le PREMIER membre de la phrase, pas la section : une
+       section haute en compte plusieurs, chacune doit partir à sa hauteur. */
+    const ancreDom = membres[0]!;
     /* Chaque phrase rend la main dès qu'elle est dite : découpes défaites,
        `will-change` retiré. Le laisser en place immobiliserait une couche de
        composition par élément révélé, sur toute la durée de la visite. */
@@ -137,7 +161,7 @@ export const monterCatalogue = (): (() => void) => {
 
     declencheurs.push(
       scene({
-        trigger: section,
+        trigger: ancreDom,
         /* L'élément est déjà franchement entré quand le mouvement démarre.
            Une section déjà à l'écran au montage part immédiatement — c'est ce
            qui remplace le fondu de route au-dessus de la ligne de flottaison. */

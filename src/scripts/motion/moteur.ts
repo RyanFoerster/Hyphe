@@ -50,6 +50,12 @@ export const demarrerMoteur = (): void => {
   gsap.registerPlugin(ScrollTrigger, SplitText, CustomEase);
   enregistrerEases();
 
+  /* Recette : `?markers=1` dessine les lignes de déclenchement à l'écran.
+     Un réglage de seuil se juge en le voyant, pas en le calculant. */
+  if (new URLSearchParams(location.search).get('markers') === '1') {
+    ScrollTrigger.defaults({ markers: true });
+  }
+
   /* Un onglet en arrière-plan rend des deltas énormes au retour. On plafonne
      plutôt que de laisser les timelines sauter d'un bloc. */
   gsap.ticker.lagSmoothing(500, 33);

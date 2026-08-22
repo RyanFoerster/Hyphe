@@ -62,13 +62,40 @@ export const STAGGER = {
 } as const;
 
 /**
- * Déclenchement. À 85 % l'élément effleurait le bas de l'écran : avec des
- * durées longues, le geste était fini avant d'être confortablement dans le
- * champ. À 92 %, il est franchement entré quand le mouvement démarre.
+ * Déclenchement.
  *
- * Ce n'est pas une constante sacrée, c'est un réglage — mais il n'existe qu'ici.
+ * **Sens de la valeur**, parce que c'est là qu'on s'est trompés : `top X%`
+ * place le HAUT de l'élément à X % **sous le bord haut** du viewport. Donc
+ * X grand = bas de l'écran = déclenche TÔT (l'élément effleure à peine) ;
+ * X petit = haut de l'écran = déclenche TARD (l'élément est franchement entré).
+ *
+ * À 72 %, plus d'un quart de la hauteur d'écran est déjà occupé par l'élément
+ * quand le mouvement démarre.
+ *
+ * `?seuil=65`, `?seuil=80`… permet de le caler au ressenti sans reconstruire.
+ * C'est un réglage de perception : il ne se décide pas sur des chiffres.
  */
-export const DECLENCHEMENT = 'top 92%';
+const SEUIL_DEFAUT = 72;
+
+const seuilDemande = (): number => {
+  if (typeof location === 'undefined') return SEUIL_DEFAUT;
+  const v = Number(new URLSearchParams(location.search).get('seuil'));
+  return Number.isFinite(v) && v > 0 && v <= 100 ? v : SEUIL_DEFAUT;
+};
+
+export const SEUIL = seuilDemande();
+
+/**
+ * Au moment du déclenchement, la bande réellement visible d'une section va de
+ * `SEUIL` au bas de l'écran — soit (100 − SEUIL) % de hauteur. Un membre situé
+ * plus bas que ça joue hors champ : sa révélation est perdue.
+ *
+ * Les phrases sont donc découpées à cette distance. Une section haute en forme
+ * plusieurs, chacune déclenchée par son propre premier membre. Les éléments
+ * proches restent groupés — c'est toujours une phrase, pas un élément isolé.
+ */
+export const SEPARATION_PHRASE = (100 - SEUIL) / 100;
+export const DECLENCHEMENT = `top ${SEUIL}%`;
 
 /**
  * Le retour n'est pas une arrivée : le hero se pose au lieu de pousser.
