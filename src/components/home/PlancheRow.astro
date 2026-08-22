@@ -16,8 +16,11 @@ const href = `/herbier/${specimen.slug}`;
 const telemeta = `STACK ${specimen.stack} · BUNDLE ${specimen.bundle} · LIGHTHOUSE ${specimen.lighthouse}`;
 ---
 
-<article class="rule-double pt-7">
-  <div class="mb-7 flex flex-wrap justify-between gap-4 text-2xs tracking-wide">
+<article class="pt-7">
+  {/* Le filet double se TRACE au lieu d'être une bordure : une bordure est là
+      avant tout le monde, et quatre doubles lignes scandaient du vide. */}
+  <span aria-hidden="true" data-reveler="filet" class="block" style="border-top:var(--rule-double)"></span>
+  <div data-reveler="texte" class="mt-7 mb-7 flex flex-wrap justify-between gap-4 text-2xs tracking-wide">
     <span class="flex items-center gap-3">
       <span class="text-spore">SPÉCIMEN Nº {specimen.num}</span>
       <LivrableTag livrable={specimen.livrable} />
@@ -33,7 +36,7 @@ const telemeta = `STACK ${specimen.stack} · BUNDLE ${specimen.bundle} · LIGHTH
   <div
     class="grid items-center gap-7 lg:grid-cols-[minmax(180px,1fr)_minmax(320px,2.4fr)_minmax(180px,1fr)]"
   >
-    <div class="hidden flex-col gap-11 lg:flex">
+    <div class="hidden flex-col gap-11 lg:flex" data-reveler="texte">
       <PlancheAnnotation annotation={annotationsPlanche[0]!} align="right" />
       <PlancheAnnotation annotation={annotationsPlanche[1]!} align="right" />
     </div>
@@ -48,7 +51,7 @@ const telemeta = `STACK ${specimen.stack} · BUNDLE ${specimen.bundle} · LIGHTH
       />
     </a>
 
-    <div class="hidden flex-col gap-11 lg:flex">
+    <div class="hidden flex-col gap-11 lg:flex" data-reveler="texte">
       <PlancheAnnotation annotation={annotationsPlanche[2]!} align="left" />
       <PlancheAnnotation annotation={annotationsPlanche[3]!} align="left" />
     </div>

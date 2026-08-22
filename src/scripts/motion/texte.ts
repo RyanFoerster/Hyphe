@@ -53,8 +53,11 @@ export interface Revelation {
 /** Enveloppe un élément dans un masque à débordement caché. */
 const enmasquer = (el: HTMLElement): (() => void) => {
   const masque = document.createElement('span');
+  /* Clip vertical seulement : une puce posée en marge négative (annotations du
+     manifesto) ne doit pas être tranchée par le masque. Et aucun style propre —
+     le masque est une fenêtre, pas un décor. */
   masque.style.cssText =
-    `display:block;overflow:hidden;padding-bottom:${GARDE_JAMBAGE};margin-bottom:-${GARDE_JAMBAGE};`;
+    `display:block;overflow:clip;overflow-x:visible;padding-bottom:${GARDE_JAMBAGE};margin-bottom:-${GARDE_JAMBAGE};`;
   el.parentNode?.insertBefore(masque, el);
   masque.appendChild(el);
   return () => {
@@ -75,6 +78,26 @@ const depart = (voix: Voix, encre: boolean): gsap.TweenVars => ({
   opacity: voix === 'nat' && encre ? REDRESSEMENT.encreDepart : 1,
   ...(voix === 'tel' ? { backgroundColor: SURLIGNE } : {}),
 });
+
+/**
+ * Colmate un état préparé : descend chaque morceau du dépassement qui reste
+ * visible dans la fenêtre de son masque.
+ *
+ * `yPercent: 100` descend l'élément de SA hauteur — mais la fenêtre du masque
+ * est plus haute que lui : la garde des jambages (padding-bottom), et pour un
+ * bloc enveloppé, ses propres marges. Mesuré : 3 à 19 px de texte restaient
+ * visibles à l'état préparé — l'échafaudage exposé. Un élément non révélé doit
+ * être VISUELLEMENT ABSENT ; l'espace, lui, reste réservé (le masque garde sa
+ * hauteur, rien ne bouge dans le flux).
+ */
+const colmater = (morceaux: HTMLElement[]): void => {
+  for (const el of morceaux) {
+    const masque = el.parentElement;
+    if (!masque) continue;
+    const fuite = masque.getBoundingClientRect().bottom - el.getBoundingClientRect().top;
+    if (fuite > 0.1) gsap.set(el, { y: fuite + 0.75 });
+  }
+};
 
 /**
  * `will-change` se pose au démarrage du geste, jamais à la préparation.
@@ -128,6 +151,7 @@ export const revelerTexte = (
     for (const undo of defaire) undo();
     return null;
   }
+  colmater(morceaux);
 
   /* Le stagger suit la voix comme la durée : un seul squelette temporel,
      joué 25 % plus vite en télémétrie — pas un squelette à deux vitesses. */
@@ -137,6 +161,7 @@ export const revelerTexte = (
 
   tl.to(morceaux, {
     yPercent: 0,
+    y: 0,
     rotate: 0,
     duration: d,
     ease: easeApparition(voix),
@@ -206,11 +231,22 @@ export const revelerGroupe = (
  * L'origine est à gauche : le trait part d'où commence la lecture.
  */
 export const revelerFilet = (cible: Element | null, voix: Voix): Revelation | null => {
-  if (!cible || !preparer(cible, { scaleX: 0, transformOrigin: '0% 50%' })) {
-    return null;
-  }
+  if (!cible) return null;
+  /* Le trait part d'où commence la lecture : de gauche pour un filet couché,
+     du haut pour un rail dressé (annotations de marge). Même geste, deux
+     orientations — décidées par la forme de l'élément, pas par un réglage. */
+  const r = cible.getBoundingClientRect();
+  const vertical = r.height > r.width;
+  const depart = vertical
+    ? { scaleY: 0, transformOrigin: '50% 0%' }
+    : { scaleX: 0, transformOrigin: '0% 50%' };
+  if (!preparer(cible, depart)) return null;
   const tl = gsap.timeline({ onStart: armer(cible) });
-  tl.to(cible, { scaleX: 1, duration: duree(DUREE.filet, voix), ease: TRACE }, 0);
+  tl.to(cible, {
+    ...(vertical ? { scaleY: 1 } : { scaleX: 1 }),
+    duration: duree(vertical ? DUREE.filet * 1.6 : DUREE.filet, voix),
+    ease: TRACE,
+  }, 0);
   return {
     timeline: tl,
     rendre: () => {
@@ -229,26 +265,43 @@ export const revelerFilet = (cible: Element | null, voix: Voix): Revelation | nu
  * pas un second.
  */
 export const revelerPlanche = (cadre: Element | null, voix: Voix): Revelation | null => {
-  const image = cadre?.querySelector<HTMLElement>('.plate-img, img');
-  if (!image || !preparer(image, { yPercent: 100, scale: 1.06 })) {
+  if (!cadre) return null;
+  const el = cadre as HTMLElement;
+  const image = el.querySelector<HTMLElement>('.plate-img, img');
+  /* Le CADRE entier se lève — fond, bordure, légende et image d'un seul
+     tenant : un cadre teinté qui attend son image est de l'échafaudage, et un
+     élément non révélé doit être visuellement absent. Le masque est le nôtre,
+     l'`overflow:hidden` du cadre ne servant qu'à son image interne. */
+  const defaire = enmasquer(el);
+  if (!preparer(el, { yPercent: 100 })) {
+    defaire();
     return null;
   }
-  const tl = gsap.timeline({ onStart: armer(image) });
-  tl.to(image, {
+  colmater([el]);
+  /* Le léger recentrage interne (1,06 → 1) reste : sans lui, la planche est
+     une vitre qu'on fait coulisser, pas une matière qui se pose. */
+  if (image) gsap.set(image, { scale: 1.06 });
+  const tl = gsap.timeline({ onStart: armer(el) });
+  tl.to(el, {
     yPercent: 0,
+    y: 0,
     duration: duree(DUREE.masque, voix),
     ease: easeApparition(voix),
   }, 0);
-  tl.to(image, {
-    scale: 1,
-    duration: duree(DUREE.masque, voix) * 1.15,
-    ease: SETTLE,
-  }, 0);
+  if (image) {
+    tl.to(image, {
+      scale: 1,
+      duration: duree(DUREE.masque, voix) * 1.15,
+      ease: SETTLE,
+    }, 0);
+  }
   return {
     timeline: tl,
     rendre: () => {
-      oublier(image);
-      gsap.set(image, { clearProps: 'all' });
+      oublier(el);
+      gsap.set(el, { clearProps: 'all' });
+      if (image) gsap.set(image, { clearProps: 'scale' });
+      defaire();
     },
   };
 };

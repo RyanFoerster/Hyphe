@@ -27,7 +27,9 @@ const { specimen } = Astro.props;
       sizes="(max-width: 1000px) 100vw, 620px"
     />
 
-    <div class="flex flex-col gap-7">
+    {/* Les annotations appartiennent à la planche : sans ça, elles flottent
+        à côté d'un cadre encore invisible — l'échafaudage inverse. */}
+    <div class="flex flex-col gap-7" data-reveler="texte">
       {
         specimen.morpho.map((m) => (
           <DualText

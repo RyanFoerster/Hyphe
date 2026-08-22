@@ -10,7 +10,10 @@ const { temoignage } = Astro.props;
 ---
 
 <section class="mt-22">
-  <div class="stack">
+  {/* L'unité de révélation est le STACK : les deux voix montent ensemble sous
+    un seul masque. Taguer une couche seule animait l'aria-hidden en
+    naturaliste et laissait le `src:` orphelin en télémétrie. */}
+  <div class="stack" data-reveler="texte">
     <blockquote class="fade-nat m-0 border-l-[3px] border-double border-nat-700 pl-6">
       <p
         class="m-0 font-display text-xl italic leading-snug text-nat-100"
@@ -27,7 +30,7 @@ const { temoignage } = Astro.props;
       class="fade-tel m-0 rounded-input border border-nat-800 bg-bg-1 px-6 py-5 text-xs text-nat-200"
       aria-hidden="true"
     >
-      <p data-reveler="texte" class="m-0">
+      <p class="m-0">
         <span class="text-nat-400">[{temoignage.ts}]</span>
         <span class="text-tele-green">feedback.client</span> — {temoignage.texte}
       </p>
