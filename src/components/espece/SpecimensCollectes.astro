@@ -12,9 +12,9 @@ const { specimens, accent } = Astro.props;
 ---
 
 <section class="rule-double mt-20 pt-8">
-  <div class="mb-7 text-2xs tracking-wider uppercase" style={`color:${accent}`}>
+  <h2 class="titre-etiquette mb-7 text-2xs tracking-wider uppercase" style={`color:${accent}`}>
     Spécimens collectés
-  </div>
+  </h2>
   <div class="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-5">
     {
       specimens.map((s) => (

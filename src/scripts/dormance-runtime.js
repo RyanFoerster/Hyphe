@@ -21,8 +21,8 @@
   'use strict';
   // Une seule dormance par fenêtre : les échanges de vue du ClientRouter ne
   // ré-exécutent pas ce script, et ce garde couvre le reste (bfcache inclus).
-  if (window.__okgDormance) return;
-  window.__okgDormance = true;
+  if (window.__hypheDormance) return;
+  window.__hypheDormance = true;
 
   var doc = document;
   var html = doc.documentElement;
@@ -37,7 +37,7 @@
   // prefers-reduced-motion garde la priorité : jamais de dormance forcée.
   var seen = false;
   try {
-    seen = sessionStorage.getItem('dormance-vue') === '1';
+    seen = sessionStorage.getItem('hyphe-dormance') === '1';
   } catch (e) {
     /* sessionStorage indisponible : on retombe sur le comportement honnête */
   }
@@ -410,7 +410,7 @@
     revealed = true;
     finished = true;
     try {
-      sessionStorage.setItem('dormance-vue', '1');
+      sessionStorage.setItem('hyphe-dormance', '1');
     } catch (e) {
       /* tant pis : la prochaine visite rejouera la dormance */
     }

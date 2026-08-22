@@ -197,6 +197,21 @@
     margin: 0;
   }
 
+  /*
+   * Une étiquette de bloc prend le rôle sémantique d'un titre sans en prendre
+   * l'habit : la règle ci-dessus lui imposerait le display, le poids 560 et les
+   * axes WONK/SOFT. On lui rend la voix de l'instrument — celle du corps de
+   * page. Le rôle change dans l'arbre d'accessibilité, pas un pixel à l'écran.
+   */
+  h1.titre-etiquette,
+  h2.titre-etiquette,
+  h3.titre-etiquette {
+    font-family: var(--font-mono);
+    font-variation-settings: normal;
+    font-weight: 400;
+    line-height: var(--leading-body);
+  }
+
   a {
     color: var(--color-nat-300);
     transition: color var(--duration-base) var(--ease-eco);

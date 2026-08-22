@@ -11,9 +11,9 @@ const { resultats } = Astro.props;
 ---
 
 <Card as="section" class="mt-22 px-10 py-12">
-  <div class="mb-8 text-2xs tracking-wider uppercase text-nat-300">
+  <h2 class="titre-etiquette mb-8 text-2xs tracking-wider uppercase text-nat-300">
     Résultats — invariants au point de vue
-  </div>
+  </h2>
   <div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-8">
     {
       resultats.map((r) => (

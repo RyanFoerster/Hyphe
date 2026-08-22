@@ -16,7 +16,7 @@
  * composants ; `--mixp` est sa version en pourcentage, pour `color-mix()`.
  */
 (function () {
-  var STORAGE_KEY = 'okg-mix';
+  var STORAGE_KEY = 'hyphe-loupe';
 
   /** Régime papier : strictement noir et blanc — aucune couleur, aucune lueur. */
   var PAPER = {

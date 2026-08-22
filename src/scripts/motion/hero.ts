@@ -16,9 +16,9 @@
  */
 import gsap from 'gsap';
 
-import { quandPret, type Cas } from './pret';
+import { contextePret, quandPret, type Cas } from './pret';
 import { revelerGroupe, revelerTexte, type Revelation } from './texte';
-import { RETOUR_FACTEUR, SOUFFLE_SANS_LOADER, duree, voixCourante } from './tokens';
+import { RETOUR_FACTEUR, duree, voixCourante } from './tokens';
 
 /**
  * Les départs, en secondes, exprimés dans la voix naturaliste — ils passent
@@ -53,7 +53,10 @@ export const monterHero = (): (() => void) => {
   if (!racine) return () => {};
 
   const voix = voixCourante();
-  const retour = dejaEntre;
+  /* Deux chemins mènent au retour : une navigation interne (ce module a déjà
+     joué), ou une dormance sautée — le cache chaud dit que le visiteur a déjà
+     vu le site dans cette session. */
+  const retour = dejaEntre || contextePret().cas === 'retour';
   const prise = (nom: string) => racine.querySelector<HTMLElement>(`[data-hero="${nom}"]`);
 
   /* La voix est lue une fois, à la construction. Basculer la loupe pendant
@@ -90,7 +93,6 @@ export const monterHero = (): (() => void) => {
      blocs ne bouge pas. Il n'existe toujours qu'une timeline. */
   if (retour) tl.timeScale(RETOUR_FACTEUR);
 
-  let appel: gsap.core.Tween | null = null;
   quandPret((c) => {
     const cas: Cas = retour ? 'retour' : c.cas;
     casHero = cas;
@@ -101,13 +103,12 @@ export const monterHero = (): (() => void) => {
       return;
     }
     dejaEntre = true;
-    /* Le seul écart entre les points d'entrée tient dans cette ligne. */
-    const souffle = cas === 'rapide' ? SOUFFLE_SANS_LOADER : 0;
-    appel = souffle ? gsap.delayedCall(souffle, () => tl.play()) : (tl.play(), null);
+    /* Plus aucun délai : l'entrée doit chevaucher la pose de la spore, jamais
+       lui succéder — et un retour n'a rien à attendre non plus. */
+    tl.play();
   });
 
   return () => {
-    appel?.kill();
     tl.kill();
     rendre();
   };

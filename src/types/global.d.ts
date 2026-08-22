@@ -17,7 +17,7 @@ interface Window {
   /** Le canevas a dessiné son premier frame (posé avant l'évènement eco:ready). */
   __ecoReady?: boolean;
   /** La dormance a déjà eu lieu dans cette fenêtre — jamais deux fois. */
-  __okgDormance?: boolean;
+  __hypheDormance?: boolean;
   /** Le site a le droit d'animer. Posé avec `eco:pret`, pour qui arrive après. */
   __ecoPret?: boolean;
   /** Poignée de recette, en développement seulement. */

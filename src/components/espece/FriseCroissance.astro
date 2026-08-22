@@ -12,9 +12,9 @@ const { frise, accent } = Astro.props;
 ---
 
 <section class="rule-double mt-20 pt-8">
-  <div class="mb-7 text-2xs tracking-wider uppercase" style={`color:${accent}`}>
+  <h2 class="titre-etiquette mb-7 text-2xs tracking-wider uppercase" style={`color:${accent}`}>
     Parcours — frise de croissance
-  </div>
+  </h2>
   <ol class="m-0 flex list-none flex-col gap-8 border-l border-nat-700 p-0">
     {
       frise.map((etape) => (

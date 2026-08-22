@@ -38,17 +38,17 @@ const VEILLE_AVEC_DORMANCE_MS = 9500;
 
 /**
  * · `loader`     — la dormance a été vue : l'entrée enchaîne sans pause.
- * · `rapide`     — elle a été sautée (cache chaud) : même timeline, précédée
- *                  d'un très court souffle pour ne pas partir avant le paint.
  * · `instantane` — veille déclenchée, ou mouvement réduit : tout est posé,
  *                  rien ne bouge, y compris si le moteur arrive ensuite.
- * · `retour`     — l'entrée a déjà eu lieu dans cette fenêtre et le visiteur
- *                  revient par une navigation interne. Ce cas ne vient PAS du
- *                  signal, qui ne se produit qu'une fois : c'est le hero qui le
- *                  décide au montage. Un rechargement dur ouvre une nouvelle
- *                  fenêtre, donc une nouvelle arrivée — comme la dormance.
+ * · `retour`     — le visiteur ne fait que repasser : soit par une navigation
+ *                  interne (le hero le décide au montage), soit parce que la
+ *                  dormance a été sautée — un cache chaud veut dire qu'il a
+ *                  déjà vu le site dans cette session. Dans les deux cas c'est
+ *                  la même règle que le fruit qu'on repose : on ne recommence
+ *                  pas le cérémonial. Un rechargement à froid, lui, ouvre une
+ *                  vraie arrivée.
  */
-export type Cas = 'loader' | 'rapide' | 'instantane' | 'retour';
+export type Cas = 'loader' | 'instantane' | 'retour';
 
 export interface Contexte {
   cas: Cas;
@@ -56,7 +56,7 @@ export interface Contexte {
 
 let pret = false;
 let revele = false;
-let contexte: Contexte = { cas: 'rapide' };
+let contexte: Contexte = { cas: 'retour' };
 let attentes: Array<(c: Contexte) => void> = [];
 
 const declencher = (cas: Cas) => {
@@ -107,16 +107,16 @@ export const ecouterPret = (): void => {
   }
   /* La dormance a déjà rendu la main avant que ce module ne se branche. */
   if (window.__ecoPret) {
-    declencher('rapide');
+    declencher('retour');
     return;
   }
-  addEventListener('eco:pret', (e) => declencher(e.detail.loader ? 'loader' : 'rapide'), {
+  addEventListener('eco:pret', (e) => declencher(e.detail.loader ? 'loader' : 'retour'), {
     once: true,
   });
 
   /* La dormance est inlinée en tête de <body> et pose son drapeau de façon
      synchrone ; ce module, lui, est différé. Si le drapeau manque ici, c'est
      qu'elle ne s'exécutera pas du tout. */
-  const veille = window.__okgDormance ? VEILLE_AVEC_DORMANCE_MS : VEILLE_SANS_DORMANCE_MS;
+  const veille = window.__hypheDormance ? VEILLE_AVEC_DORMANCE_MS : VEILLE_SANS_DORMANCE_MS;
   setTimeout(() => declencher('instantane'), veille);
 };
