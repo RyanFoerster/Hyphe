@@ -88,6 +88,7 @@ export const monterCatalogue = (): (() => void) => {
   const revelations: Revelation[] = [];
   const declencheurs: ScrollTriggerType[] = [];
   const timelines: gsap.core.Timeline[] = [];
+  const enAttente: Array<() => void> = [];
   let enVol = 0;
 
   for (const [section, membres] of phrases) {
@@ -117,23 +118,49 @@ export const monterCatalogue = (): (() => void) => {
     if (!pose) continue;
     timelines.push(tl);
 
+    /* Dire la phrase, ou la poser si l'air est déjà plein. Un seul chemin,
+       partagé par le déclencheur de section et le repli de bas de page. */
+    let dite = false;
+    const dire = () => {
+      if (dite) return;
+      dite = true;
+      if (enVol >= EN_VOL_MAX) {
+        /* Trop de monde en l'air : celle-ci se pose sans jouer. */
+        tl.progress(1, true);
+        for (const r of siennes) r.rendre();
+        return;
+      }
+      enVol++;
+      tl.play();
+    };
+    enAttente.push(dire);
+
     declencheurs.push(
       scene({
         trigger: section,
-        /* L'élément est déjà en train d'être lu quand il finit d'apparaître.
+        /* L'élément est déjà franchement entré quand le mouvement démarre.
            Une section déjà à l'écran au montage part immédiatement — c'est ce
            qui remplace le fondu de route au-dessus de la ligne de flottaison. */
         start: DECLENCHEMENT,
         once: true,
+        onEnter: dire,
+      }),
+    );
+  }
+
+  /*
+   * Repli de fin de course. À 92 %, une section trop proche du pied ne voit
+   * jamais son seuil : la page n'a plus assez de hauteur pour l'amener là.
+   * Quand le scroll touche le fond, tout ce qui attend encore est dit.
+   */
+  if (enAttente.length) {
+    declencheurs.push(
+      scene({
+        trigger: document.body,
+        start: 'bottom bottom',
+        once: true,
         onEnter: () => {
-          if (enVol >= EN_VOL_MAX) {
-            /* Trop de monde en l'air : celle-ci se pose sans jouer. */
-            tl.progress(1, true);
-            for (const r of siennes) r.rendre();
-            return;
-          }
-          enVol++;
-          tl.play();
+          for (const dire of enAttente) dire();
         },
       }),
     );

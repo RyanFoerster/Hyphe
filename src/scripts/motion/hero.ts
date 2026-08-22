@@ -18,7 +18,7 @@ import gsap from 'gsap';
 
 import { contextePret, quandPret, type Cas } from './pret';
 import { revelerGroupe, revelerTexte, type Revelation } from './texte';
-import { RETOUR_FACTEUR, duree, voixCourante } from './tokens';
+import { HERO_FACTEUR, RETOUR_FACTEUR, duree, voixCourante } from './tokens';
 
 /**
  * Les départs, en secondes, exprimés dans la voix naturaliste — ils passent
@@ -31,10 +31,10 @@ import { RETOUR_FACTEUR, duree, voixCourante } from './tokens';
  */
 const SCENARIO = {
   sourcil: 0,
-  titre: 0.15,
-  ancre: 0.9,
-  baseline: 1.4,
-  actions: 1.95,
+  titre: 0.55,
+  ancre: 1.4,
+  baseline: 2.25,
+  actions: 2.95,
 } as const;
 
 /**
@@ -88,10 +88,11 @@ export const monterHero = (): (() => void) => {
   const tl = gsap.timeline({ paused: true, onComplete: rendre });
   for (const [r, position] of vivantes) tl.add(r.timeline, position);
 
-  /* Un retour se POSE, il ne pousse pas : la même timeline, resserrée d'un
-     seul facteur — durées et staggers ensemble, donc le rapport entre les
-     blocs ne bouge pas. Il n'existe toujours qu'une timeline. */
-  if (retour) tl.timeScale(RETOUR_FACTEUR);
+  /* Le hero est joué plus vite que le catalogue : cinq blocs aux durées de
+     section feraient 4,3 s. Et un retour se POSE au lieu de pousser — même
+     timeline, resserrée encore. Durées et staggers bougent ensemble, donc le
+     rapport entre les blocs ne change jamais. Il n'existe qu'une timeline. */
+  tl.timeScale(HERO_FACTEUR * (retour ? RETOUR_FACTEUR : 1));
 
   quandPret((c) => {
     const cas: Cas = retour ? 'retour' : c.cas;

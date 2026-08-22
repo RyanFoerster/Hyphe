@@ -16,20 +16,36 @@ export type Voix = 'nat' | 'tel';
 /** La télémétrie parle 25 % plus vite. Une seule constante, partout. */
 export const FACTEUR_TEL = 0.75;
 
-/** Durées de base, en secondes, exprimées dans la voix naturaliste. */
+/**
+ * Recette : `?glisse=lent` étire tout le mouvement de 25 %, pour comparer deux
+ * réglages sur la même page sans reconstruire. Même esprit que `?loader=slow`.
+ */
+export const FACTEUR_GLISSE =
+  typeof location !== 'undefined' && new URLSearchParams(location.search).get('glisse') === 'lent'
+    ? 1.25
+    : 1;
+
+/**
+ * Durées de base, en secondes, exprimées dans la voix naturaliste.
+ *
+ * Réglées pour un GLISSEMENT, pas pour une apparition : le geste doit avoir le
+ * temps de se voir. Avec un stagger resté à 70 ms et des lignes à 1,35 s, les
+ * lignes se recouvrent à plus de 90 % — c'est ce recouvrement, plus que la
+ * durée elle-même, qui donne la sensation de flux continu.
+ */
 export const DUREE = {
   /** Une ligne de texte qui monte sous son masque. */
-  ligne: 0.9,
+  ligne: 1.35,
   /** Un mot de grand titre. */
-  mot: 1.05,
+  mot: 1.5,
   /** Un masque d'image qui se lève. */
-  masque: 1.15,
+  masque: 1.6,
   /** Un filet qui se trace, d'un bord à l'autre. */
-  filet: 0.4,
+  filet: 0.55,
   /** Un compteur qui rejoint sa valeur. */
   chiffre: 1.4,
-  /** La montée d'encre finale, en fin de révélation naturaliste. */
-  encre: 0.2,
+  /** La montée d'encre : elle se termine AVEC le mouvement, jamais avant. */
+  encre: 0.45,
 } as const;
 
 /**
@@ -46,10 +62,13 @@ export const STAGGER = {
 } as const;
 
 /**
- * Déclenchement : l'élément est déjà en cours de lecture quand il finit
- * d'apparaître. Jamais le centre de l'écran — ça se ressent comme de la lenteur.
+ * Déclenchement. À 85 % l'élément effleurait le bas de l'écran : avec des
+ * durées longues, le geste était fini avant d'être confortablement dans le
+ * champ. À 92 %, il est franchement entré quand le mouvement démarre.
+ *
+ * Ce n'est pas une constante sacrée, c'est un réglage — mais il n'existe qu'ici.
  */
-export const DECLENCHEMENT = 'top 85%';
+export const DECLENCHEMENT = 'top 92%';
 
 /**
  * Le retour n'est pas une arrivée : le hero se pose au lieu de pousser.
@@ -58,7 +77,17 @@ export const DECLENCHEMENT = 'top 85%';
  * deviennent 1,14 s en naturaliste, 2,14 s deviennent 0,86 s en télémétrie :
  * le ratio des deux voix tient de lui-même.
  */
-export const RETOUR_FACTEUR = 2.5;
+export const RETOUR_FACTEUR = 2.44;
+
+/**
+ * Le hero est une phrase composée de cinq blocs : aux durées du catalogue il
+ * durerait 4,3 s. On ne l'allonge pas dans les mêmes proportions — il est joué
+ * plus vite, ce qui le ramène sous 3,2 s. Le scénario, lui, est déjà au plus
+ * serré que permet la règle de densité — un bloc ne peut pas partir avant que
+ * l'avant-avant-dernier soit fini, sinon trois choses bougent ensemble. C'est
+ * donc le facteur qui absorbe, pas les silences.
+ */
+export const HERO_FACTEUR = 1.4;
 
 /** Parallaxe : fonds et éléments décoratifs seulement, jamais le texte. */
 export const PARALLAXE_MAX = 0.08;
@@ -73,7 +102,7 @@ export const REDRESSEMENT = {
 
 /** Traduit une durée naturaliste dans la voix demandée. */
 export const duree = (base: number, voix: Voix): number =>
-  voix === 'tel' ? base * FACTEUR_TEL : base;
+  (voix === 'tel' ? base * FACTEUR_TEL : base) * FACTEUR_GLISSE;
 
 /**
  * La voix du moment, lue sur la loupe. Elle est lue **à la construction** de

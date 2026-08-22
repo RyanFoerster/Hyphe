@@ -11,7 +11,15 @@
  */
 import CustomEase from 'gsap/CustomEase';
 
-/** Croissance naturaliste : démarre à peine, s'installe longuement. */
+/**
+ * Croissance naturaliste — un glissement, pas une poussée.
+ *
+ * La courbe part avec de la vitesse déjà acquise, puis passe l'essentiel de son
+ * temps dans l'approche finale : à 20 % du temps écoulé, plus de 80 % de la
+ * distance est faite, et le dernier dixième de distance occupe près de la
+ * moitié de la durée. C'est ce déséquilibre qui donne le fluide — une courbe
+ * symétrique, même longue, ne donnerait que du lent.
+ */
 export const GROWTH = 'eco.growth';
 /** La pose finale — ce qui rejoint sa place sans jamais la dépasser. */
 export const SETTLE = 'eco.settle';
@@ -29,7 +37,7 @@ export const enregistrerEases = (): void => {
   if (fait) return;
   fait = true;
 
-  CustomEase.create(GROWTH, 'M0,0 C0.34,0 0.1,1 1,1');
+  CustomEase.create(GROWTH, 'M0,0 C0.19,0.92 0.28,1 1,1');
   CustomEase.create(SETTLE, 'M0,0 C0.25,0.1 0.05,1 1,1');
   CustomEase.create(SIGNAL, 'M0,0 C0.05,0.7 0.1,1 1,1');
   CustomEase.create(TRACE, 'M0,0 C0.3,0.4 0.2,1 1,1');
