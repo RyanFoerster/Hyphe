@@ -74,8 +74,18 @@ const depart = (voix: Voix, encre: boolean): gsap.TweenVars => ({
   transformOrigin: '0% 100%',
   opacity: voix === 'nat' && encre ? REDRESSEMENT.encreDepart : 1,
   ...(voix === 'tel' ? { backgroundColor: SURLIGNE } : {}),
-  willChange: 'transform',
 });
+
+/**
+ * `will-change` se pose au démarrage du geste, jamais à la préparation.
+ *
+ * Un élément préparé peut attendre longtemps sous la ligne de flottaison — si
+ * le visiteur ne descend pas, il attend toute la visite. Le poser dès la
+ * préparation immobiliserait une couche de composition par élément en attente,
+ * ce qui est exactement ce qu'on cherche à éviter. Il est retiré par
+ * `rendre()`, avec le reste.
+ */
+const armer = (cibles: gsap.TweenTarget) => () => gsap.set(cibles, { willChange: 'transform' });
 
 /**
  * Prépare une révélation. Retourne `null` si le moteur est arrivé trop tard —
@@ -123,7 +133,7 @@ export const revelerTexte = (
      joué 25 % plus vite en télémétrie — pas un squelette à deux vitesses. */
   const ecart = duree(decoupe === 'mots' ? STAGGER.mot : STAGGER.ligne, voix);
   const d = duree(decoupe === 'mots' ? DUREE.mot : DUREE.ligne, voix);
-  const tl = gsap.timeline();
+  const tl = gsap.timeline({ onStart: armer(morceaux) });
 
   tl.to(morceaux, {
     yPercent: 0,
@@ -173,8 +183,8 @@ export const revelerGroupe = (
   cibles: Element[],
   voix: Voix,
 ): Revelation | null => {
-  if (!cibles.length || !preparer(cibles, { y: 18, opacity: 0, willChange: 'transform' })) return null;
-  const tl = gsap.timeline();
+  if (!cibles.length || !preparer(cibles, { y: 18, opacity: 0 })) return null;
+  const tl = gsap.timeline({ onStart: armer(cibles) });
   tl.to(cibles, {
     y: 0,
     opacity: 1,
@@ -196,10 +206,10 @@ export const revelerGroupe = (
  * L'origine est à gauche : le trait part d'où commence la lecture.
  */
 export const revelerFilet = (cible: Element | null, voix: Voix): Revelation | null => {
-  if (!cible || !preparer(cible, { scaleX: 0, transformOrigin: '0% 50%', willChange: 'transform' })) {
+  if (!cible || !preparer(cible, { scaleX: 0, transformOrigin: '0% 50%' })) {
     return null;
   }
-  const tl = gsap.timeline();
+  const tl = gsap.timeline({ onStart: armer(cible) });
   tl.to(cible, { scaleX: 1, duration: duree(DUREE.filet, voix), ease: TRACE }, 0);
   return {
     timeline: tl,
@@ -220,10 +230,10 @@ export const revelerFilet = (cible: Element | null, voix: Voix): Revelation | nu
  */
 export const revelerPlanche = (cadre: Element | null, voix: Voix): Revelation | null => {
   const image = cadre?.querySelector<HTMLElement>('.plate-img, img');
-  if (!image || !preparer(image, { yPercent: 100, scale: 1.06, willChange: 'transform' })) {
+  if (!image || !preparer(image, { yPercent: 100, scale: 1.06 })) {
     return null;
   }
-  const tl = gsap.timeline();
+  const tl = gsap.timeline({ onStart: armer(image) });
   tl.to(image, {
     yPercent: 0,
     duration: duree(DUREE.masque, voix),

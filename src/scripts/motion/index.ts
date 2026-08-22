@@ -46,17 +46,19 @@ export const quandMoteur = (fn: (m: Moteur) => void): void => {
 export const initMotion = (): void => {
   ecouterPret();
 
-  /* Deux frames : on laisse le premier paint se faire, puis on demande le
-     moteur. `fetchpriority` bas via le repli d'inactivité — la dormance et les
-     planches passent devant, elles, elles se voient. */
-  const reclamer = () => {
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(() => void chargerMoteur(), { timeout: 1200 });
-    } else {
-      setTimeout(() => void chargerMoteur(), 200);
-    }
-  };
-  requestAnimationFrame(() => requestAnimationFrame(reclamer));
+  /*
+   * Deux frames — le premier paint est passé — puis on demande le moteur
+   * SANS attendre un temps mort.
+   *
+   * Le repli d'inactivité qu'il y avait ici coûtait le cas `rapide` : sur
+   * cache chaud la dormance rend la main vers 260 ms, et le moteur arrivait
+   * après. Le hero renonçait alors à animer, conformément à la règle — donc
+   * l'entrée « sautée » ne jouait jamais. Mesuré : 10 chargements sur 10.
+   *
+   * Rien n'est bloqué pour autant : la dormance est inlinée et n'attend pas ce
+   * paquet, et le premier paint a déjà eu lieu quand la demande part.
+   */
+  requestAnimationFrame(() => requestAnimationFrame(() => void chargerMoteur()));
 
   if (import.meta.env.DEV) {
     window.__ecoMotion = {

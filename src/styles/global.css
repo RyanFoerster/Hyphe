@@ -328,6 +328,11 @@
 .loupe-range:focus-visible::-webkit-slider-thumb {
   box-shadow: var(--shadow-glow);
 }
+/* Firefox n'applique pas la règle WebKit : sans ce doublon, le curseur de la
+   loupe est focusable au clavier sans aucun indicateur visible. */
+.loupe-range:focus-visible::-moz-range-thumb {
+  box-shadow: var(--shadow-glow);
+}
 
 @media (min-width: 640px) {
   .loupe-range {
