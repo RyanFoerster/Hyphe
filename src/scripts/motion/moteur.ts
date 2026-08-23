@@ -17,6 +17,7 @@ import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
 
 import { cederLeBattement } from './battement';
+import { pageDejaChargee } from './index';
 import { figerAutorisation } from './masque';
 import { monterCatalogue } from './catalogue';
 export { phrasesEnCours } from './catalogue';
@@ -104,7 +105,10 @@ export const demarrerMoteur = (): void => {
     demonterHero = monterHero();
     demonterCatalogue = monterCatalogue();
   };
-  monterPage();
+  /* Le moteur a gagné la course contre `astro:page-load` : c'est l'évènement
+     qui montera. S'il l'a perdue, personne ne viendra — on monte tout de
+     suite. Jamais les deux : un démontage inutile détruirait le socle. */
+  if (pageDejaChargee()) monterPage();
 
   /* ── Navigation ── */
   document.addEventListener('astro:before-swap', viderScenes);

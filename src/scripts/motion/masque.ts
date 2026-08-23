@@ -26,6 +26,31 @@ import { estRevele, quandPret } from './pret';
 
 /** Ce qu'on a effectivement masqué — pour pouvoir tout rendre d'un coup. */
 const masques = new Set<Element>();
+
+/**
+ * Le socle : l'attribut `style` tel que le markup l'avait écrit, mémorisé
+ * avant la première écriture du moteur.
+ *
+ * `clearProps: 'all'` ne retire pas « ce que GSAP a posé » — il VIDE
+ * l'attribut `style` en entier. Mesuré : le `padding-left` des notes du
+ * manifesto, le `background` du rail, la couleur des eyebrows, le
+ * `border-color` et l'`opacity` liée à la loupe des planches, tous détruits
+ * par un simple démontage. La mise en page au repos appartient au CSS et au
+ * markup : l'animation la transporte, elle ne la reconstruit pas et n'a pas
+ * le droit de l'effacer.
+ */
+const socle = new Map<Element, string | null>();
+
+/** Rend aux éléments l'attribut `style` exact qu'ils avaient avant le moteur. */
+const restituerSocle = (els: Element[]): void => {
+  for (const el of els) {
+    if (!socle.has(el)) continue;
+    const base = socle.get(el)!;
+    if (base === null) el.removeAttribute('style');
+    else el.setAttribute('style', base);
+    socle.delete(el);
+  }
+};
 let verrouille = false;
 /** Fenêtre d'échange de vue : le nouveau DOM n'a pas encore été peint. */
 let enEchange = false;
@@ -85,20 +110,29 @@ export const peutPreparer = (el: Element): boolean => masquable(el);
 export const preparer = (cibles: gsap.TweenTarget, etat: gsap.TweenVars): boolean => {
   const els = gsap.utils.toArray<Element>(cibles);
   if (!els.length || !els.every(masquable)) return false;
+  for (const el of els) {
+    if (!socle.has(el)) socle.set(el, el.getAttribute('style'));
+    masques.add(el);
+  }
   gsap.set(els, etat);
-  for (const el of els) masques.add(el);
   return true;
 };
 
-/** Un masque a joué son entrée : il n'est plus à libérer en urgence. */
+/**
+ * Fin d'une entrée : on rend l'élément à son état de repos — celui du markup,
+ * au caractère près. C'est l'inverse exact de `preparer`, et le seul moyen
+ * d'avoir un état après nettoyage identique à l'état sans JavaScript.
+ */
 export const oublier = (cibles: gsap.TweenTarget): void => {
-  for (const el of gsap.utils.toArray<Element>(cibles)) masques.delete(el);
+  const els = gsap.utils.toArray<Element>(cibles);
+  restituerSocle(els);
+  for (const el of els) masques.delete(el);
 };
 
 /** Tout rendre visible immédiatement, sans transition. */
 export const liberer = (): void => {
   if (!masques.size) return;
-  gsap.set([...masques], { clearProps: 'all' });
+  restituerSocle([...masques]);
   masques.clear();
 };
 

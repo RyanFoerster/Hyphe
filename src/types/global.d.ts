@@ -20,6 +20,8 @@ interface Window {
   __hypheDormance?: boolean;
   /** Le site a le droit d'animer. Posé avec `eco:pret`, pour qui arrive après. */
   __ecoPret?: boolean;
+  /** La dormance jouera-t-elle sa scène ? Posé de façon synchrone, à son départ. */
+  __hypheCeremonial?: boolean;
   /** Poignée de recette, en développement seulement. */
   __ecoMotion?: {
     battement(): { abonnes: number; source: 'propre' | 'moteur' | 'arrete' };

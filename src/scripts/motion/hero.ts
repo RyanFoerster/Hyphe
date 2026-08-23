@@ -16,7 +16,7 @@
  */
 import gsap from 'gsap';
 
-import { contextePret, quandPret, type Cas } from './pret';
+import { contextePret, estPret, quandPret, type Cas } from './pret';
 import { revelerGroupe, revelerTexte, type Revelation } from './texte';
 import { HERO_FACTEUR, RETOUR_FACTEUR, duree, voixCourante } from './tokens';
 
@@ -56,7 +56,19 @@ export const monterHero = (): (() => void) => {
   /* Deux chemins mènent au retour : une navigation interne (ce module a déjà
      joué), ou une dormance sautée — le cache chaud dit que le visiteur a déjà
      vu le site dans cette session. */
-  const retour = dejaEntre || contextePret().cas === 'retour';
+  /*
+   * Arrivée ou retour ? La dormance le sait de façon synchrone dès son départ
+   * et l'annonce (`__hypheCeremonial`) : première visite de la session ou
+   * recette forcée = cérémonial, sinon le visiteur ne fait que repasser.
+   *
+   * On ne le déduit pas de `contextePret()`, qui ne fait autorité qu'une fois
+   * le signal passé : le hero se monte avant, et le lire trop tôt faisait
+   * jouer le retour à chaque arrivée.
+   */
+  const retour =
+    dejaEntre ||
+    (window.__hypheCeremonial === false) ||
+    (estPret() && contextePret().cas === 'retour');
   const prise = (nom: string) => racine.querySelector<HTMLElement>(`[data-hero="${nom}"]`);
 
   /* La voix est lue une fois, à la construction. Basculer la loupe pendant

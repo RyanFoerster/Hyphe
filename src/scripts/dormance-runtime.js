@@ -43,6 +43,12 @@
   }
   var FIRST = !seen && !reduced;
 
+  // Annoncé tout de suite, en clair : la dormance jouera-t-elle sa scène ?
+  // Le hero le demande à son montage, bien avant `eco:pret`. Sans ça il devait
+  // deviner en lisant un contexte pas encore établi — et une course perdue lui
+  // faisait jouer une arrivée là où le visiteur ne fait que repasser.
+  window.__hypheCeremonial = FIRST || FORCE;
+
   // Prêt avant la fin du délai de grâce → on ne montre rien du tout.
   var GRACE_MS = FIRST || FORCE ? 0 : 300;
   // Durée minimale de lisibilité — uniquement si la scène a été montrée.

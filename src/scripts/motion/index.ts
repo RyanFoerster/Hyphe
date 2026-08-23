@@ -43,7 +43,20 @@ export const quandMoteur = (fn: (m: Moteur) => void): void => {
   void chargerMoteur().then(fn);
 };
 
+/**
+ * `astro:page-load` est-il déjà passé ? Ce module part avec la page, donc il
+ * attrape l'évènement initial ; le moteur, différé, peut arriver avant OU
+ * après lui. Sans ce drapeau il montait deux fois au chargement — et le
+ * démontage du second effaçait les styles du markup.
+ */
+let pageChargee = false;
+export const pageDejaChargee = (): boolean => pageChargee;
+
 export const initMotion = (): void => {
+  document.addEventListener('astro:page-load', () => {
+    pageChargee = true;
+  });
+
   ecouterPret();
 
   /*

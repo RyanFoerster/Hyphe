@@ -194,7 +194,6 @@ export const revelerTexte = (
          Le registre des masques les oublie : ils sont sur le point d'être
          détachés, et rien ne doit plus tenter de les libérer. */
       oublier(morceaux);
-      gsap.set(morceaux, { clearProps: 'all' });
       for (const undo of defaire) undo();
     },
   };
@@ -219,10 +218,7 @@ export const revelerGroupe = (
   }, 0);
   return {
     timeline: tl,
-    rendre: () => {
-      oublier(cibles);
-      gsap.set(cibles, { clearProps: 'all' });
-    },
+    rendre: () => oublier(cibles),
   };
 };
 
@@ -249,10 +245,7 @@ export const revelerFilet = (cible: Element | null, voix: Voix): Revelation | nu
   }, 0);
   return {
     timeline: tl,
-    rendre: () => {
-      oublier(cible);
-      gsap.set(cible, { clearProps: 'all' });
-    },
+    rendre: () => oublier(cible),
   };
 };
 
@@ -299,7 +292,6 @@ export const revelerPlanche = (cadre: Element | null, voix: Voix): Revelation | 
     timeline: tl,
     rendre: () => {
       oublier(el);
-      gsap.set(el, { clearProps: 'all' });
       if (image) gsap.set(image, { clearProps: 'scale' });
       defaire();
     },
