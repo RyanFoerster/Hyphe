@@ -1,0 +1,128 @@
+---
+// Les projets, vus de l'intérieur de la roche. Chaque chapitre est un écran de
+// défilement ; World place le spécimen correspondant dans la galerie et règle
+// --focus selon la distance de la caméra.
+import Window from './os/Window.astro';
+import { projects } from '../data/projects';
+
+const years = projects.map((p) => p.year);
+const pad = (n: number) => String(n).padStart(2, '0');
+const parts = (text: string, word: string) => {
+	const i = text.indexOf(word);
+	return i < 0 ? [text, '', ''] : [text.slice(0, i), word, text.slice(i + word.length)];
+};
+---
+
+<section id="work" class="relative" aria-labelledby="work-title">
+	<div class="dive relative h-[170svh]" data-dive>
+		<div class="dive-title sticky top-0 z-[3] flex h-[100svh] flex-col items-center justify-center px-4 text-center">
+			<p class="meta text-mineral"><span data-scramble>[ 01 ] Selected work — {Math.min(...years)} / {Math.max(...years)}</span></p>
+			<h2 id="work-title" class="titre mt-7 text-[clamp(3.2rem,9vw,10rem)]" data-split>Enter the specimen</h2>
+			<p class="meta mt-7 text-bone/60"><span data-scramble>{pad(projects.length)} projects grown inside</span></p>
+		</div>
+	</div>
+
+	<ol class="relative">
+		{
+			projects.map((p, i) => {
+				const [before, word, after] = parts(p.summary, p.highlight);
+				return (
+					<li
+						class="chapter relative h-[160svh]"
+						id={p.slug}
+						data-chapter
+						data-slug={p.slug}
+						data-accent={p.visual.accent}
+					>
+						<div
+							class:list={[
+								'sticky top-0 z-[5] flex h-[100svh] items-end px-3 pb-4 sm:px-6 md:items-center md:px-[5vw] md:pb-0',
+								i % 2 === 0 ? 'md:justify-end' : 'md:justify-start',
+							]}
+						>
+							<article class="chapter-card w-full max-w-[25rem]" aria-labelledby={`chapter-${p.slug}`}>
+								<Window title={`specimen.${pad(i + 1)}`} meta={`${p.year}`}>
+									<img
+										src={`/visuals/${p.slug}.svg`}
+										alt=""
+										width="1600"
+										height="1000"
+										loading="lazy"
+										class="world-off-only aspect-[16/10] w-full object-cover"
+									/>
+									<div class="px-5 pb-5 pt-4">
+										<p class="meta text-mineral">
+											<span data-scramble>{pad(i + 1)} / {pad(projects.length)} — {p.category}</span>
+										</p>
+										<h3 id={`chapter-${p.slug}`} class="titre mt-4 text-[clamp(2.9rem,5vw,5rem)]" data-split>
+											{p.name}
+										</h3>
+										<p class="mt-5 text-[15px] leading-relaxed text-bone/75">
+											{before}
+											{word && <mark class="hl">{word}</mark>}
+											{after}
+										</p>
+										<dl class="meta mt-5 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-mineral">
+											<dt class="text-mineral-dim">Client</dt>
+											<dd class="text-bone/85">{p.client}</dd>
+											<dt class="text-mineral-dim">Scope</dt>
+											<dd>{p.services.slice(0, 3).join(' · ')}</dd>
+										</dl>
+										<a
+											href={`/work/${p.slug}`}
+											data-portal
+											data-portal-target={`#frame-${p.slug}`}
+											class="meta mt-6 inline-flex items-center gap-3 rounded-full border border-bone/20 px-4 py-2.5 text-bone transition hover:border-acid hover:text-acid"
+										>
+											<span data-scramble>Open the specimen</span>
+											<span aria-hidden="true">→</span>
+										</a>
+									</div>
+								</Window>
+							</article>
+						</div>
+					</li>
+				);
+			})
+		}
+	</ol>
+
+	<div class="relative h-[120svh]" data-exit>
+		<div class="sticky top-0 z-[3] flex h-[100svh] items-center justify-center">
+			<p class="meta text-bone/70"><span data-scramble>End of the gallery — light ahead</span></p>
+		</div>
+	</div>
+</section>
+
+<style>
+	.dive-title {
+		opacity: var(--t, 1);
+	}
+	/* Verre plus dense : le texte reste lisible sur la galerie en caractères */
+	.chapter-card :global(.os-window) {
+		background: color-mix(in oklab, var(--color-void) 88%, transparent);
+	}
+	.chapter-card {
+		opacity: var(--focus, 1);
+		translate: 0 calc((1 - var(--focus, 1)) * 26px);
+		filter: blur(calc((1 - var(--focus, 1)) * 6px));
+	}
+	:global(html[data-world='on']) .world-off-only {
+		display: none;
+	}
+	/* Sans le monde 3D, pas besoin d'un si long couloir */
+	:global(html:not(.world)) .dive {
+		height: 70svh;
+	}
+	:global(html:not(.world)) [data-exit] {
+		display: none;
+	}
+	:global(html:not(.world)) .chapter {
+		height: auto;
+		padding-block: 10svh;
+	}
+	:global(html:not(.world)) .chapter > div {
+		position: relative;
+		height: auto;
+	}
+</style>

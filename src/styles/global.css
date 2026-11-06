@@ -1,378 +1,315 @@
 @import "tailwindcss";
+@import "@fontsource/fragment-mono/latin-400.css";
+@import "@fontsource-variable/instrument-sans/wght.css";
 
-/* ──────────────────────────────────────────────────────────────
-   Écosystème — design system « studio Hyphe »
-   Les valeurs ci-dessous sont le régime NUIT (t = 1). Le régime
-   PAPIER (t = 0) et tous les états intermédiaires sont appliqués
-   à l'exécution par src/scripts/mix.ts, qui réécrit ces mêmes
-   variables en style inline sur <html>.
-   ────────────────────────────────────────────────────────────── */
+/* Parceh (version Personal Use) ne dessine que les lettres, la virgule,
+   le point et « & ». unicode-range la limite à ces caractères : le reste
+   (chiffres, apostrophe, tiret…) bascule sur la sans au lieu d'un trou. */
+@font-face {
+  font-family: "Parceh";
+  src: url("/fonts/Parceh.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0020, U+0026, U+002C, U+002E, U+0041-005A, U+0061-007A,
+    U+00C0-00D6, U+00D8-00F6, U+00F8-00FF, U+0152-0153;
+}
+
 @theme {
-  /* Fond — le socle commun aux deux vues */
-  --color-bg-0: #0e1410; /* humus profond */
-  --color-bg-1: #1a2119; /* terreau */
-  --color-bg-2: #232c21; /* surface élevée */
+  --font-titre: "Parceh", "Instrument Sans Variable", serif;
+  --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Fragment Mono", ui-monospace, monospace;
 
-  /* Rampe principale — naturaliste */
-  --color-nat-100: #e8e4d9;
-  --color-nat-200: #c9cdb8;
-  --color-nat-300: #a8b89a;
-  --color-nat-400: #8aa372;
-  --color-nat-500: #6b8f4e;
-  --color-nat-600: #56753d;
-  --color-nat-700: #42592e;
-  --color-nat-800: #2e3d20;
-  --color-nat-900: #1c2614;
+  --tracking-titre: -0.03em;
+  --leading-titre: 0.75;
 
-  /* Accents */
-  --color-spore: #d4a24c; /* spore ocre */
-  --color-bloom: #e0507e; /* floraison */
+  /* Charbon à nuance verte, du plus profond au plus clair */
+  --color-void: #090c0a;
+  --color-deep: #0e1310;
+  --color-soil: #141a16;
+  --color-loam: #1c241f;
+  /* Mousse, minéral, os */
+  --color-moss: #6b7a58;
+  --color-moss-dim: #3c4634;
+  --color-mineral: #8d938c;
+  --color-mineral-dim: #5a605a;
+  --color-bone: #e6e4dc;
+  /* Accents rares : vert acide pour l'interface, braise pour la fleur */
+  --color-acid: #c8f53c;
+  --color-ember: #f07a2a;
+  /* Ton du scan (vue capteur de la lentille) */
+  --color-scan: #9ef0e0;
 
-  /* Rampe secondaire — télémétrie */
-  --color-tele-cyan: #4df0d0; /* bioluminescence */
-  --color-tele-green: #9cff57; /* phosphore */
-  --color-tele-coral: #ff6b5a; /* alerte corail */
-
-  /* Typographies */
-  --font-display: "Fraunces", Georgia, serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --font-text: "Figtree", system-ui, sans-serif;
-
-  /* Échelle typographique */
-  --text-2xs: 11px;
-  --text-xs: 12px;
-  --text-sm: 13px;
-  --text-base: 15px;
-  --text-lg: 18px;
-  --text-xl: 24px;
-  --text-2xl: 34px;
-  --text-3xl: 52px;
-  --text-4xl: 76px;
-
-  --leading-tight: 1.05;
-  --leading-snug: 1.25;
-  --leading-body: 1.6;
-
-  --tracking-wide: 0.08em; /* labels mono, nomenclature */
-  --tracking-wider: 0.16em; /* eyebrows en majuscules */
-
-  /* Coins — les planches de gravure sont carrées */
-  --radius-input: 2px;
-  --radius-plate: 4px;
-
-  /* Ombres */
-  --shadow-card: 0 1px 0 rgb(232 228 217 / 0.04) inset, 0 8px 24px rgb(0 0 0 / 0.35);
-  --shadow-raised: 0 1px 0 rgb(232 228 217 / 0.06) inset, 0 16px 40px rgb(0 0 0 / 0.5);
-  --shadow-glow: 0 0 0 1px var(--color-tele-cyan), 0 0 16px rgb(77 240 208 / 0.35);
-
-  /* Mouvement — rare et sec */
-  --ease-eco: cubic-bezier(0.2, 0.8, 0.2, 1);
-  /*
-   * `eco.growth`, à l'identique — la courbe de croissance du moteur GSAP,
-   * écrite ici pour que le dernier geste de la dormance et le premier du hero
-   * partagent littéralement le même mouvement. `--ease-eco` reste le réflexe
-   * de l'interface (départ franc, bon pour un survol) ; celle-ci est la voix
-   * du vivant (départ lent, arrivée très douce).
-   */
-  --ease-growth: cubic-bezier(0.34, 0, 0.1, 1);
-  --duration-fast: 120ms;
-  --duration-base: 200ms;
-
-  --animate-spore-pulse: sporePulse 3.2s var(--ease-eco) infinite;
-  --animate-nutrient-up: nutrientUp 2.6s linear infinite;
-  --animate-nutrient-down: nutrientDown 2.2s linear infinite;
-  --animate-orbit: orbit 26s linear infinite;
-  --animate-route-in: routeIn 400ms var(--ease-eco) both;
+  --ease-organic: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-portal: cubic-bezier(0.76, 0, 0.18, 1);
 }
 
-@keyframes sporePulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.85;
-  }
-  50% {
-    transform: scale(1.5);
-    opacity: 0.35;
-  }
-}
-@keyframes nutrientUp {
-  0% {
-    transform: translateY(26px);
-    opacity: 0;
-  }
-  25%,
-  75% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-26px);
-    opacity: 0;
-  }
-}
-@keyframes nutrientDown {
-  0% {
-    transform: translateY(-26px);
-    opacity: 0;
-  }
-  25%,
-  75% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(26px);
-    opacity: 0;
-  }
-}
-@keyframes orbit {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes routeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+/* Typo de titre : Parceh, interlettrage -3 %, interlignage 75 %.
+   La taille reste libre ; --tw-leading garde les 75 % même quand
+   une taille text-* est posée sur le même élément. */
+@utility titre {
+  font-family: var(--font-titre);
+  font-weight: 400;
+  --tw-tracking: var(--tracking-titre);
+  letter-spacing: var(--tracking-titre);
+  --tw-leading: var(--leading-titre);
+  line-height: var(--leading-titre);
 }
 
-/* ── Variables d'exécution non colorimétriques ─────────────────
-   `--mix` : 0 = naturaliste, 1 = télémétrie (courbe d'encre raide).
-   `--mixp` : idem, exprimé en pourcentage pour color-mix().
-   Les autres suivent le régime papier ⇄ nuit.
-   ────────────────────────────────────────────────────────────── */
+/* Libellés techniques de l'OS */
+@utility meta {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Verre dépoli : surface, bord fin, reflet haut, ombre douce */
+@utility glass {
+  background: color-mix(in oklab, var(--color-soil) 52%, transparent);
+  backdrop-filter: blur(20px) saturate(125%);
+  -webkit-backdrop-filter: blur(20px) saturate(125%);
+  border: 1px solid rgb(230 228 220 / 0.09);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    0 40px 80px -40px rgb(0 0 0 / 0.75);
+}
+
+/* Verre clair, sans flou : laisse voir la couche ASCII dessous */
+@utility lens-glass {
+  background: rgb(230 228 220 / 0.015);
+  border: 1px solid rgb(230 228 220 / 0.16);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
 @layer base {
-  :root {
-    --mix: 0;
-    --mixp: 0%;
-    --glow-a: rgb(77 240 208 / 0.7);
-    --scrim-a: rgb(14 20 16 / 0.92);
-    --scrim-b: rgb(14 20 16 / 0.75);
-    --img-filter: grayscale(0.85) sepia(0.3) hue-rotate(55deg) brightness(0.72) contrast(1.05);
-    --loupe-track: linear-gradient(90deg, #12100e, #4df0d0);
-    --rule-double: 3px double var(--color-nat-700);
-
-    color-scheme: dark light;
-  }
-
   html {
-    background: var(--color-bg-0);
-  }
-
-  /*
-   * Le lissage natif et Lenis se disputeraient le même geste : deux courbes
-   * sur un seul défilement, ce qui se sent immédiatement. Lenis pose `.lenis`
-   * sur <html> quand il prend la main — le natif ne sert donc que quand il
-   * n'est pas là (mouvement réduit, JS en échec, ancres avant hydratation).
-   */
-  html:not(.lenis) {
-    scroll-behavior: smooth;
+    background: var(--color-void);
+    color: var(--color-bone);
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    margin: 0;
-    overflow-x: hidden;
-    background: transparent;
-    color: var(--color-nat-100);
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    line-height: var(--leading-body);
+    min-height: 100dvh;
+    background:
+      radial-gradient(120% 80% at 50% 0%, var(--color-deep), transparent 70%),
+      var(--color-void);
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-  }
-
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-display);
-    font-variation-settings: "WONK" 1, "SOFT" 0;
-    font-weight: 560;
-    line-height: var(--leading-tight);
-    margin: 0;
-  }
-
-  /*
-   * Une étiquette de bloc prend le rôle sémantique d'un titre sans en prendre
-   * l'habit : la règle ci-dessus lui imposerait le display, le poids 560 et les
-   * axes WONK/SOFT. On lui rend la voix de l'instrument — celle du corps de
-   * page. Le rôle change dans l'arbre d'accessibilité, pas un pixel à l'écran.
-   */
-  h1.titre-etiquette,
-  h2.titre-etiquette,
-  h3.titre-etiquette {
-    font-family: var(--font-mono);
-    font-variation-settings: normal;
-    font-weight: 400;
-    line-height: var(--leading-body);
-  }
-
-  a {
-    color: var(--color-nat-300);
-    transition: color var(--duration-base) var(--ease-eco);
-  }
-  a:hover {
-    color: var(--color-nat-100);
-  }
-
-  /* Focus — jamais l'outline bleu navigateur, mais toujours un indicateur
-     au clavier : seul :focus-visible est stylé, le focus au clic reste nu. */
-  :focus-visible {
-    outline: none;
-    box-shadow: var(--shadow-glow);
-    border-radius: var(--radius-input);
-  }
-
-  /* Le flash bleu/gris du tap mobile n'existe pas en gravure. */
-  a,
-  button,
-  [role='button'] {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* Les liens SVG de l'arbre : focables au clic seulement (tabindex -1) —
-     le clavier passe par la liste sémantique, qui allume l'anneau DA sur le
-     fruit. Aucun anneau système ne doit apparaître au clic. */
-  svg a:focus {
-    outline: none;
-  }
-  svg a {
-    user-select: none;
-    -webkit-user-select: none;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
   }
 
   ::selection {
-    background: var(--color-nat-700);
-    color: var(--color-nat-100);
+    background: var(--color-acid);
+    color: var(--color-void);
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--color-acid);
+    outline-offset: 3px;
   }
 }
 
-@layer components {
-  /* Filet double — motif de gravure séparant les grandes sections */
-  .rule-double {
-    border-top: var(--rule-double);
-  }
-
-  /* Traitement bichrome des planches (suit le régime via --img-filter) */
-  .plate-img {
-    filter: var(--img-filter);
-    transition: filter var(--duration-base) var(--ease-eco);
-  }
-
-  /*
-   * Superposition des deux régimes : les enfants occupent la même cellule,
-   * la loupe décide lequel est lisible. C'est le motif signature du site.
-   */
-  .stack {
-    display: grid;
-  }
-  .stack > * {
-    grid-area: 1 / 1;
-  }
-  /*
-   * Quand les deux vues empilées ont des hauteurs très différentes (l'arbre
-   * de l'herbier ~1300 px, le tableau de télémétrie ~430), la plus haute
-   * impose son scroll à l'autre : un grand vide sous la vue lisible. Celle
-   * qui est effacée sort donc du flux — repli piloté par `herbier.ts`, et
-   * seulement aux extrêmes du fondu, quand son opacité est déjà nulle.
-   * Le conteneur doit être `relative` pour que la cellule reste le cadre.
-   */
-  .vue-repliee {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    pointer-events: none;
-  }
-
-  /*
-   * Symbiose — isoler un spécimen au survol : l'autre s'efface, comme sous
-   * la loupe. La règle vit ici parce qu'elle relie deux composants : la
-   * section qui groupe et les cartes qu'elle contient.
-   */
-  .symbiose:has([data-espece]:hover) [data-espece]:not(:hover) {
-    opacity: 0.35;
-  }
-
-  .fade-nat {
-    opacity: calc(1 - var(--mix));
-    transition: opacity 300ms var(--ease-eco);
-  }
-  .fade-tel {
-    opacity: var(--mix);
-    transition: opacity 300ms var(--ease-eco);
-  }
+/* Grain minéral sur tout le site */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* ── Loupe de terrain ──────────────────────────────────────── */
-.loupe-range {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 110px;
-  height: 2px;
-  background: var(--loupe-track);
-  outline: none;
-  cursor: ew-resize;
+/* ---------- Apparitions (les panneaux de verre entrent en douceur) ---------- */
+[data-reveal] {
+  opacity: 0;
+  translate: 0 28px;
+  filter: blur(6px);
+  transition:
+    opacity 1s var(--ease-organic),
+    translate 1.2s var(--ease-organic),
+    filter 1s var(--ease-organic);
+  transition-delay: var(--reveal-delay, 0ms);
 }
-.loupe-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--color-nat-100);
-  border: 1px solid var(--color-bg-0);
-  box-shadow: 0 0 0 1px var(--color-nat-100);
-  cursor: ew-resize;
-}
-.loupe-range::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border: 1px solid var(--color-bg-0);
-  border-radius: 50%;
-  background: var(--color-nat-100);
-  box-shadow: 0 0 0 1px var(--color-nat-100);
-  cursor: ew-resize;
-}
-.loupe-range:focus-visible {
-  box-shadow: none;
-}
-.loupe-range:focus-visible::-webkit-slider-thumb {
-  box-shadow: var(--shadow-glow);
-}
-/* Firefox n'applique pas la règle WebKit : sans ce doublon, le curseur de la
-   loupe est focusable au clavier sans aucun indicateur visible. */
-.loupe-range:focus-visible::-moz-range-thumb {
-  box-shadow: var(--shadow-glow);
+[data-reveal].is-in {
+  opacity: 1;
+  translate: 0 0;
+  filter: blur(0);
 }
 
-@media (min-width: 640px) {
-  .loupe-range {
-    width: 180px;
+/* ---------- Fenêtre « À propos » (dialog modal) ---------- */
+dialog.os-dialog {
+  opacity: 0;
+  scale: 0.96;
+  translate: 0 12px;
+  transition:
+    opacity 0.35s var(--ease-organic),
+    scale 0.45s var(--ease-organic),
+    translate 0.45s var(--ease-organic),
+    overlay 0.45s allow-discrete,
+    display 0.45s allow-discrete;
+}
+dialog.os-dialog[open] {
+  opacity: 1;
+  scale: 1;
+  translate: 0 0;
+}
+@starting-style {
+  dialog.os-dialog[open] {
+    opacity: 0;
+    scale: 0.96;
+    translate: 0 12px;
+  }
+}
+dialog.os-dialog::backdrop {
+  background: rgb(9 12 10 / 0);
+  backdrop-filter: blur(0);
+  transition:
+    background 0.45s,
+    backdrop-filter 0.45s,
+    overlay 0.45s allow-discrete,
+    display 0.45s allow-discrete;
+}
+dialog.os-dialog[open]::backdrop {
+  background: rgb(9 12 10 / 0.45);
+  backdrop-filter: blur(3px);
+}
+@starting-style {
+  dialog.os-dialog[open]::backdrop {
+    background: rgb(9 12 10 / 0);
+    backdrop-filter: blur(0);
   }
 }
 
-/* La View Transition native ne fait pas de crossfade : chaque route pose sa
-   propre entrée (`animate-route-in`). Deux fondus superposés se voient. */
-::view-transition-old(root) {
-  display: none;
+/* ---------- Transition en mosaïque ---------- */
+html.tiles-cover body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--color-void);
+  animation: veil-off 0s 2.5s forwards;
 }
-::view-transition-new(root) {
-  animation: none;
+@keyframes veil-off {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+.tile-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ---------- Texte : titres découpés en mots ---------- */
+/* Chaque mot se révèle par paliers (comme un balayage de capteur) et passe
+   un instant dans une boîte de suivi. */
+[data-split] .w {
+  position: relative;
+  display: inline-block;
+  clip-path: inset(-25% 100% -25% 0);
+}
+[data-split] .w::after {
+  content: "";
+  position: absolute;
+  inset: -0.06em -0.08em 0.02em;
+  border: 1px solid rgb(222 232 228 / 0.55);
+  opacity: 0;
+  pointer-events: none;
+}
+[data-split].is-in .w {
+  animation: word-in 0.62s steps(6, end) forwards;
+  animation-delay: calc(var(--split-delay, 0ms) + var(--i) * 90ms);
+}
+[data-split].is-in .w::after {
+  animation: word-box 0.9s var(--ease-organic) forwards;
+  animation-delay: calc(var(--split-delay, 0ms) + var(--i) * 90ms + 120ms);
+}
+@keyframes word-in {
+  to {
+    clip-path: inset(-25% -5% -25% 0);
+  }
+}
+@keyframes word-box {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; inset: -0.12em -0.14em -0.04em; }
+}
+
+/* ---------- Texte : mots mis en exergue ---------- */
+/* Boîte de suivi, point d'ancrage et valeur brute, comme une détection */
+mark.hl {
+  position: relative;
+  background: none;
+  color: var(--color-bone);
+  padding: 0 0.12em;
+}
+mark.hl::before {
+  content: "";
+  position: absolute;
+  inset: -0.05em -0.02em -0.08em;
+  border: 1px solid rgb(222 232 228 / 0.5);
+  clip-path: inset(0 100% 100% 0);
+  transition: clip-path 0.9s var(--ease-organic) 0.3s;
+  pointer-events: none;
+}
+mark.hl::after {
+  content: attr(data-hl);
+  position: absolute;
+  left: -0.02em;
+  bottom: calc(100% + 0.15em);
+  font: 400 9px/1 var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--color-acid);
+  opacity: 0;
+  transition: opacity 0.4s 0.9s;
+  white-space: nowrap;
+  pointer-events: none;
+}
+mark.hl.is-in::before {
+  clip-path: inset(0 0 0 0);
+}
+mark.hl.is-in::after {
+  opacity: 1;
+}
+mark.hl:hover::before {
+  border-color: var(--color-acid);
+  background: repeating-linear-gradient(90deg, rgb(200 245 60 / 0.12) 0 1px, transparent 1px 3px);
+}
+
+/* Lien pointeur sur les spécimens de la galerie */
+html[data-specimen-hover] body {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
+  [data-split] .w {
+    clip-path: none;
+  }
+  [data-reveal] {
+    opacity: 1;
+    translate: none;
+    filter: none;
+    transition: none;
   }
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }

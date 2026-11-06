@@ -1,0 +1,68 @@
+---
+import { site } from '../data/site';
+
+const isHome = Astro.url.pathname === '/';
+---
+
+<header class="site-nav pointer-events-none fixed inset-x-0 top-0 z-50">
+	<!-- Voile qui apparaît au défilement, pour que le menu reste lisible -->
+	<div class="nav-veil absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-void via-void/70 to-transparent opacity-0 transition-opacity duration-500" aria-hidden="true"></div>
+	<nav
+		class="pointer-events-auto relative mx-auto flex items-center gap-4 px-4 pt-4 sm:px-6 sm:pt-5"
+		aria-label="Main"
+	>
+		<a href="/" class="group flex items-center gap-3" aria-label="Studio Hyphe, home">
+			<img src="/HYPHE.svg" alt="" width="555" height="146" class="h-[18px] w-auto opacity-95 transition-opacity group-hover:opacity-70 sm:h-5" />
+		</a>
+
+		<span class="meta hidden text-mineral lg:block">Digital experience studio</span>
+
+		<div class="meta ml-auto flex items-center gap-1 text-bone/80">
+			<a
+				href={isHome ? '#work' : '/#work'}
+				class="rounded-full px-3 py-2 transition hover:bg-bone/8 hover:text-bone"
+			>
+				Work
+			</a>
+			<button
+				type="button"
+				class="rounded-full px-3 py-2 uppercase transition hover:bg-bone/8 hover:text-bone"
+				data-open-about
+				aria-haspopup="dialog"
+			>
+				About
+			</button>
+			<a
+				href={`mailto:${site.email}`}
+				class="hidden rounded-full border border-bone/15 px-3 py-2 transition hover:border-acid/60 hover:text-acid sm:block"
+			>
+				Contact
+			</a>
+		</div>
+
+		<span class="meta hidden w-24 text-right text-mineral md:block" aria-label={`Local time in ${site.city}`}>
+			<span class="text-mineral-dim">{site.city.slice(0, 3)}</span>
+			<time data-clock data-tz={site.timezone} class="tabular-nums text-bone/80">--:--</time>
+		</span>
+	</nav>
+</header>
+
+<script>
+	const clocks = document.querySelectorAll<HTMLElement>('[data-clock]');
+	const tick = () => {
+		for (const el of clocks) {
+			el.textContent = new Intl.DateTimeFormat('en-GB', {
+				hour: '2-digit',
+				minute: '2-digit',
+				timeZone: el.dataset.tz,
+			}).format(new Date());
+		}
+	};
+	tick();
+	setInterval(tick, 20_000);
+
+	const veil = document.querySelector<HTMLElement>('.nav-veil')!;
+	const onScroll = () => veil.classList.toggle('opacity-100', scrollY > innerHeight * 0.6);
+	addEventListener('scroll', onScroll, { passive: true });
+	onScroll();
+</script>

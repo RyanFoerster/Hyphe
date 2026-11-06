@@ -1,0 +1,68 @@
+---
+// Fenêtre de l'Organic OS : barre de titre en mono, commandes, corps libre.
+// `lens` : verre clair sans flou, qui révèle la couche ASCII de l'artefact.
+interface Props {
+	title: string;
+	meta?: string;
+	lens?: boolean;
+	closable?: boolean;
+	draggable?: boolean;
+	class?: string;
+	bodyClass?: string;
+	[key: string]: unknown;
+}
+
+const {
+	title,
+	meta,
+	lens = false,
+	closable = false,
+	draggable = false,
+	class: className,
+	bodyClass,
+	...rest
+} = Astro.props;
+---
+
+<div
+	class:list={[
+		'os-window flex flex-col overflow-hidden rounded-[10px]',
+		lens ? 'lens-glass' : 'glass',
+		className,
+	]}
+	data-lens={lens ? '' : undefined}
+	data-draggable={draggable ? '' : undefined}
+	{...rest}
+>
+	<div
+		class:list={[
+			'os-titlebar meta flex h-7 shrink-0 items-center gap-3 border-b border-bone/8 px-2.5 text-mineral',
+			draggable && 'cursor-grab touch-none select-none active:cursor-grabbing',
+		]}
+		data-drag-handle={draggable ? '' : undefined}
+	>
+		<span class="flex items-center gap-1.5" aria-hidden="true">
+			<span class="size-1.5 rounded-full bg-bone/25"></span>
+			<span class="size-1.5 rounded-full bg-bone/12"></span>
+		</span>
+		<span class="truncate text-bone/80">{title}</span>
+		{meta && <span class="ml-auto truncate">{meta}</span>}
+		{
+			closable && (
+				<button
+					type="button"
+					class:list={['grid size-5 place-items-center rounded-sm text-bone/70 transition hover:bg-bone/10 hover:text-bone', !meta && 'ml-auto']}
+					data-close
+					aria-label="Close window"
+				>
+					<svg width="9" height="9" viewBox="0 0 9 9" aria-hidden="true">
+						<path d="M1 1l7 7M8 1L1 8" stroke="currentColor" stroke-width="1.2" />
+					</svg>
+				</button>
+			)
+		}
+	</div>
+	<div class:list={['os-body relative min-h-0 flex-1', bodyClass]}>
+		<slot />
+	</div>
+</div>

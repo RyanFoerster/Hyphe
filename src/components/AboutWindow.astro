@@ -1,0 +1,83 @@
+---
+import Window from './os/Window.astro';
+import { site } from '../data/site';
+---
+
+<dialog
+	id="about"
+	class="os-dialog m-auto w-[min(440px,calc(100vw-32px))] overflow-visible bg-transparent p-0 text-bone backdrop:bg-transparent"
+	aria-labelledby="about-title"
+>
+	<Window title="about.sys" meta="v1.0 — read only" closable draggable class="max-h-[min(640px,calc(100dvh-48px))]" bodyClass="overflow-y-auto">
+		<div class="relative">
+			<canvas
+				class="pointer-events-none block h-28 w-full"
+				data-ascii
+				data-ascii-kind="sprout"
+				data-ascii-seed="5"
+				data-ascii-size="9"
+				aria-hidden="true"
+			></canvas>
+		</div>
+		<div class="space-y-6 px-5 pb-6">
+			<h2 id="about-title" class="titre text-5xl" data-split>Studio Hyphe</h2>
+			<p class="text-[15px] leading-relaxed text-bone/85">
+				Hyphae are the threads a fungus grows through the soil — invisible, patient, connecting
+				everything. We work the same way: a small studio designing and building digital experiences
+				for brands that want to be felt, not just seen.
+			</p>
+
+			<div>
+				<p class="meta mb-2 text-mineral">What we do</p>
+				<ul class="flex flex-wrap gap-1.5">
+					{site.services.map((s) => (
+						<li class="meta rounded-full border border-bone/12 px-2.5 py-1 text-bone/80">{s}</li>
+					))}
+				</ul>
+			</div>
+
+			<div class="grid grid-cols-2 gap-4 border-t border-bone/8 pt-5">
+				<div>
+					<p class="meta mb-1.5 text-mineral">Contact</p>
+					<a href={`mailto:${site.email}`} class="text-sm text-bone underline decoration-bone/30 underline-offset-4 transition hover:text-acid hover:decoration-acid">
+						{site.email}
+					</a>
+					<p class="mt-1 text-sm text-bone/60">{site.city} — worldwide</p>
+				</div>
+				<div>
+					<p class="meta mb-1.5 text-mineral">Elsewhere</p>
+					<ul class="space-y-0.5 text-sm">
+						{site.socials.map((s) => (
+							<li>
+								<a href={s.href} target="_blank" rel="noopener" class="text-bone/85 transition hover:text-acid">
+									{s.label} ↗
+								</a>
+							</li>
+						))}
+					</ul>
+				</div>
+			</div>
+		</div>
+	</Window>
+</dialog>
+
+<script>
+	import { makeDraggable } from '../scripts/drag';
+
+	const dialog = document.getElementById('about') as HTMLDialogElement;
+	const win = dialog.querySelector<HTMLElement>('.os-window')!;
+	// La fenêtre se déplace par sa barre de titre, comme dans un OS
+	const drag = makeDraggable(win);
+
+	document.querySelectorAll('[data-open-about]').forEach((btn) =>
+		btn.addEventListener('click', () => {
+			drag.reset();
+			dialog.showModal();
+		}),
+	);
+	dialog.querySelector('[data-close]')?.addEventListener('click', () => dialog.close());
+	// Clic hors de la fenêtre : on ferme
+	dialog.addEventListener('click', (e) => {
+		if (e.target === dialog) dialog.close();
+	});
+</script>

@@ -1,0 +1,93 @@
+---
+// Le monde WebGL de la page d'accueil : canvas fixe, couche d'analyse,
+// chargement, étiquette de la fleur, et cadres invisibles qui suivent les
+// spécimens (le portail part de là).
+import { projects } from '../data/projects';
+---
+
+<!-- Avant tout rendu : si WebGL 2 est là, la page prend sa forme longue -->
+<script is:inline>
+	try {
+		if (document.createElement('canvas').getContext('webgl2')) document.documentElement.classList.add('world');
+	} catch {}
+</script>
+
+<canvas class="world-gl pointer-events-none fixed inset-0 z-[2] size-full" data-world-gl aria-hidden="true"></canvas>
+<canvas class="pointer-events-none fixed inset-0 z-[3] size-full" data-world-overlay aria-hidden="true"></canvas>
+
+<p class="world-loader meta pointer-events-none fixed left-1/2 top-1/2 z-[3] -translate-x-1/2 -translate-y-1/2 text-mineral" aria-hidden="true">
+	<span class="text-bone/80">specimen</span> loading <span data-progress class="tabular-nums text-acid">000</span>%
+</p>
+
+<div class="pointer-events-none fixed right-[7%] top-[27%] z-[3] hidden w-48 opacity-0 md:block" data-callout-label aria-hidden="true">
+	<p class="meta text-bone/90">01. Gazania rigens</p>
+	<p class="meta mt-1 text-mineral">Organism, scanned.<br />Grows where nothing should.</p>
+	<p class="meta mt-2 text-mineral-dim"><span data-triangles>—</span> tri / real time</p>
+</div>
+
+<div aria-hidden="true">
+	{projects.map((p) => <div class="pointer-events-none fixed left-0 top-0" id={`frame-${p.slug}`} data-specimen-frame={p.slug}></div>)}
+</div>
+
+<style>
+	.world-gl {
+		opacity: 0;
+		transition: opacity 1.4s var(--ease-organic);
+	}
+	:global(html[data-world='on']) .world-gl {
+		opacity: 1;
+	}
+	.world-loader {
+		transition: opacity 0.6s;
+	}
+	:global(html[data-world='on']) .world-loader,
+	:global(html[data-world='off']) .world-loader {
+		opacity: 0;
+	}
+</style>
+
+<script>
+	import { mountAscii } from '../scripts/ascii';
+
+	const root = document.documentElement;
+	const canvas = document.querySelector<HTMLCanvasElement>('[data-world-gl]')!;
+	const overlay = document.querySelector<HTMLCanvasElement>('[data-world-overlay]')!;
+	const progress = document.querySelector<HTMLElement>('[data-progress]')!;
+
+	const fallback = () => {
+		root.dataset.world = 'off';
+		root.classList.remove('world');
+		const hero = document.querySelector<HTMLElement>('[data-hero]');
+		const c = hero?.querySelector<HTMLCanvasElement>('[data-ascii-deferred]');
+		if (hero && c) {
+			hero.dataset.fallback = '';
+			c.setAttribute('data-ascii', '');
+			mountAscii(hero);
+		}
+	};
+
+	const boot = async () => {
+		if (!root.classList.contains('world')) return fallback();
+		try {
+			const [{ createWorld }] = await Promise.all([
+				import('../scripts/world'),
+				document.fonts.load('44px "Fragment Mono"'),
+			]);
+			await createWorld({
+				canvas,
+				overlay,
+				onProgress: (f) => (progress.textContent = String(Math.round(f * 100)).padStart(3, '0')),
+				onReady: ({ triangles }) => {
+					document.querySelector('[data-triangles]')!.textContent = triangles.toLocaleString('en-US');
+					root.dataset.world = 'on';
+				},
+			});
+		} catch (error) {
+			console.warn('[world]', error);
+			fallback();
+		}
+	};
+
+	if ('requestIdleCallback' in window) requestIdleCallback(boot, { timeout: 400 });
+	else setTimeout(boot, 120);
+</script>

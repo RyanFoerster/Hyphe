@@ -1,30 +1,23 @@
 ---
-import BaseLayout from '~/layouts/BaseLayout.astro';
-import SectionTitle from '~/components/ui/SectionTitle.astro';
+import Layout from '../layouts/Layout.astro';
 ---
 
-<BaseLayout
-  title="Page introuvable"
-  description="Page introuvable — studio Hyphe, création numérique à Liège : sites web et applications sur mesure."
-  ecoMode="legal"
-  crumbs={[{ href: '#', nat: 'Non répertorié', tel: 'err.404' }]}
->
-  <main
-    class="flex min-h-screen animate-route-in flex-col items-center justify-center px-6 py-[150px] text-center"
-  >
-    <figure
-      class="m-0 mb-8 flex aspect-[4/3] w-[min(420px,80vw)] items-center justify-center rounded-plate border border-dashed border-nat-700 bg-bg-1"
-    >
-      <figcaption class="text-xs tracking-wide text-nat-400 line-through">SPÉCIMEN Nº ???</figcaption>
-    </figure>
-
-    <div class="mb-3 text-2xs tracking-wider uppercase text-nat-300">
-      Erreur 404 — page introuvable
-    </div>
-    <SectionTitle as="h1" class="text-2xl">Spécimen non répertorié</SectionTitle>
-    <p class="mt-4 mb-8 max-w-[30em] text-nat-300">
-      Rien n'a germé à cette adresse. Le relevé a peut-être été déplacé, ou il n'a jamais existé.
-    </p>
-    <a href="/herbier" class="text-xs tracking-wide">voir nos projets — l'herbier →</a>
-  </main>
-</BaseLayout>
+<Layout title="Not found">
+	<section class="relative grid min-h-[100svh] place-items-center overflow-hidden px-4">
+		<canvas
+			class="pointer-events-none absolute inset-0 size-full opacity-50"
+			data-ascii
+			data-ascii-kind="mycelium"
+			data-ascii-seed="404"
+			data-ascii-size="12"
+			aria-hidden="true"
+		></canvas>
+		<div class="relative text-center">
+			<p class="meta mb-6 text-mineral">Error 404 — nothing grows here</p>
+			<h1 class="titre text-[clamp(3.5rem,10vw,9rem)]" data-split>Lost in the soil</h1>
+			<a href="/" class="meta mt-10 inline-block rounded-full border border-bone/20 px-5 py-3 transition hover:border-acid hover:text-acid">
+				Back to the surface
+			</a>
+		</div>
+	</section>
+</Layout>
