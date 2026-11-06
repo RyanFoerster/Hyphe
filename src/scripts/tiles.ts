@@ -88,6 +88,16 @@ export async function mosaic(origin: { x: number; y: number }, cover: boolean, d
 	if (!cover) c.remove();
 }
 
+/** Quitte la page en mosaïque, depuis `origin` ; la page suivante se recompose depuis là */
+export function go(href: string, origin = { x: innerWidth / 2, y: innerHeight / 2 }) {
+	if (reduced) {
+		location.href = href;
+		return;
+	}
+	sessionStorage.setItem(KEY, JSON.stringify({ ...origin, t: Date.now() }));
+	void mosaic(origin, true, 700).then(() => (location.href = href));
+}
+
 export function mountTiles() {
 	// Arrivée : la page était masquée par html.tiles-cover (script de tête)
 	const raw = sessionStorage.getItem(KEY);
@@ -113,9 +123,7 @@ export function mountTiles() {
 		const frameSel = a.dataset.portalTarget;
 		const frame = (frameSel && document.querySelector(frameSel)) || a.querySelector('[data-portal-frame]') || a;
 		const r = frame.getBoundingClientRect();
-		const origin = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-		sessionStorage.setItem(KEY, JSON.stringify({ ...origin, t: Date.now() }));
-		mosaic(origin, true, 700).then(() => (location.href = url.href));
+		go(url.href, { x: r.left + r.width / 2, y: r.top + r.height / 2 });
 	});
 
 	// Retour arrière depuis le cache : on enlève un éventuel voile resté en place

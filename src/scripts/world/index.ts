@@ -58,7 +58,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 	const P = post.uniforms;
 	const ext = await createArtefact({ renderer, lowPower, onProgress });
 	const cave = createCavern(
-		chapters.map((c) => ({ slug: c.dataset.slug!, accent: c.dataset.accent! })),
+		chapters.map((c) => ({ slug: c.dataset.slug!, accent: c.dataset.accent!, cover: c.dataset.cover! })),
 		{ lowPower },
 	);
 	const layer = createOverlay(overlay);
@@ -315,6 +315,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			// Post
 			P.uInside.value = 0;
 			P.uFade.value = 0;
+			P.uScanAll.value = 1;
 			P.uAscii.value = reduced ? (d > 0.5 ? 1 : 0) : smoothstep(0.6, 1, d);
 			P.uAura.value = (1 - smoothstep(0.5, 0.95, d)) * reveal;
 			P.uBloom.value = 1 + d * 0.6;
@@ -422,6 +423,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			overlayAlpha = 1;
 
 			P.uInside.value = 1;
+			P.uScanAll.value = 0;
 			P.uAscii.value = 1;
 			P.uAura.value = 0;
 			P.uBloom.value = 0.85;
@@ -458,7 +460,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			}
 		}
 		P.uLensCount.value = n;
-		const radius = (inside ? 150 : 110) * dpr * smooth.lens;
+		const radius = (inside ? 150 : 130) * dpr * smooth.lens;
 		P.uCursor.value.set(smooth.lx * dpr, (height - smooth.ly) * dpr, radius, smooth.lens);
 		P.uTime.value = time;
 		P.uNear.value = camera.near;
@@ -467,6 +469,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 		P.uTint.value.copy(tint);
 
 		post.render(scene, camera);
+		const cursorOn = !inside && d < 0.05 && pointer.free && finePointer && Math.hypot(pointer.px - focusPx.x, pointer.py - focusPx.y) < focusPx.r * 0.95;
 		layer.draw({
 			time,
 			dpr,
@@ -477,6 +480,11 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			frames,
 			callouts,
 			roots,
+			cursor: {
+				x: pointer.px,
+				y: pointer.py,
+				on: cursorOn,
+			},
 			motion,
 		});
 	};

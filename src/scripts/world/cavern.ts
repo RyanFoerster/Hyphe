@@ -9,6 +9,8 @@ import { NOISE, additive, noise3, rng } from './shared';
 export interface SpecimenInput {
 	slug: string;
 	accent: string;
+	/** Image du spécimen (SVG généré ou vrai média) */
+	cover: string;
 }
 
 const CHAPTER_GAP = 9;
@@ -145,7 +147,8 @@ const SPECIMEN_FRAG = /* glsl */ `
 	}
 `;
 
-function svgTexture(url: string, w: number, h: number) {
+/** Image dessinée dans une toile au format du spécimen, recadrée sans déformer */
+function imageTexture(url: string, w: number, h: number) {
 	const canvas = document.createElement('canvas');
 	canvas.width = w;
 	canvas.height = h;
@@ -154,7 +157,10 @@ function svgTexture(url: string, w: number, h: number) {
 	const img = new Image();
 	img.decoding = 'async';
 	img.onload = () => {
-		canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+		const iw = img.naturalWidth || w;
+		const ih = img.naturalHeight || h;
+		const k = Math.max(w / iw, h / ih);
+		canvas.getContext('2d')!.drawImage(img, (w - iw * k) / 2, (h - ih * k) / 2, iw * k, ih * k);
 		tex.needsUpdate = true;
 	};
 	img.src = url;
@@ -314,7 +320,7 @@ export function createCavern(items: SpecimenInput[], { lowPower }: { lowPower: b
 			s: sChap[i],
 			side: i % 2 === 0 ? -1 : 1,
 			load() {
-				if (!mat.uniforms.tMap.value) mat.uniforms.tMap.value = svgTexture(`/visuals/${item.slug}.svg`, texW, Math.round(texW / 1.6));
+				if (!mat.uniforms.tMap.value) mat.uniforms.tMap.value = imageTexture(item.cover, texW, Math.round(texW / 1.6));
 			},
 		};
 	});

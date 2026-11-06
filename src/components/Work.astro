@@ -3,7 +3,7 @@
 // défilement ; World place le spécimen correspondant dans la galerie et règle
 // --focus selon la distance de la caméra.
 import Window from './os/Window.astro';
-import { projects } from '../data/projects';
+import { coverOf, portraitOf, projects } from '../data/projects';
 
 const years = projects.map((p) => p.year);
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -33,6 +33,7 @@ const parts = (text: string, word: string) => {
 						data-chapter
 						data-slug={p.slug}
 						data-accent={p.visual.accent}
+						data-cover={coverOf(p)}
 					>
 						<div
 							class:list={[
@@ -43,12 +44,12 @@ const parts = (text: string, word: string) => {
 							<article class="chapter-card w-full max-w-[25rem]" aria-labelledby={`chapter-${p.slug}`}>
 								<Window title={`specimen.${pad(i + 1)}`} meta={`${p.year}`}>
 									<img
-										src={`/visuals/${p.slug}.svg`}
+										src={coverOf(p)}
 										alt=""
 										width="1600"
-										height="1000"
+										height="900"
 										loading="lazy"
-										class="world-off-only aspect-[16/10] w-full object-cover"
+										class="world-off-only aspect-video w-full object-cover"
 									/>
 									<div class="px-5 pb-5 pt-4">
 										<p class="meta text-mineral">
@@ -59,9 +60,9 @@ const parts = (text: string, word: string) => {
 										</h3>
 										<p class="meta mt-2 text-bone/60">{p.latin} — {p.locality}</p>
 										<ul class="mt-5 hidden grid-cols-3 gap-2 md:grid" aria-hidden="true">
-											{[1, 3, 4].map((n) => (
-												<li class="strip aspect-square overflow-hidden">
-													<img src={`/visuals/${p.slug}/${n}.svg`} alt="" loading="lazy" class="size-full object-cover" />
+											{[0, 1, 2].map((n) => (
+												<li class="strip aspect-[4/5] overflow-hidden">
+													<img src={portraitOf(p, n)} alt="" loading="lazy" class="size-full object-cover" />
 												</li>
 											))}
 										</ul>

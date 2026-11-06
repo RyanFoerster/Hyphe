@@ -28,6 +28,8 @@ export interface OverlayFrame {
 	callouts: { from: Pt; to: { x: number; y: number }; a: number }[];
 	/** Hyphes de la roche vers les projets en orbite */
 	roots: { x: number; y: number; a: number; lit: boolean }[];
+	/** Curseur sur la roche : un jardin en caractères pousse sur son passage */
+	cursor: { x: number; y: number; on: boolean };
 	motion: number;
 }
 
@@ -52,6 +54,13 @@ export function createOverlay(canvas: HTMLCanvasElement) {
 	const cells: [number, number][] = [];
 	for (let gx = -2; gx < 2; gx++)
 		for (let gy = -2; gy < 2; gy++) if (Math.abs(gx + 0.5) + Math.abs(gy + 0.5) < 3 || rand() > 0.6) cells.push([gx, gy]);
+
+	// Le jardin : chaque passage du curseur sur la roche plante une graine
+	// qui germe, monte en tige, déplie ses feuilles, fleurit puis fane.
+	type Plant = { dx: number; dy: number; born: number; len: number; lean: number; kind: number; seed: number };
+	const plants: Plant[] = [];
+	let lastSeed = { x: -1e4, y: -1e4 };
+	const LIFE = 5.2;
 
 	const resize = (cssW: number, cssH: number, ratio: number) => {
 		w = cssW;
@@ -194,6 +203,80 @@ export function createOverlay(canvas: HTMLCanvasElement) {
 				ctx.fill();
 			});
 		}
+
+		// Le jardin : on plante en suivant le curseur, puis tout pousse et fane
+		if (f.cursor.on && Math.hypot(f.cursor.x - lastSeed.x, f.cursor.y - lastSeed.y) > 26) {
+			lastSeed = { x: f.cursor.x, y: f.cursor.y };
+			plants.push({
+				dx: f.cursor.x - f.focus.x,
+				dy: f.cursor.y - f.focus.y,
+				born: f.time,
+				len: 3 + Math.floor(rand() * 6),
+				lean: (rand() - 0.5) * 1.4,
+				kind: Math.floor(rand() * 3),
+				seed: rand(),
+			});
+			if (plants.length > 42) plants.shift();
+		}
+		if (!f.cursor.on) lastSeed = { x: -1e4, y: -1e4 };
+		ctx.font = `11px "Fragment Mono", ui-monospace, monospace`;
+		ctx.textBaseline = 'alphabetic';
+		ctx.textAlign = 'center';
+		const CW = 7;
+		const CH = 11;
+		for (let i = plants.length - 1; i >= 0; i--) {
+			const pl = plants[i];
+			const age = (f.time - pl.born) / (f.motion || 1);
+			if (age > LIFE) {
+				plants.splice(i, 1);
+				continue;
+			}
+			const grow = Math.min(1, age / 1.3);
+			const wilt = Math.max(0, (age - (LIFE - 1.4)) / 1.4);
+			const a = (1 - wilt) * Math.min(1, f.alpha * 1.4 + 0.3);
+			const bx = f.focus.x + pl.dx;
+			const by = f.focus.y + pl.dy;
+			// Racines : quelques points qui s'étalent sous la graine
+			ctx.fillStyle = `rgba(222,232,228,${(0.45 * a).toFixed(3)})`;
+			const spread = Math.min(1, age / 0.6);
+			for (let r = -2; r <= 2; r++) if (r) ctx.fillText(Math.abs(r) === 2 ? '.' : ':', bx + r * CW * spread, by + CH * 0.6);
+			// Tige : un caractère par étage, penché selon la plante, qui balance
+			const n = Math.max(1, Math.round(pl.len * grow));
+			const sway = Math.sin(f.time * 1.6 + pl.seed * 9) * 0.25 * f.motion;
+			let x = bx;
+			for (let k = 0; k < n; k++) {
+				const tilt = (pl.lean + sway) * (k / pl.len);
+				x += tilt * CW * 0.55;
+				const y = by - k * CH;
+				const ch = wilt > 0.5 ? '.' : tilt > 0.18 ? '/' : tilt < -0.18 ? '\\' : '|';
+				ctx.fillStyle = `rgba(222,232,228,${(0.85 * a).toFixed(3)})`;
+				ctx.fillText(ch, x, y);
+				// Feuilles, une sur deux, de part et d'autre
+				if (k > 0 && k % 2 === 0 && k < n - 1 && wilt < 0.7) {
+					const side = (k / 2) % 2 ? 1 : -1;
+					ctx.fillStyle = `rgba(150,190,90,${(0.9 * a).toFixed(3)})`;
+					ctx.fillText(side > 0 ? '>' : '<', x + side * CW, y + 2);
+				}
+			}
+			// Fleur au sommet, une fois la tige montée
+			if (grow >= 1 && wilt < 0.85) {
+				const top = by - n * CH;
+				const open = Math.min(1, (age - 1.3) / 0.5);
+				const warm = pl.kind === 0;
+				ctx.fillStyle = warm ? `rgba(240,122,42,${a.toFixed(3)})` : `rgba(200,245,60,${a.toFixed(3)})`;
+				const heart = wilt > 0.3 ? '.' : open < 0.5 ? 'o' : pl.kind === 2 ? String(Math.floor((f.time * 3 + pl.seed * 10) % 10)) : '@';
+				ctx.fillText(heart, x, top);
+				if (open > 0.5 && wilt < 0.3) {
+					ctx.fillStyle = `rgba(230,228,220,${(0.75 * a).toFixed(3)})`;
+					ctx.fillText('*', x - CW, top + 2);
+					ctx.fillText('*', x + CW, top + 2);
+					ctx.fillText('+', x, top - CH * 0.9);
+				}
+			}
+		}
+		ctx.textAlign = 'left';
+		ctx.textBaseline = 'bottom';
+		ctx.font = `8px "Fragment Mono", ui-monospace, monospace`;
 
 		// Courbes de légende : une ligne fine et souple, un point à chaque bout
 		for (const c of f.callouts) {

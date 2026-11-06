@@ -71,6 +71,7 @@ const COMPOSITE_FRAG = /* glsl */ `
 	uniform float uBloom;
 	uniform float uFlash;
 	uniform float uFade;
+	uniform float uScanAll;
 	uniform float uTile;
 	uniform float uReveal;
 	uniform float uMosaic;
@@ -207,15 +208,16 @@ const COMPOSITE_FRAG = /* glsl */ `
 		vec3 col = display(s.rgb + bloomAt(vUv) * uBloom);
 
 		// Lentilles : rectangles de verre + disque du curseur
-		float m = 0.0;
+		float rm = 0.0;
 		for (int i = 0; i < ${MAX_LENSES}; i++) {
 			if (i >= uLensCount) break;
 			vec4 r = uLenses[i];
 			vec2 inside = step(r.xy, px) * step(px, r.xy + r.zw);
-			m = max(m, inside.x * inside.y);
+			rm = max(rm, inside.x * inside.y);
 		}
 		float dc = length(px - uCursor.xy);
-		m = max(m, (1.0 - smoothstep(uCursor.z - 1.5, uCursor.z, dc)) * uCursor.w);
+		float disc = (1.0 - smoothstep(uCursor.z - 1.5, uCursor.z, dc)) * uCursor.w;
+		float m = max(rm, disc);
 
 		// Mosaïque : la roche apparaît tuile par tuile, puis quelques tuiles
 		// restent vivantes et basculent en ASCII ou en scan
@@ -229,7 +231,8 @@ const COMPOSITE_FRAG = /* glsl */ `
 		float tileCover = texture2D(tColor, ((tid + 0.5) * uTile + uFocus * uRes) / uRes).a;
 		float live = near * step(1.0 - uMosaic, hash(tid * 1.3 + slot)) * step(0.5, tileCover);
 		float revealing = step(0.001, rev) * step(rev, 0.999) * (1.0 - uInside);
-		float tileMode = max(live, revealing) * (1.0 - uAscii);
+		// Roche scannée par défaut : les tuiles vivantes montrent alors la matière
+		float tileMode = max(live * (1.0 - uScanAll), revealing) * (1.0 - uAscii);
 		if (tileMode > 0.0) {
 			vec3 dig = hash(tid + slot * 0.37) > 0.5 ? scanView(px) : asciiRamp(px).rgb;
 			col = mix(col, dig, tileMode);
@@ -259,7 +262,10 @@ const COMPOSITE_FRAG = /* glsl */ `
 		}
 
 		// Dehors, la lentille révèle le relief chiffré
-		float lensOut = m * (1.0 - uInside) * (1.0 - uAscii);
+		// Par défaut, toute la roche est vue au scan ; le curseur, les fenêtres
+		// et les tuiles vivantes y ouvrent des trouées sur la vraie matière
+		float scanned = clamp(s.a, 0.0, 1.0) * uScanAll * (1.0 - disc) * (1.0 - rm) * (1.0 - live);
+		float lensOut = max(scanned, m * (1.0 - uScanAll)) * (1.0 - uInside) * (1.0 - uAscii);
 		if (lensOut > 0.0) {
 			col = mix(col, topo(px, raw, col), lensOut);
 			cover = max(cover, lensOut);
@@ -356,6 +362,7 @@ export function createPost(renderer: THREE.WebGLRenderer, { lowPower }: { lowPow
 			uBloom: { value: 1 },
 			uFlash: { value: 0 },
 			uFade: { value: 0 },
+			uScanAll: { value: 1 },
 			uTile: { value: 120 },
 			uReveal: { value: 0 },
 			uMosaic: { value: 0.12 },

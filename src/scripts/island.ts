@@ -17,7 +17,7 @@ export function mountIsland(island: HTMLElement) {
 	const trigger = island.querySelector<HTMLButtonElement>('.view-bar button')!;
 	const status = island.querySelector<HTMLElement>('[data-island-status]')!;
 	let current: View = 'bar';
-	let scanEnd = 0;
+	let scanEnd: ReturnType<typeof setTimeout> | undefined;
 
 	const fit = () => {
 		const v = views.get(current)!;

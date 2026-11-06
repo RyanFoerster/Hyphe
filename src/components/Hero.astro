@@ -2,7 +2,7 @@
 // Le hero : la roche au centre (rendue par World), le titre de part et
 // d'autre, les projets en orbite autour d'elle.
 import Window from './os/Window.astro';
-import { projects } from '../data/projects';
+import { coverOf, projects } from '../data/projects';
 import { site } from '../data/site';
 ---
 
@@ -40,8 +40,8 @@ import { site } from '../data/site';
 		</a>
 
 		<div class="lens-slot hidden md:block" data-reveal style="--reveal-delay: 900ms">
-			<Window title="artefact.scan" meta="lens 01" lens draggable class="h-[150px] w-[200px] lg:h-[176px] lg:w-[236px]">
-				<p class="meta pointer-events-none absolute bottom-2 left-2.5 text-bone/45">drag to scan</p>
+			<Window title="artefact.matter" meta="lens 01" lens draggable class="h-[150px] w-[200px] lg:h-[176px] lg:w-[236px]">
+				<p class="meta pointer-events-none absolute bottom-2 left-2.5 text-bone/45">drag to reveal</p>
 			</Window>
 		</div>
 	</div>
@@ -60,7 +60,7 @@ import { site } from '../data/site';
 						aria-label={`${p.name} — ${p.category}, ${p.year}`}
 					>
 						<span data-portal-frame class="thumb">
-							<img src={`/visuals/${p.slug}.svg`} alt="" width="64" height="40" />
+							<img src={coverOf(p)} alt="" width="64" height="36" />
 						</span>
 						<span class="body">
 							<span class="meta text-mineral">

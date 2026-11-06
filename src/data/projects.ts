@@ -1,6 +1,7 @@
-// Projets FICTIFS servant à construire le système. Clients, chiffres et
-// textes sont inventés : à remplacer par les vrais projets du studio.
+// Les projets du studio. Loum est réel (médias dans public/work/loum) ; les
+// autres sont FICTIFS, clients et chiffres inventés, à remplacer.
 // Les noms passent en Parceh : lettres, espaces, virgules et points seulement.
+// Formats d'image : 16:9 et 4:5 uniquement.
 
 export type VisualKind = 'topo' | 'strata' | 'bloom';
 
@@ -29,9 +30,94 @@ export interface Project {
 		line: string;
 		accent: string;
 	};
+	/** Adresse du site livré, sans protocole */
+	url?: string;
+	/** Vrais médias. Sans eux, les visuels sont générés (lib/generative). */
+	media?: {
+		/** Image 16:9 des cartes, spécimens et partages */
+		cover: string;
+		/** Vidéo 16:9 du hero, avec son image d'attente */
+		heroVideo?: string;
+		heroPoster?: string;
+		gallery: Plate[];
+	};
 }
 
+export type Ratio = '16/9' | '4/5';
+export interface Plate {
+	src: string;
+	ratio: Ratio;
+	caption: string;
+	/** browser : la capture est montrée dans une fenêtre de navigateur */
+	kind?: 'image' | 'video' | 'browser';
+	poster?: string;
+}
+
+/** Image de couverture : le vrai média ou le visuel généré */
+export const coverOf = (p: Project) => p.media?.cover ?? `/visuals/${p.slug}.svg`;
+
+/** Les planches d'un projet, dans l'ordre de la page */
+export function platesOf(p: Project): Plate[] {
+	if (p.media) return p.media.gallery;
+	const v = (n: number) => `/visuals/${p.slug}/${n}.svg`;
+	return [
+		{ src: v(1), ratio: '16/9', caption: 'key visual' },
+		{ src: `/visuals/${p.slug}.svg`, ratio: '16/9', caption: 'website, home', kind: 'browser' },
+		{ src: v(3), ratio: '4/5', caption: 'detail, line work' },
+		{ src: v(2), ratio: '16/9', caption: 'system, second family' },
+		{ src: v(4), ratio: '4/5', caption: 'mobile, home' },
+		{ src: v(5), ratio: '4/5', caption: 'mobile, story' },
+		{ src: v(6), ratio: '4/5', caption: 'mobile, detail' },
+		{ src: v(5), ratio: '16/9', caption: 'motion still, frame 0284' },
+	];
+}
+
+/** Une image 4:5 d'un projet (planches de l'herbier, cartes) */
+export const portraitOf = (p: Project, i = 0) => platesOf(p).filter((x) => x.ratio === '4/5' && x.kind !== 'video')[i]?.src ?? coverOf(p);
+
 export const projects: Project[] = [
+	{
+		slug: 'loum',
+		latin: 'Loumia gridiflora',
+		locality: 'Belgium',
+		name: 'Loum',
+		client: 'Loum',
+		year: 2026,
+		category: 'Studio website',
+		services: ['Web design', 'Creative development', 'Infinite grid', 'Keystatic CMS'],
+		summary: 'An endless, draggable contact sheet for an independent Belgian design studio.',
+		highlight: 'contact sheet',
+		intro:
+			'Loum is an independent design studio shaping brands, identities and worlds. Their work lives in images, so the website is made of nothing else: every image of every project, laid out on an endless contact sheet you can drag in every direction.',
+		challenge:
+			'Show everything at once without turning it into noise, stay fast with hundreds of high-resolution images, and let the studio update the whole thing on its own.',
+		approach: [
+			'An infinite grid you drag like a light table. Images are dealt out one project at a time so neighbours rarely share a project, while a live readout shows coordinates and speed.',
+			'Project pages keep the print logic of the studio: crop marks, pixel dimensions, an index number, and the next project already waiting at the end of the page.',
+			'Content lives in Keystatic: images are optimised at build time, videos and GIFs stay as they are. Deployed on Vercel.',
+		],
+		visual: { kind: 'strata', seed: 5, bg: '#f2f1ec', line: '#1c1c1a', accent: '#e6e4dc' },
+		url: 'studioloum.com',
+		media: {
+			cover: '/work/loum/home.webp',
+			heroVideo: '/work/loum/grid.mp4',
+			heroPoster: '/work/loum/grid-poster.webp',
+			gallery: [
+				{ src: '/work/loum/home-drag.webp', ratio: '16/9', caption: 'index, the contact sheet' },
+				{ src: '/work/loum/m-home.webp', ratio: '4/5', caption: 'mobile, index' },
+				{ src: '/work/loum/work-vera.webp', ratio: '4/5', caption: 'held work — Vera' },
+				{ src: '/work/loum/project.webp', ratio: '16/9', caption: 'project page, Biche', kind: 'browser' },
+				{ src: '/work/loum/m-project.webp', ratio: '4/5', caption: 'mobile, project' },
+				{ src: '/work/loum/m-scroll.webp', ratio: '4/5', caption: 'mobile, figures' },
+				{ src: '/work/loum/work-toro.webp', ratio: '4/5', caption: 'held work — Toro' },
+				{ src: '/work/loum/grid.mp4', ratio: '16/9', caption: 'motion, dragging the grid', kind: 'video', poster: '/work/loum/grid-poster.webp' },
+				{ src: '/work/loum/project-scroll.webp', ratio: '16/9', caption: 'project page, Lire le rap' },
+				{ src: '/work/loum/work-biche.webp', ratio: '4/5', caption: 'held work — Biche' },
+				{ src: '/work/loum/work-tilo.webp', ratio: '4/5', caption: 'held work — Tilo' },
+				{ src: '/work/loum/about.webp', ratio: '16/9', caption: 'about, over a project', kind: 'browser' },
+			],
+		},
+	},
 	{
 		slug: 'lichen-archive',
 		latin: 'Cladonia archiva',

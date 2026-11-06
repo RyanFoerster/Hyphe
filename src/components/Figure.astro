@@ -11,9 +11,14 @@ interface Props {
 	/** Cadrage de l'image dans son cadre (object-position) */
 	position?: string;
 	eager?: boolean;
+	/** Vidéo muette en boucle, avec son image d'attente */
+	video?: boolean;
+	poster?: string;
+	/** Adresse affichée dans une barre de navigateur au-dessus de l'image */
+	browser?: string;
 }
 
-const { src, alt, fig, caption, ratio = '16/10', class: className, position = '50% 50%', eager = false } = Astro.props;
+const { src, alt, fig, caption, ratio = '16/9', class: className, position = '50% 50%', eager = false, video = false, poster, browser } = Astro.props;
 
 // Ordre de disparition des tuiles : fixé au build, différent pour chaque image
 let seed = [...src].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
@@ -29,15 +34,41 @@ const value = (rand() * 0.6 + 0.4 + 0.00000004).toFixed(8);
 ---
 
 <figure class:list={['fig group', className]} data-tiles>
+	{
+		browser && (
+			<div class="meta flex h-8 items-center gap-3 border border-b-0 border-bone/12 bg-deep px-3 text-mineral">
+				<span class="text-acid">*</span>
+				<span class="text-bone/80">https://{browser}</span>
+				<span class="ml-auto hidden sm:inline">live</span>
+			</div>
+		)
+	}
 	<div class="frame relative overflow-hidden" style={`aspect-ratio: ${ratio}`} data-portal-frame>
-		<img
-			src={src}
-			alt={alt}
-			loading={eager ? 'eager' : 'lazy'}
-			decoding="async"
-			class="absolute inset-0 size-full object-cover transition duration-[1400ms] ease-(--ease-organic) group-hover:scale-[1.03]"
-			style={`object-position: ${position}`}
-		/>
+		{
+			video ? (
+				<video
+					src={src}
+					poster={poster}
+					muted
+					loop
+					playsinline
+					autoplay
+					preload="metadata"
+					aria-label={alt}
+					class="absolute inset-0 size-full object-cover"
+					data-motion
+				></video>
+			) : (
+				<img
+					src={src}
+					alt={alt}
+					loading={eager ? 'eager' : 'lazy'}
+					decoding="async"
+					class="absolute inset-0 size-full object-cover transition duration-[1400ms] ease-(--ease-organic) group-hover:scale-[1.03]"
+					style={`object-position: ${position}`}
+				/>
+			)
+		}
 		<slot />
 		<span class="tiles" aria-hidden="true" style={`--cols: ${COLS}; --rows: ${ROWS}`}>
 			{tiles.map((d) => <span style={`--d: ${d}ms`}></span>)}
@@ -45,9 +76,19 @@ const value = (rand() * 0.6 + 0.4 + 0.00000004).toFixed(8);
 	</div>
 	<figcaption class="meta mt-3 flex items-baseline justify-between gap-4 text-mineral">
 		<span><span class="text-bone/85">fig. {fig}</span> — {caption}</span>
-		<span class="tabular-nums text-mineral-dim transition-colors group-hover:text-acid">{value}</span>
+		<span class="hidden tabular-nums text-mineral-dim transition-colors group-hover:text-acid sm:inline">{value}</span>
 	</figcaption>
 </figure>
+
+<script>
+	// Mouvement réduit : les vidéos restent sur leur première image
+	if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		document.querySelectorAll<HTMLVideoElement>('video[data-motion]').forEach((v) => {
+			v.removeAttribute('autoplay');
+			v.pause();
+		});
+	}
+</script>
 
 <style>
 	.frame {

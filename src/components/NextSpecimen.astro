@@ -1,0 +1,175 @@
+---
+// Fin de page projet : on continue de défiler et le spécimen suivant pousse.
+// Une graine, un cadre qui s'ouvre jusqu'à l'écran entier, l'image qui se
+// recompose tuile par tuile, le nom qui éclot lettre à lettre, une hyphe
+// qui court en bas. Au bout, on entre dans le projet sans cliquer.
+import { coverOf, projects, type Project } from '../data/projects';
+
+interface Props {
+	next: Project;
+}
+
+const { next } = Astro.props;
+const no = String(projects.indexOf(next) + 1).padStart(2, '0');
+const total = String(projects.length).padStart(2, '0');
+const COLS = 10;
+const ROWS = 6;
+let seed = next.visual.seed * 7919;
+const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+// Seuil d'apparition de chaque tuile : du centre vers les bords, un peu au hasard
+const tiles = Array.from({ length: COLS * ROWS }, (_, i) => {
+	const x = (i % COLS) / (COLS - 1) - 0.5;
+	const y = Math.floor(i / COLS) / (ROWS - 1) - 0.5;
+	return (0.06 + Math.hypot(x, y) * 0.6 + rand() * 0.2).toFixed(3);
+});
+const letters = [...next.name];
+---
+
+<section class="next relative" aria-label={`Next project: ${next.name}`} data-next data-href={`/work/${next.slug}`}>
+	<div class="stage sticky top-0 h-[100svh] overflow-hidden">
+		<!-- L'image du suivant, révélée par un cadre qui s'ouvre et des tuiles qui tombent -->
+		<div class="shot absolute inset-0">
+			<img src={coverOf(next)} alt="" loading="lazy" class="absolute inset-0 size-full object-cover" />
+			<div class="absolute inset-0 bg-gradient-to-t from-void/85 via-void/20 to-void/40"></div>
+			<span class="tiles" aria-hidden="true" style={`--cols: ${COLS}; --rows: ${ROWS}`}>
+				{tiles.map((t) => <span style={`--t: ${t}`}></span>)}
+			</span>
+		</div>
+		<div class="box" aria-hidden="true">
+			<span class="tick left-0 top-0 border-l border-t"></span>
+			<span class="tick right-0 top-0 border-r border-t"></span>
+			<span class="tick bottom-0 left-0 border-b border-l"></span>
+			<span class="tick bottom-0 right-0 border-b border-r"></span>
+			<span class="meta absolute -top-5 left-0 text-bone/80">specimen {no} / {total}</span>
+			<span class="meta absolute -top-5 right-0 tabular-nums text-acid" data-next-value>0.00000000</span>
+		</div>
+
+		<div class="relative flex h-full flex-col justify-between px-4 pb-6 pt-24 sm:px-6">
+			<p class="meta flex justify-between text-mineral">
+				<span>Keep scrolling — next specimen</span>
+				<span class="hidden sm:inline">{next.latin} — {next.locality}</span>
+			</p>
+			<div>
+				<p class="titre text-[clamp(4rem,14vw,14rem)] text-bone" aria-hidden="true">
+					{letters.map((c, i) => <span class="nl" style={`--t: ${(0.15 + (i / Math.max(1, letters.length)) * 0.55).toFixed(3)}`}>{c === ' ' ? ' ' : c}</span>)}
+				</p>
+				<div class="meta mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-bone/70">
+					<span class="tabular-nums" data-next-bar>[::::::::::::::::::::::::]</span>
+					<span class="tabular-nums text-acid" data-next-pct>000%</span>
+					<a href={`/work/${next.slug}`} data-portal class="ml-auto border border-bone/20 px-3 py-2 text-bone transition hover:border-acid hover:text-acid">
+						Enter {next.name} →
+					</a>
+				</div>
+				<!-- L'hyphe qui court sous le nom -->
+				<svg class="mt-5 block h-6 w-full overflow-visible" viewBox="0 0 1000 24" preserveAspectRatio="none" aria-hidden="true">
+					<path d="M0 12 C 80 2, 140 22, 220 12 S 360 4, 430 13 S 560 22, 640 11 S 790 3, 860 12 S 960 20, 1000 12" pathLength="1" class="hypha" />
+					<path d="M220 12 l 10 -10 M430 13 l -8 9 M640 11 l 9 -9 M860 12 l -7 9" pathLength="1" class="twig" />
+				</svg>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.next {
+		height: 260svh;
+		--p: 0;
+	}
+	/* Le cadre s'ouvre d'une vignette au centre jusqu'à l'écran entier */
+	.shot {
+		clip-path: inset(calc((1 - var(--p)) * 34%) calc((1 - var(--p)) * 36%));
+	}
+	.box {
+		position: absolute;
+		inset: calc((1 - var(--p)) * 34%) calc((1 - var(--p)) * 36%);
+		opacity: calc(1 - var(--p) * 0.8);
+		pointer-events: none;
+	}
+	.tick {
+		position: absolute;
+		width: 10px;
+		height: 10px;
+		border-color: var(--color-acid);
+	}
+	.tiles {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		grid-template-columns: repeat(var(--cols), 1fr);
+		grid-template-rows: repeat(var(--rows), 1fr);
+	}
+	/* Chaque tuile tombe à son seuil, avec un bord acide au passage */
+	.tiles span {
+		background: var(--color-void);
+		opacity: clamp(0, (var(--t) - var(--p)) * 9, 1);
+		box-shadow: inset 0 0 0 1px rgb(200 245 60 / calc(clamp(0, 1 - max(var(--t) - var(--p), var(--p) - var(--t)) * 14, 1) * 0.7));
+	}
+	.nl {
+		display: inline-block;
+		opacity: clamp(0, (var(--p) - var(--t)) * 7, 1);
+		translate: 0 calc(clamp(0, 1 - (var(--p) - var(--t)) * 7, 1) * 0.18em);
+		filter: blur(calc(clamp(0, 1 - (var(--p) - var(--t)) * 7, 1) * 0.08em));
+	}
+	.hypha,
+	.twig {
+		fill: none;
+		stroke: var(--color-acid);
+		stroke-width: 1;
+		vector-effect: non-scaling-stroke;
+		stroke-dasharray: 1;
+		stroke-dashoffset: calc(1 - var(--p));
+	}
+	.twig {
+		stroke: rgb(230 228 220 / 0.6);
+		stroke-dashoffset: calc(1 - clamp(0, (var(--p) - 0.4) * 1.6, 1));
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.next {
+			height: auto;
+			--p: 1;
+		}
+		.stage {
+			position: relative;
+		}
+	}
+</style>
+
+<script>
+	import { go } from '../scripts/tiles';
+
+	const zone = document.querySelector<HTMLElement>('[data-next]');
+	if (zone && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		const bar = zone.querySelector<HTMLElement>('[data-next-bar]')!;
+		const pct = zone.querySelector<HTMLElement>('[data-next-pct]')!;
+		const value = zone.querySelector<HTMLElement>('[data-next-value]')!;
+		// On n'enchaîne que si le visiteur est vraiment descendu jusque-là
+		// (pas au retour arrière, qui ramène directement en bas de page)
+		let armed = false;
+		let gone = false;
+		let shown = 0;
+		const tick = () => {
+			const r = zone.getBoundingClientRect();
+			const p = Math.min(1, Math.max(0, -r.top / (r.height - innerHeight)));
+			if (p < 0.85) armed = true;
+			shown += (p - shown) * 0.2;
+			if (Math.abs(p - shown) < 0.001) shown = p;
+			zone.style.setProperty('--p', shown.toFixed(4));
+			const filled = Math.round(shown * 24);
+			bar.textContent = `[${'#'.repeat(filled)}${':'.repeat(24 - filled)}]`;
+			pct.textContent = `${String(Math.round(shown * 100)).padStart(3, '0')}%`;
+			value.textContent = (shown + (shown > 0 && shown < 1 ? 0.00000001 : 0)).toFixed(8);
+			if (armed && !gone && p >= 0.995) {
+				gone = true;
+				go(zone.dataset.href!);
+			}
+			requestAnimationFrame(tick);
+		};
+		requestAnimationFrame(tick);
+		addEventListener('pageshow', (e) => {
+			if (e.persisted) {
+				armed = false;
+				gone = false;
+			}
+		});
+	}
+</script>

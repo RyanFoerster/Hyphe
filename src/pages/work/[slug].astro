@@ -4,7 +4,8 @@ import Layout from '../../layouts/Layout.astro';
 import Footer from '../../components/Footer.astro';
 import Figure from '../../components/Figure.astro';
 import Herbarium from '../../components/Herbarium.astro';
-import { projects, type Project } from '../../data/projects';
+import NextSpecimen from '../../components/NextSpecimen.astro';
+import { coverOf, platesOf, projects, type Plate, type Project } from '../../data/projects';
 
 export const getStaticPaths = (() =>
 	projects.map((project, i) => ({
@@ -19,15 +20,34 @@ interface Props {
 }
 
 const { project: p, next } = Astro.props;
-const visual = `/visuals/${p.slug}.svg`;
-const v = (n: number) => `/visuals/${p.slug}/${n}.svg`;
+const visual = coverOf(p);
+const hero = p.media?.heroVideo ? { video: p.media.heroVideo, poster: p.media.heroPoster } : null;
 const organism = { topo: 'mycelium', strata: 'roots', bloom: 'flower' }[p.visual.kind];
 const accent = p.visual.accent === '#f07a2a' ? 'ember' : 'acid';
-const domain = `${p.name.toLowerCase().replace(/\s+/g, '')}.com`;
+const domain = p.url ?? `${p.name.toLowerCase().replace(/\s+/g, '')}.com`;
 // Le mot mis en exergue dans l'introduction, s'il y figure
 const word = [p.highlight, p.client].find((w) => p.intro.includes(w)) ?? '';
 const at = word ? p.intro.indexOf(word) : -1;
 const intro = at < 0 ? [p.intro, '', ''] : [p.intro.slice(0, at), word, p.intro.slice(at + word.length)];
+// Mise en planches : une image 16:9 par rangée (pleine largeur ou décalée), les
+// 4:5 qui se suivent groupées par deux ou trois, en quinconce
+type Row = { wide: Plate; n: number } | { tall: Plate[]; n: number };
+const rows: Row[] = [];
+platesOf(p).forEach((plate, i) => {
+	const last = rows[rows.length - 1];
+	if (plate.ratio === '4/5' && last && 'tall' in last && last.tall.length < 3) last.tall.push(plate);
+	else rows.push(plate.ratio === '4/5' ? { tall: [plate], n: i + 1 } : { wide: plate, n: i + 1 });
+});
+const plateI = rows.slice(0, 2);
+const plateII = rows.slice(2);
+const fig = (n: number) => String(n).padStart(2, '0');
+const wideClass = (k: number) => (k % 2 === 0 ? 'md:col-span-12' : k % 4 === 1 ? 'md:col-span-9 md:col-start-4' : 'md:col-span-9');
+const tallClass = (count: number, j: number) =>
+	count === 1
+		? j === 0 ? 'md:col-span-5 md:col-start-2' : ''
+		: count === 2
+			? ['md:col-span-5 md:col-start-2', 'md:col-span-5 md:col-start-8 md:mt-40'][j]
+			: ['md:col-span-3 md:col-start-2', 'md:col-span-3 md:col-start-6 md:mt-24', 'md:col-span-3 md:col-start-10 md:mt-48'][j];
 const palette = [
 	{ name: 'Ground', hex: p.visual.bg },
 	{ name: 'Line', hex: p.visual.line },
@@ -39,8 +59,24 @@ const palette = [
 <Layout title={p.name} description={p.summary} image={visual}>
 	<!-- L'environnement du projet : on y entre par la mosaïque -->
 	<section class="relative h-[100svh] min-h-[600px] overflow-hidden" aria-labelledby="project-title">
-		<img src={visual} alt="" class="absolute inset-0 size-full scale-105 object-cover" fetchpriority="high" />
-		<div class="absolute inset-0 bg-gradient-to-b from-void/30 via-transparent to-void"></div>
+		<!-- Vrai projet : le site vit dans un cadre de visée, sur fond sombre -->
+		{
+			hero ? (
+				<div class="hero-shot absolute left-4 right-4 top-24 sm:left-auto sm:right-6 md:top-[14svh]">
+					<span class="tick left-0 top-0 border-l border-t" aria-hidden="true" />
+					<span class="tick right-0 top-0 border-r border-t" aria-hidden="true" />
+					<span class="tick bottom-0 left-0 border-b border-l" aria-hidden="true" />
+					<span class="tick bottom-0 right-0 border-b border-r" aria-hidden="true" />
+					<p class="meta absolute -top-5 left-0 text-bone/70">https://{domain}</p>
+					<video src={hero.video} poster={hero.poster} muted loop playsinline autoplay class="block aspect-video w-full object-cover" data-motion aria-label={`${p.name} website, live`} />
+				</div>
+			) : (
+				<>
+					<img src={visual} alt="" class="absolute inset-0 size-full scale-105 object-cover" fetchpriority="high" />
+					<div class="absolute inset-0 bg-gradient-to-b from-void/30 via-transparent to-void" />
+				</>
+			)
+		}
 		<canvas
 			class="pointer-events-none absolute inset-y-[12%] right-0 w-full opacity-80 md:w-1/2"
 			data-ascii
@@ -72,32 +108,40 @@ const palette = [
 		</p>
 	</section>
 
-	<!-- Planche I : le visuel clé, le site -->
-	<section class="space-y-24 px-4 sm:px-6 md:space-y-32" aria-label="Gallery, plate I">
-		<Figure src={v(1)} alt={`${p.name}, key visual`} fig="01" caption="key visual" ratio="21/9" />
-
-		<figure class="mx-auto max-w-[1400px]" data-reveal>
-			<div class="browser">
-				<div class="meta flex h-8 items-center gap-3 border-b border-dashed border-bone/15 px-3 text-mineral">
-					<span class="text-acid">*</span>
-					<span class="text-bone/80">https://{domain}</span>
-					<span class="ml-auto hidden sm:inline">1440 × 900 — live</span>
-				</div>
-				<div class="relative aspect-[16/9] overflow-hidden">
-					<img src={visual} alt={`${p.name} website, home page`} loading="lazy" class="absolute inset-0 size-full object-cover" />
-					<div class="absolute inset-0 bg-gradient-to-r from-void/80 via-void/20 to-transparent"></div>
-					<div class="absolute inset-x-[4%] top-[5%] flex items-center justify-between">
-						<span class="text-[clamp(0.6rem,1.1vw,0.95rem)] tracking-wide text-bone/90">{p.name}</span>
-						<span class="meta hidden gap-6 text-bone/60 sm:flex"><span>Index</span><span>About</span><span>Shop</span></span>
+	<!-- Plate I -->
+	<section class="space-y-24 px-4 sm:px-6 md:space-y-36" aria-label="Gallery, plate i">
+		{
+			plateI.map((row, k) =>
+				'wide' in row ? (
+					<div class="grid md:grid-cols-12">
+						<Figure
+							class={wideClass(k)}
+							src={row.wide.src}
+							alt={`${p.name}, ${row.wide.caption}`}
+							fig={fig(row.n)}
+							caption={row.wide.caption}
+							ratio="16/9"
+							video={row.wide.kind === 'video'}
+							poster={row.wide.poster}
+							browser={row.wide.kind === 'browser' ? domain : undefined}
+						/>
 					</div>
-					<div class="absolute bottom-[10%] left-[4%] max-w-[55%]">
-						<p class="titre text-[clamp(1.6rem,6vw,6rem)]">{p.name}</p>
-						<p class="mt-[3%] max-w-[80%] text-[clamp(0.55rem,1.05vw,0.95rem)] leading-snug text-bone/70">{p.summary}</p>
+				) : (
+					<div class="grid grid-cols-2 gap-3 md:grid-cols-12 md:gap-6">
+						{row.tall.map((plate, j) => (
+							<Figure
+								class:list={[tallClass(row.tall.length, j), row.tall.length === 3 && j === 2 && 'col-span-2 mx-auto w-1/2 md:w-auto']}
+								src={plate.src}
+								alt={`${p.name}, ${plate.caption}`}
+								fig={fig(row.n + j)}
+								caption={plate.caption}
+								ratio="4/5"
+							/>
+						))}
 					</div>
-				</div>
-			</div>
-			<figcaption class="meta mt-3 text-mineral"><span class="text-bone/85">fig. 02</span> — website, home</figcaption>
-		</figure>
+				),
+			)
+		}
 	</section>
 
 	<canvas class="pointer-events-none mt-24 block h-28 w-full opacity-60" data-ascii data-ascii-kind="mycelium" data-ascii-seed={p.visual.seed + 3} data-ascii-size="10" aria-hidden="true"></canvas>
@@ -123,24 +167,42 @@ const palette = [
 		</div>
 	</section>
 
-	<!-- Planche II : détails, écrans, matière -->
-	<section class="space-y-24 px-4 sm:px-6 md:space-y-36" aria-label="Gallery, plate II">
-		<div class="grid gap-14 md:grid-cols-12 md:gap-6">
-			<Figure class="md:col-span-5" src={v(3)} alt={`${p.name}, detail`} fig="03" caption="detail, line work" ratio="4/5" />
-			<Figure class="md:col-span-6 md:col-start-7 md:mt-48" src={v(2)} alt={`${p.name}, secondary visual`} fig="04" caption="system, second family" ratio="16/11" />
-		</div>
-
-		<div class="grid grid-cols-3 gap-3 md:grid-cols-12 md:gap-6">
-			{
-				[4, 5, 6].map((n, i) => (
-					<div class:list={['md:col-span-3', i === 0 && 'md:col-start-2', i === 1 && 'md:mt-24', i === 2 && 'md:mt-48']}>
-						<Figure src={v(n)} alt={`${p.name} on mobile, screen ${i + 1}`} fig={String(5 + i).padStart(2, '0')} caption={['mobile, home', 'mobile, story', 'mobile, detail'][i]} ratio="9/19" />
+	<!-- Plate II -->
+	<section class="space-y-24 px-4 sm:px-6 md:space-y-36" aria-label="Gallery, plate ii">
+		{
+			plateII.map((row, k) =>
+				'wide' in row ? (
+					<div class="grid md:grid-cols-12">
+						<Figure
+							class={wideClass(k)}
+							src={row.wide.src}
+							alt={`${p.name}, ${row.wide.caption}`}
+							fig={fig(row.n)}
+							caption={row.wide.caption}
+							ratio="16/9"
+							video={row.wide.kind === 'video'}
+							poster={row.wide.poster}
+							browser={row.wide.kind === 'browser' ? domain : undefined}
+						/>
 					</div>
-				))
-			}
-		</div>
-
+				) : (
+					<div class="grid grid-cols-2 gap-3 md:grid-cols-12 md:gap-6">
+						{row.tall.map((plate, j) => (
+							<Figure
+								class:list={[tallClass(row.tall.length, j), row.tall.length === 3 && j === 2 && 'col-span-2 mx-auto w-1/2 md:w-auto']}
+								src={plate.src}
+								alt={`${p.name}, ${plate.caption}`}
+								fig={fig(row.n + j)}
+								caption={plate.caption}
+								ratio="4/5"
+							/>
+						))}
+					</div>
+				),
+			)
+		}
 		<!-- Planche de matière : typographie et couleurs -->
+		{!p.media && (
 		<figure class="grid gap-6 md:grid-cols-12" data-reveal>
 			<div class="plate relative flex min-h-[420px] flex-col justify-between overflow-hidden p-6 md:col-span-7" style={`background:${p.visual.bg}`}>
 				<p class="meta flex justify-between text-bone/60"><span>Type specimen</span><span>Parceh / Instrument Sans</span></p>
@@ -157,14 +219,10 @@ const palette = [
 					))
 				}
 			</ul>
-			<figcaption class="meta text-mineral md:col-span-12"><span class="text-bone/85">fig. 08</span> — matter: type and colour</figcaption>
+			<figcaption class="meta text-mineral md:col-span-12"><span class="text-bone/85">fig. {fig(platesOf(p).length + 1)}</span> — matter: type and colour</figcaption>
 		</figure>
+		)}
 
-		<Figure src={v(5)} alt={`${p.name}, motion still`} fig="09" caption="motion still, frame 0284" ratio="21/9">
-			<p class="meta absolute bottom-4 left-4 flex gap-4 text-bone/80">
-				<span class="text-acid">▸</span><span class="tabular-nums">00:12:04</span><span class="text-mineral">[####::::::::]</span>
-			</p>
-		</Figure>
 	</section>
 
 	<canvas class="pointer-events-none mt-24 block h-28 w-full opacity-60" data-ascii data-ascii-kind="roots" data-ascii-seed={p.visual.seed + 9} data-ascii-size="10" aria-hidden="true"></canvas>
@@ -194,29 +252,30 @@ const palette = [
 		}
 	</section>
 
-	<!-- Spécimen suivant -->
-	<section class="px-4 sm:px-6" aria-label="Next project">
-		<a href={`/work/${next.slug}`} data-portal class="group block" data-reveal>
-			<p class="meta mb-4 flex justify-between text-mineral">
-				<span>Next specimen — {next.latin}</span><span>{next.client} — {next.year}</span>
-			</p>
-			<div data-portal-frame class="next relative h-[42vh] min-h-[260px] overflow-hidden">
-				<img src={`/visuals/${next.slug}.svg`} alt="" loading="lazy" class="absolute inset-0 size-full object-cover transition duration-[1400ms] ease-(--ease-organic) group-hover:scale-105" />
-				<div class="absolute inset-0 bg-gradient-to-t from-void/80 to-transparent"></div>
-				<p class="titre absolute bottom-5 left-5 text-[clamp(3rem,9vw,9rem)] transition-transform duration-700 ease-(--ease-organic) group-hover:translate-x-3" data-split>{next.name}</p>
-			</div>
-		</a>
-	</section>
-
 	<Footer />
+	<NextSpecimen next={next} />
 </Layout>
 
 <style>
-	.browser,
-	.plate,
-	.next {
+	.plate {
 		border: 1px solid rgb(230 228 220 / 0.12);
 		background-color: var(--color-deep);
+	}
+.hero-shot {
+		width: min(58vw, calc((100svh - 420px) * 16 / 9), 1040px);
+	}
+	@media (max-width: 639px) {
+		.hero-shot {
+			width: auto;
+		}
+	}
+	.tick {
+		position: absolute;
+		z-index: 1;
+		width: 10px;
+		height: 10px;
+		margin: -5px;
+		border-color: var(--color-acid);
 	}
 	.swatch {
 		border: 1px solid rgb(230 228 220 / 0.12);
