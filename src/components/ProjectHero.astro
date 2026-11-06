@@ -1,0 +1,181 @@
+---
+// Le haut d'une page projet. Rendu à l'identique en deux endroits :
+//   page  le hero de la page du projet
+//   next  la fin de la page précédente, où il pousse au défilement (--p de 0 à 1)
+// À p = 1 les deux sont pixel pour pixel les mêmes : le changement de page ne se voit pas.
+import Herbarium from './Herbarium.astro';
+import { coverOf, type Project } from '../data/projects';
+
+interface Props {
+	project: Project;
+	mode?: 'page' | 'next';
+}
+
+const { project: p, mode = 'page' } = Astro.props;
+const next = mode === 'next';
+const visual = coverOf(p);
+const domain = p.url ?? `${p.name.toLowerCase().replace(/\s+/g, '')}.com`;
+const organism = { topo: 'mycelium', strata: 'roots', bloom: 'flower' }[p.visual.kind];
+const accent = p.visual.accent === '#f07a2a' ? 'ember' : 'acid';
+const media = p.media?.heroVideo ? { video: p.media.heroVideo, poster: p.media.heroPoster } : null;
+
+// Tuiles de la pousse (mode next) : du centre vers les bords, un peu au hasard
+const COLS = 10;
+const ROWS = 6;
+let seed = p.visual.seed * 7919;
+const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+const tiles = next
+	? Array.from({ length: COLS * ROWS }, (_, i) => {
+			const x = (i % COLS) / (COLS - 1) - 0.5;
+			const y = Math.floor(i / COLS) / (ROWS - 1) - 0.5;
+			return (0.06 + Math.hypot(x, y) * 0.6 + rand() * 0.2).toFixed(3);
+		})
+	: [];
+// Mots du nom (comme le découpage du titre de la page) : une lettre = un bloc
+let count = 0;
+const words = p.name.split(' ').map((word) => {
+	const from = count;
+	count += word.length;
+	return { word, from };
+});
+const total = count;
+---
+
+<div class:list={['project-hero relative h-[100svh] min-h-[600px] overflow-hidden', next && 'is-next']} data-continue-hero>
+	{
+		media ? (
+			<div class="hero-shot absolute left-4 right-4 top-24 sm:left-auto sm:right-6 md:top-[14svh]">
+				<span class="tick left-0 top-0 border-l border-t" aria-hidden="true" />
+				<span class="tick right-0 top-0 border-r border-t" aria-hidden="true" />
+				<span class="tick bottom-0 left-0 border-b border-l" aria-hidden="true" />
+				<span class="tick bottom-0 right-0 border-b border-r" aria-hidden="true" />
+				<p class="late meta absolute -top-5 left-0 text-bone/70">https://{domain}</p>
+				<div class="grow relative">
+					{next ? (
+						<img src={media.poster} alt="" loading="lazy" class="block aspect-video w-full object-cover" />
+					) : (
+						<video src={media.video} poster={media.poster} muted loop playsinline autoplay class="block aspect-video w-full object-cover" data-motion aria-label={`${p.name} website, live`} />
+					)}
+					{next && <span class="tiles" aria-hidden="true" style={`--cols: ${COLS}; --rows: ${ROWS}`}>{tiles.map((t) => <span style={`--t: ${t}`} />)}</span>}
+				</div>
+			</div>
+		) : (
+			<div class="grow absolute inset-0">
+				<img src={visual} alt="" class="absolute inset-0 size-full scale-105 object-cover" fetchpriority={next ? 'low' : 'high'} loading={next ? 'lazy' : 'eager'} />
+				<div class="absolute inset-0 bg-gradient-to-b from-void/30 via-transparent to-void" />
+				{next && <span class="tiles" aria-hidden="true" style={`--cols: ${COLS}; --rows: ${ROWS}`}>{tiles.map((t) => <span style={`--t: ${t}`} />)}</span>}
+			</div>
+		)
+	}
+	<canvas
+		class="pointer-events-none absolute inset-y-[12%] right-0 w-full opacity-80 md:w-1/2"
+		data-ascii
+		data-ascii-kind={organism}
+		data-ascii-seed={p.visual.seed}
+		data-ascii-size="11"
+		data-ascii-accent={accent}
+		data-hero-ascii
+		aria-hidden="true"
+	></canvas>
+
+	<div class="relative flex h-full flex-col justify-end gap-8 px-4 pb-6 pt-24 sm:px-6 md:flex-row md:items-end md:justify-between md:pb-8">
+		<div>
+			<p class="late meta mb-6 text-mineral" aria-hidden={next ? 'true' : undefined}>
+				<a href="/work" class="transition hover:text-bone" tabindex={next ? -1 : undefined}>Herbarium</a>
+				<span class="text-mineral-dim"> / </span><span class="text-bone/80">{p.slug}.prj</span>
+			</p>
+			{
+				next ? (
+					<p class="titre text-[clamp(4rem,13vw,13rem)]" aria-hidden="true">
+						{words.map((w, k) => (
+							<>
+								{k > 0 && ' '}
+								<span class="nw">
+									{[...w.word].map((c, j) => <span class="nl" style={`--t: ${(0.15 + ((w.from + j) / Math.max(1, total)) * 0.55).toFixed(3)}`}>{c}</span>)}
+								</span>
+							</>
+						))}
+					</p>
+				) : (
+					<h1 id="project-title" class="titre text-[clamp(4rem,13vw,13rem)]" data-split style="--split-delay: 700ms">{p.name}</h1>
+				)
+			}
+			<p class="late meta mt-5 max-w-xl text-bone/70">{p.latin} — {p.summary}</p>
+		</div>
+		<Herbarium project={p} class="late w-full shrink-0 md:w-[340px]" />
+	</div>
+</div>
+
+<style>
+	.hero-shot {
+		width: min(58vw, calc((100svh - 420px) * 16 / 9), 1040px);
+	}
+	@media (max-width: 639px) {
+		.hero-shot {
+			width: auto;
+		}
+	}
+	.tick {
+		position: absolute;
+		z-index: 1;
+		width: 10px;
+		height: 10px;
+		margin: -5px;
+		border-color: var(--color-acid);
+	}
+
+	/* ---- Pousse (fin de la page précédente) ---- */
+	.is-next .grow {
+		clip-path: inset(calc((1 - var(--p, 1)) * 34%) calc((1 - var(--p, 1)) * 36%));
+	}
+	.is-next .hero-shot .grow {
+		clip-path: inset(calc((1 - var(--p, 1)) * 50%));
+	}
+	.is-next .tick {
+		opacity: clamp(0, (var(--p, 1) - 0.5) * 3, 1);
+	}
+	.is-next .late {
+		opacity: clamp(0, (var(--p, 1) - 0.78) * 6, 1);
+	}
+	.tiles {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		grid-template-columns: repeat(var(--cols), 1fr);
+		grid-template-rows: repeat(var(--rows), 1fr);
+	}
+	/* Chaque tuile tombe à son seuil, avec un bord acide au passage */
+	.tiles span {
+		background: var(--color-void);
+		opacity: clamp(0, (var(--t) - var(--p, 1)) * 9, 1);
+		box-shadow: inset 0 0 0 1px rgb(200 245 60 / calc(clamp(0, 1 - max(var(--t) - var(--p, 1), var(--p, 1) - var(--t)) * 14, 1) * 0.7));
+	}
+	.nw {
+		display: inline-block;
+		white-space: nowrap;
+	}
+	.nl {
+		display: inline-block;
+		opacity: clamp(0, (var(--p, 1) - var(--t)) * 7, 1);
+		translate: 0 calc(clamp(0, 1 - (var(--p, 1) - var(--t)) * 7, 1) * 0.18em);
+		filter: blur(calc(clamp(0, 1 - (var(--p, 1) - var(--t)) * 7, 1) * 0.08em));
+	}
+
+	/* ---- Arrivée en continu : rien ne se rejoue, tout est déjà là ---- */
+	:global(html.continued) [data-continue-hero] :global(.g) {
+		animation: none !important;
+		opacity: 1;
+		filter: none;
+		transform: none;
+	}
+	:global(html.continued) [data-continue-hero] :global(.l::before),
+	:global(html.continued) [data-continue-hero] :global(.l::after),
+	:global(html.continued) [data-continue-hero] :global(.w::after) {
+		animation: none !important;
+		opacity: 0;
+	}
+	:global(html.continued) [data-continue-hero] :global(.w) {
+		animation: none !important;
+		clip-path: none;
+	}
+</style>

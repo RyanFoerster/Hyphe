@@ -157,6 +157,17 @@ html.is-loading mark.hl.is-in::before {
   clip-path: inset(0 100% 100% 0);
 }
 
+/* ---------- Passage d'une page à l'autre ---------- */
+/* Le navigateur garde l'ancienne image jusqu'à la nouvelle et fond les deux :
+   pour le défilement infini, elles sont identiques, rien ne se voit. */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.35s;
+}
+
 /* ---------- Transition en mosaïque ---------- */
 html.tiles-cover body::before {
   content: "";
@@ -356,6 +367,9 @@ html[data-specimen-hover] body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
   html[data-text] [data-split] .w {
     clip-path: none;
   }

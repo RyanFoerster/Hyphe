@@ -178,7 +178,8 @@ class Organism {
 		this.seed = Number(canvas.dataset.asciiSeed ?? 1);
 		this.size = Number(canvas.dataset.asciiSize ?? 11);
 		this.accent = COLORS[(canvas.dataset.asciiAccent as keyof typeof COLORS) ?? 'acid'] ?? COLORS.acid;
-		if (still) this.progress = 1;
+		// Arrivée en continu : l'organisme du hero est déjà poussé, comme sur la page d'avant
+		if (still || (canvas.hasAttribute('data-hero-ascii') && document.documentElement.classList.contains('continued'))) this.progress = 1;
 
 		new ResizeObserver(() => this.resize()).observe(canvas);
 		new IntersectionObserver(([entry]) => {

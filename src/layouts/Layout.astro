@@ -40,6 +40,10 @@ const canonical = new URL(Astro.url.pathname, site.url);
 				const r = JSON.parse(sessionStorage.getItem('hyphe:tiles') || 'null');
 				if (r && Date.now() - r.t < 5000 && !matchMedia('(prefers-reduced-motion: reduce)').matches)
 					document.documentElement.classList.add('tiles-cover');
+				// Arrivée par le défilement infini : le haut de page est déjà en place
+				const c = Number(sessionStorage.getItem('hyphe:continue'));
+				sessionStorage.removeItem('hyphe:continue');
+				if (c && Date.now() - c < 5000) document.documentElement.classList.add('continued');
 			} catch {}
 		</script>
 	</head>

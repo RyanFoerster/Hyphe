@@ -3,7 +3,7 @@ import type { GetStaticPaths } from 'astro';
 import Layout from '../../layouts/Layout.astro';
 import Footer from '../../components/Footer.astro';
 import Figure from '../../components/Figure.astro';
-import Herbarium from '../../components/Herbarium.astro';
+import ProjectHero from '../../components/ProjectHero.astro';
 import NextSpecimen from '../../components/NextSpecimen.astro';
 import { coverOf, platesOf, projects, type Plate, type Project } from '../../data/projects';
 
@@ -21,9 +21,6 @@ interface Props {
 
 const { project: p, next } = Astro.props;
 const visual = coverOf(p);
-const hero = p.media?.heroVideo ? { video: p.media.heroVideo, poster: p.media.heroPoster } : null;
-const organism = { topo: 'mycelium', strata: 'roots', bloom: 'flower' }[p.visual.kind];
-const accent = p.visual.accent === '#f07a2a' ? 'ember' : 'acid';
 const domain = p.url ?? `${p.name.toLowerCase().replace(/\s+/g, '')}.com`;
 // Le mot mis en exergue dans l'introduction, s'il y figure
 const word = [p.highlight, p.client].find((w) => p.intro.includes(w)) ?? '';
@@ -57,47 +54,9 @@ const palette = [
 ---
 
 <Layout title={p.name} description={p.summary} image={visual}>
-	<!-- L'environnement du projet : on y entre par la mosaïque -->
-	<section class="relative h-[100svh] min-h-[600px] overflow-hidden" aria-labelledby="project-title">
-		<!-- Vrai projet : le site vit dans un cadre de visée, sur fond sombre -->
-		{
-			hero ? (
-				<div class="hero-shot absolute left-4 right-4 top-24 sm:left-auto sm:right-6 md:top-[14svh]">
-					<span class="tick left-0 top-0 border-l border-t" aria-hidden="true" />
-					<span class="tick right-0 top-0 border-r border-t" aria-hidden="true" />
-					<span class="tick bottom-0 left-0 border-b border-l" aria-hidden="true" />
-					<span class="tick bottom-0 right-0 border-b border-r" aria-hidden="true" />
-					<p class="meta absolute -top-5 left-0 text-bone/70">https://{domain}</p>
-					<video src={hero.video} poster={hero.poster} muted loop playsinline autoplay class="block aspect-video w-full object-cover" data-motion aria-label={`${p.name} website, live`} />
-				</div>
-			) : (
-				<>
-					<img src={visual} alt="" class="absolute inset-0 size-full scale-105 object-cover" fetchpriority="high" />
-					<div class="absolute inset-0 bg-gradient-to-b from-void/30 via-transparent to-void" />
-				</>
-			)
-		}
-		<canvas
-			class="pointer-events-none absolute inset-y-[12%] right-0 w-full opacity-80 md:w-1/2"
-			data-ascii
-			data-ascii-kind={organism}
-			data-ascii-seed={p.visual.seed}
-			data-ascii-size="11"
-			data-ascii-accent={accent}
-			aria-hidden="true"
-		></canvas>
-
-		<div class="relative flex h-full flex-col justify-end gap-8 px-4 pb-6 pt-24 sm:px-6 md:flex-row md:items-end md:justify-between md:pb-8">
-			<div>
-				<p class="meta mb-6 text-mineral">
-					<a href="/work" class="transition hover:text-bone">Herbarium</a>
-					<span class="text-mineral-dim"> / </span><span class="text-bone/80" data-scramble>{p.slug}.prj</span>
-				</p>
-				<h1 id="project-title" class="titre text-[clamp(4rem,13vw,13rem)]" data-split style="--split-delay: 700ms">{p.name}</h1>
-				<p class="meta mt-5 max-w-xl text-bone/70">{p.latin} — {p.summary}</p>
-			</div>
-			<Herbarium project={p} class="w-full shrink-0 md:w-[340px]" />
-		</div>
+	<!-- L'environnement du projet (le même rendu clôt la page précédente) -->
+	<section aria-labelledby="project-title">
+		<ProjectHero project={p} />
 	</section>
 
 	<!-- Introduction -->
@@ -265,19 +224,7 @@ const palette = [
 		width: min(58vw, calc((100svh - 420px) * 16 / 9), 1040px);
 	}
 	@media (max-width: 639px) {
-		.hero-shot {
-			width: auto;
-		}
-	}
-	.tick {
-		position: absolute;
-		z-index: 1;
-		width: 10px;
-		height: 10px;
-		margin: -5px;
-		border-color: var(--color-acid);
-	}
-	.swatch {
+		.swatch {
 		border: 1px solid rgb(230 228 220 / 0.12);
 	}
 </style>
