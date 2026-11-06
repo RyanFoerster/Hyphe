@@ -1,8 +1,9 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import Layout from '../../layouts/Layout.astro';
-import Window from '../../components/os/Window.astro';
 import Footer from '../../components/Footer.astro';
+import Figure from '../../components/Figure.astro';
+import Herbarium from '../../components/Herbarium.astro';
 import { projects, type Project } from '../../data/projects';
 
 export const getStaticPaths = (() =>
@@ -17,8 +18,9 @@ interface Props {
 	index: number;
 }
 
-const { project: p, next, index } = Astro.props;
+const { project: p, next } = Astro.props;
 const visual = `/visuals/${p.slug}.svg`;
+const v = (n: number) => `/visuals/${p.slug}/${n}.svg`;
 const organism = { topo: 'mycelium', strata: 'roots', bloom: 'flower' }[p.visual.kind];
 const accent = p.visual.accent === '#f07a2a' ? 'ember' : 'acid';
 const domain = `${p.name.toLowerCase().replace(/\s+/g, '')}.com`;
@@ -26,10 +28,16 @@ const domain = `${p.name.toLowerCase().replace(/\s+/g, '')}.com`;
 const word = [p.highlight, p.client].find((w) => p.intro.includes(w)) ?? '';
 const at = word ? p.intro.indexOf(word) : -1;
 const intro = at < 0 ? [p.intro, '', ''] : [p.intro.slice(0, at), word, p.intro.slice(at + word.length)];
+const palette = [
+	{ name: 'Ground', hex: p.visual.bg },
+	{ name: 'Line', hex: p.visual.line },
+	{ name: 'Accent', hex: p.visual.accent },
+	{ name: 'Bone', hex: '#e6e4dc' },
+];
 ---
 
 <Layout title={p.name} description={p.summary} image={visual}>
-	<!-- L'environnement du projet : on y entre par le portail -->
+	<!-- L'environnement du projet : on y entre par la mosaïque -->
 	<section class="relative h-[100svh] min-h-[600px] overflow-hidden" aria-labelledby="project-title">
 		<img src={visual} alt="" class="absolute inset-0 size-full scale-105 object-cover" fetchpriority="high" />
 		<div class="absolute inset-0 bg-gradient-to-b from-void/30 via-transparent to-void"></div>
@@ -43,23 +51,16 @@ const intro = at < 0 ? [p.intro, '', ''] : [p.intro.slice(0, at), word, p.intro.
 			aria-hidden="true"
 		></canvas>
 
-		<div class="relative flex h-full flex-col justify-end gap-10 px-4 pb-6 pt-24 sm:px-6 md:flex-row md:items-end md:justify-between md:pb-8">
+		<div class="relative flex h-full flex-col justify-end gap-8 px-4 pb-6 pt-24 sm:px-6 md:flex-row md:items-end md:justify-between md:pb-8">
 			<div>
 				<p class="meta mb-6 text-mineral">
-					<a href="/#work" class="transition hover:text-bone">Work</a>
+					<a href="/work" class="transition hover:text-bone">Herbarium</a>
 					<span class="text-mineral-dim"> / </span><span class="text-bone/80" data-scramble>{p.slug}.prj</span>
 				</p>
 				<h1 id="project-title" class="titre text-[clamp(4rem,13vw,13rem)]" data-split style="--split-delay: 700ms">{p.name}</h1>
+				<p class="meta mt-5 max-w-xl text-bone/70">{p.latin} — {p.summary}</p>
 			</div>
-
-			<Window title="info.sys" meta={`${String(index + 1).padStart(2, '0')} / ${String(projects.length).padStart(2, '0')}`} class="w-full shrink-0 md:w-[320px]">
-				<dl class="meta grid grid-cols-[5.5rem_1fr] gap-y-2 p-4 text-bone/85">
-					<dt class="text-mineral">Client</dt><dd>{p.client}</dd>
-					<dt class="text-mineral">Year</dt><dd>{p.year}</dd>
-					<dt class="text-mineral">Type</dt><dd>{p.category}</dd>
-					<dt class="text-mineral">Services</dt><dd>{p.services.join(', ')}</dd>
-				</dl>
-			</Window>
+			<Herbarium project={p} class="w-full shrink-0 md:w-[340px]" />
 		</div>
 	</section>
 
@@ -71,10 +72,17 @@ const intro = at < 0 ? [p.intro, '', ''] : [p.intro.slice(0, at), word, p.intro.
 		</p>
 	</section>
 
-	<!-- Aperçu du site dans une fenêtre de navigateur de l'OS -->
-	<section class="px-4 sm:px-6" aria-label="Website preview">
-		<div data-reveal>
-			<Window title={domain} meta="1440 × 900 — live preview" class="mx-auto max-w-[1400px]">
+	<!-- Planche I : le visuel clé, le site -->
+	<section class="space-y-24 px-4 sm:px-6 md:space-y-32" aria-label="Gallery, plate I">
+		<Figure src={v(1)} alt={`${p.name}, key visual`} fig="01" caption="key visual" ratio="21/9" />
+
+		<figure class="mx-auto max-w-[1400px]" data-reveal>
+			<div class="browser">
+				<div class="meta flex h-8 items-center gap-3 border-b border-dashed border-bone/15 px-3 text-mineral">
+					<span class="text-acid">*</span>
+					<span class="text-bone/80">https://{domain}</span>
+					<span class="ml-auto hidden sm:inline">1440 × 900 — live</span>
+				</div>
 				<div class="relative aspect-[16/9] overflow-hidden">
 					<img src={visual} alt={`${p.name} website, home page`} loading="lazy" class="absolute inset-0 size-full object-cover" />
 					<div class="absolute inset-0 bg-gradient-to-r from-void/80 via-void/20 to-transparent"></div>
@@ -87,12 +95,15 @@ const intro = at < 0 ? [p.intro, '', ''] : [p.intro.slice(0, at), word, p.intro.
 						<p class="mt-[3%] max-w-[80%] text-[clamp(0.55rem,1.05vw,0.95rem)] leading-snug text-bone/70">{p.summary}</p>
 					</div>
 				</div>
-			</Window>
-		</div>
+			</div>
+			<figcaption class="meta mt-3 text-mineral"><span class="text-bone/85">fig. 02</span> — website, home</figcaption>
+		</figure>
 	</section>
 
+	<canvas class="pointer-events-none mt-24 block h-28 w-full opacity-60" data-ascii data-ascii-kind="mycelium" data-ascii-seed={p.visual.seed + 3} data-ascii-size="10" aria-hidden="true"></canvas>
+
 	<!-- Défi et approche -->
-	<section class="grid gap-x-6 gap-y-16 px-4 py-28 sm:px-6 md:grid-cols-12 md:py-40">
+	<section class="grid gap-x-6 gap-y-16 px-4 py-24 sm:px-6 md:grid-cols-12 md:py-32">
 		<div class="md:col-span-4" data-reveal>
 			<p class="meta mb-5 text-mineral"><span data-scramble>[ 02 ] Challenge</span></p>
 			<p class="text-lg leading-relaxed text-bone/85">{p.challenge}</p>
@@ -102,7 +113,7 @@ const intro = at < 0 ? [p.intro, '', ''] : [p.intro.slice(0, at), word, p.intro.
 			<ol class="space-y-8">
 				{
 					p.approach.map((step, i) => (
-						<li class="grid grid-cols-[2.5rem_1fr] gap-4 border-t border-bone/10 pt-6">
+						<li class="grid grid-cols-[2.5rem_1fr] gap-4 border-t border-dashed border-bone/15 pt-6">
 							<span class="meta text-acid/80">{String(i + 1).padStart(2, '0')}</span>
 							<p class="text-lg leading-relaxed text-bone/85">{step}</p>
 						</li>
@@ -112,39 +123,67 @@ const intro = at < 0 ? [p.intro, '', ''] : [p.intro.slice(0, at), word, p.intro.
 		</div>
 	</section>
 
-	<!-- Mobile : deux écrans, décalés -->
-	<section class="grid grid-cols-2 gap-4 px-4 sm:px-6 md:grid-cols-12 md:gap-6" aria-label="Mobile screens">
-		{
-			[0, 1].map((n) => (
-				<div class:list={['md:col-span-3', n === 0 ? 'md:col-start-4' : 'md:col-start-8 md:mt-32']} data-reveal style={`--reveal-delay: ${n * 150}ms`}>
-					<div class="glass overflow-hidden rounded-[28px] p-2">
-						<div class="relative aspect-[9/19] overflow-hidden rounded-[22px]">
-							<img src={visual} alt={`${p.name} on mobile, screen ${n + 1}`} loading="lazy" class="absolute inset-0 size-full object-cover" style={`object-position: ${n ? '78%' : '22%'} 50%`} />
-							<div class="absolute inset-0 bg-gradient-to-t from-void/90 via-transparent to-void/40"></div>
-							<p class="meta absolute left-4 top-5 text-bone/80">{p.name}</p>
-							<p class="titre absolute bottom-6 left-4 right-4 text-[clamp(1.6rem,3vw,2.6rem)]">{n === 0 ? p.name : p.client}</p>
-						</div>
+	<!-- Planche II : détails, écrans, matière -->
+	<section class="space-y-24 px-4 sm:px-6 md:space-y-36" aria-label="Gallery, plate II">
+		<div class="grid gap-14 md:grid-cols-12 md:gap-6">
+			<Figure class="md:col-span-5" src={v(3)} alt={`${p.name}, detail`} fig="03" caption="detail, line work" ratio="4/5" />
+			<Figure class="md:col-span-6 md:col-start-7 md:mt-48" src={v(2)} alt={`${p.name}, secondary visual`} fig="04" caption="system, second family" ratio="16/11" />
+		</div>
+
+		<div class="grid grid-cols-3 gap-3 md:grid-cols-12 md:gap-6">
+			{
+				[4, 5, 6].map((n, i) => (
+					<div class:list={['md:col-span-3', i === 0 && 'md:col-start-2', i === 1 && 'md:mt-24', i === 2 && 'md:mt-48']}>
+						<Figure src={v(n)} alt={`${p.name} on mobile, screen ${i + 1}`} fig={String(5 + i).padStart(2, '0')} caption={['mobile, home', 'mobile, story', 'mobile, detail'][i]} ratio="9/19" />
 					</div>
-				</div>
-			))
-		}
+				))
+			}
+		</div>
+
+		<!-- Planche de matière : typographie et couleurs -->
+		<figure class="grid gap-6 md:grid-cols-12" data-reveal>
+			<div class="plate relative flex min-h-[420px] flex-col justify-between overflow-hidden p-6 md:col-span-7" style={`background:${p.visual.bg}`}>
+				<p class="meta flex justify-between text-bone/60"><span>Type specimen</span><span>Parceh / Instrument Sans</span></p>
+				<p class="titre text-[clamp(7rem,18vw,16rem)] text-bone">Aa</p>
+				<p class="titre text-[clamp(2rem,4vw,3.6rem)]" style={`color:${p.visual.accent}`}>{p.name}</p>
+			</div>
+			<ul class="grid grid-cols-2 gap-3 md:col-span-5">
+				{
+					palette.map((c) => (
+						<li class="swatch flex aspect-square flex-col justify-end p-3" style={`background:${c.hex}`}>
+							<span class="meta text-bone mix-blend-difference">{c.name}</span>
+							<span class="meta tabular-nums text-bone/70 mix-blend-difference">{c.hex.toUpperCase()}</span>
+						</li>
+					))
+				}
+			</ul>
+			<figcaption class="meta text-mineral md:col-span-12"><span class="text-bone/85">fig. 08</span> — matter: type and colour</figcaption>
+		</figure>
+
+		<Figure src={v(5)} alt={`${p.name}, motion still`} fig="09" caption="motion still, frame 0284" ratio="21/9">
+			<p class="meta absolute bottom-4 left-4 flex gap-4 text-bone/80">
+				<span class="text-acid">▸</span><span class="tabular-nums">00:12:04</span><span class="text-mineral">[####::::::::]</span>
+			</p>
+		</Figure>
 	</section>
 
+	<canvas class="pointer-events-none mt-24 block h-28 w-full opacity-60" data-ascii data-ascii-kind="roots" data-ascii-seed={p.visual.seed + 9} data-ascii-size="10" aria-hidden="true"></canvas>
+
 	<!-- Services et résultats -->
-	<section class="grid gap-x-6 gap-y-16 px-4 py-28 sm:px-6 md:grid-cols-12 md:py-40">
+	<section class="grid gap-x-6 gap-y-16 px-4 py-24 sm:px-6 md:grid-cols-12 md:py-32">
 		<div class="md:col-span-4" data-reveal>
-			<p class="meta mb-5 text-mineral">[ 04 ] Services</p>
-			<ul class="flex flex-wrap gap-2">
-				{p.services.map((s) => <li class="meta rounded-full border border-bone/15 px-3 py-1.5 text-bone/85">{s}</li>)}
+			<p class="meta mb-5 text-mineral"><span data-scramble>[ 04 ] Services</span></p>
+			<ul class="meta flex flex-wrap gap-x-3 gap-y-2 text-bone/85">
+				{p.services.map((s) => <li><span class="text-mineral-dim">[</span> {s} <span class="text-mineral-dim">]</span></li>)}
 			</ul>
 		</div>
 		{
 			p.results && (
 				<div class="md:col-span-7 md:col-start-6" data-reveal style="--reveal-delay: 120ms">
-					<p class="meta mb-5 text-mineral">[ 05 ] Results</p>
+					<p class="meta mb-5 text-mineral"><span data-scramble>[ 05 ] Results</span></p>
 					<dl class="grid gap-6 sm:grid-cols-3">
 						{p.results.map((r) => (
-							<div class="flex flex-col border-t border-bone/10 pt-5">
+							<div class="flex flex-col border-t border-dashed border-bone/15 pt-5">
 								<dt class="meta order-2 mt-2 text-mineral">{r.label}</dt>
 								<dd class="text-[clamp(2.4rem,4vw,3.6rem)] leading-none tracking-[-0.03em] text-bone">{r.value}</dd>
 							</div>
@@ -155,13 +194,13 @@ const intro = at < 0 ? [p.intro, '', ''] : [p.intro.slice(0, at), word, p.intro.
 		}
 	</section>
 
-	<!-- Projet suivant : on repasse par un portail -->
+	<!-- Spécimen suivant -->
 	<section class="px-4 sm:px-6" aria-label="Next project">
 		<a href={`/work/${next.slug}`} data-portal class="group block" data-reveal>
 			<p class="meta mb-4 flex justify-between text-mineral">
-				<span>Next specimen</span><span>{next.client} — {next.year}</span>
+				<span>Next specimen — {next.latin}</span><span>{next.client} — {next.year}</span>
 			</p>
-			<div data-portal-frame class="relative h-[42vh] min-h-[260px] overflow-hidden rounded-[12px] border border-bone/10">
+			<div data-portal-frame class="next relative h-[42vh] min-h-[260px] overflow-hidden">
 				<img src={`/visuals/${next.slug}.svg`} alt="" loading="lazy" class="absolute inset-0 size-full object-cover transition duration-[1400ms] ease-(--ease-organic) group-hover:scale-105" />
 				<div class="absolute inset-0 bg-gradient-to-t from-void/80 to-transparent"></div>
 				<p class="titre absolute bottom-5 left-5 text-[clamp(3rem,9vw,9rem)] transition-transform duration-700 ease-(--ease-organic) group-hover:translate-x-3" data-split>{next.name}</p>
@@ -171,3 +210,15 @@ const intro = at < 0 ? [p.intro, '', ''] : [p.intro.slice(0, at), word, p.intro.
 
 	<Footer />
 </Layout>
+
+<style>
+	.browser,
+	.plate,
+	.next {
+		border: 1px solid rgb(230 228 220 / 0.12);
+		background-color: var(--color-deep);
+	}
+	.swatch {
+		border: 1px solid rgb(230 228 220 / 0.12);
+	}
+</style>

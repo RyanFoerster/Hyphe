@@ -175,6 +175,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 	let reveal = reduced ? 1 : 0;
 	let readyAt = -1;
 	let revealArmed = false;
+	let lastStatus = 'surface — specimen 001';
 
 	const sAt = (y: number) => {
 		if (y <= knots[0][0]) return 0;
@@ -221,6 +222,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 		const points: Pt[] = [];
 		const frames: { x: number; y: number; w: number; h: number; a: number; label: string }[] = [];
 		const callouts: { from: Pt; to: { x: number; y: number }; a: number }[] = [];
+		const roots: { x: number; y: number; a: number; lit: boolean }[] = [];
 		let focusPx = { x: width / 2, y: height / 2, r: 0 };
 		let flowerFrom = 0;
 		hoverSpecimen = -1;
@@ -280,6 +282,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 				el.style.setProperty('--back', back.toFixed(3));
 				el.style.visibility = o < 0.02 ? 'hidden' : '';
 				el.style.pointerEvents = back > 0.62 || o < 0.2 ? 'none' : '';
+				roots.push({ x: p.x, y: p.y, a: o * (1 - back) * 1.4, lit: hovered === i || focused === i });
 			});
 
 			// Points suivis par l'analyse
@@ -311,6 +314,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 
 			// Post
 			P.uInside.value = 0;
+			P.uFade.value = 0;
 			P.uAscii.value = reduced ? (d > 0.5 ? 1 : 0) : smoothstep(0.6, 1, d);
 			P.uAura.value = (1 - smoothstep(0.5, 0.95, d)) * reveal;
 			P.uBloom.value = 1 + d * 0.6;
@@ -421,12 +425,25 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			P.uAscii.value = 1;
 			P.uAura.value = 0;
 			P.uBloom.value = 0.85;
-			P.uFlash.value = (1 - smoothstep(0, 3, s)) * 0.7 + smoothstep(cave.sEnd - 2, cave.sEnd + 4, s) * 0.8;
+			P.uFlash.value = (1 - smoothstep(0, 3, s)) * 0.7;
+			P.uFade.value = smoothstep(cave.sEnd - 6, cave.sEnd + 2.5, s);
 			P.uExposure.value = 1.0;
 			const zoom = 1 + (1 - smoothstep(0, 3.5, s)) * 1.4;
 			P.uCell.value.set(7 * dpr * zoom, 12 * dpr * zoom);
 		}
 		document.documentElement.toggleAttribute('data-specimen-hover', hoverSpecimen >= 0);
+
+		// État lisible dans l'île de navigation : surface, descente, spécimen
+		let status = 'surface — specimen 001';
+		if (inside) {
+			const sNow = sAt(sy);
+			const i = cave.specimens.reduce((b, sp, j) => (Math.abs(sp.s - sNow) < Math.abs(cave.specimens[b].s - sNow) ? j : b), 0);
+			status = sNow > cave.sEnd - 2 ? 'end of the gallery' : `specimen.${String(i + 1).padStart(2, '0')} — ${cave.specimens[i].slug}`;
+		} else if (d > 0.04) status = `descending — ${String(Math.round(d * 10) * 10).padStart(3, '0')}%`;
+		if (status !== lastStatus) {
+			lastStatus = status;
+			dispatchEvent(new CustomEvent('hyphe:status', { detail: status }));
+		}
 		dive.style.setProperty('--t', String(inside ? 0 : smoothstep(0.35, 0.6, d) * (1 - smoothstep(0.88, 1, d))));
 		if (!inside) chapters.forEach((c) => c.style.setProperty('--focus', '0'));
 
@@ -459,6 +476,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			focus: focusPx,
 			frames,
 			callouts,
+			roots,
 			motion,
 		});
 	};

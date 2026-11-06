@@ -1,0 +1,231 @@
+---
+// L'herbier : tous les projets du studio. Deux lectures :
+//   sheets  des planches qui flottent, reliées entre elles par des hyphes
+//   index   une liste serrée, l'image suit le curseur
+import Layout from '../../layouts/Layout.astro';
+import Footer from '../../components/Footer.astro';
+import Figure from '../../components/Figure.astro';
+import Herbarium from '../../components/Herbarium.astro';
+import { projects } from '../../data/projects';
+
+const years = projects.map((p) => p.year);
+const pad = (n: number) => String(n).padStart(2, '0');
+// Composition flottante : chaque planche a sa place et son décalage
+const slots = [
+	'md:col-span-5',
+	'md:col-start-8 md:col-span-4 md:mt-40',
+	'md:col-start-2 md:col-span-4 md:mt-10',
+	'md:col-start-7 md:col-span-5 md:mt-52',
+	'md:col-start-3 md:col-span-5 md:mt-6',
+];
+const ratios = ['4/5', '1/1', '3/4', '16/11', '4/5'];
+---
+
+<Layout title="Herbarium" description="Every specimen grown by Studio Hyphe: websites, interfaces and interactive worlds.">
+	<canvas class="hyphae pointer-events-none fixed inset-0 z-0 size-full" data-hyphae aria-hidden="true"></canvas>
+
+	<section class="relative z-[1] px-4 pb-16 pt-36 sm:px-6 md:pt-44" aria-labelledby="work-title">
+		<div class="grid gap-8 md:grid-cols-12">
+			<p class="meta text-mineral md:col-span-3" data-reveal>
+				<span data-scramble>[ Index ] Herbarium</span><br />
+				<span class="text-mineral-dim">{pad(projects.length)} specimens — {Math.min(...years)} / {Math.max(...years)}</span>
+			</p>
+			<div class="md:col-span-9">
+				<h1 id="work-title" class="titre text-[clamp(4rem,13vw,13rem)]" data-split>Herbarium</h1>
+				<p class="mt-8 max-w-xl text-[15px] leading-relaxed text-bone/75" data-reveal style="--reveal-delay: 200ms">
+					Every project the studio has grown, pressed and labelled. Websites, interfaces and interactive worlds,
+					<mark class="hl">collected</mark> like specimens.
+				</p>
+			</div>
+		</div>
+
+		<div class="meta mt-14 flex items-center justify-between border-y border-dashed border-bone/15 py-3 text-mineral" data-reveal>
+			<span>Read as</span>
+			<div class="flex gap-1" role="group" aria-label="Display">
+				<button type="button" class="toggle" data-mode="sheets" aria-pressed="true">[ Sheets ]</button>
+				<button type="button" class="toggle" data-mode="index" aria-pressed="false">[ Index ]</button>
+			</div>
+		</div>
+	</section>
+
+	<!-- Planches : la lecture flottante -->
+	<section class="sheets relative z-[1] px-4 pb-32 sm:px-6" aria-label="Specimens, sheets" data-herbarium-view="sheets">
+		<ul class="grid gap-20 md:grid-cols-12 md:gap-x-6 md:gap-y-16">
+			{
+				projects.map((p, i) => (
+					<li class={slots[i % slots.length]} data-reveal style={`--reveal-delay: ${(i % 2) * 140}ms`}>
+						<div class="float" style={`--float-delay: ${-i * 1.9}s`}>
+							<a href={`/work/${p.slug}`} data-portal class="sheet group block" data-sheet aria-label={`${p.name} — ${p.latin}, ${p.client}, ${p.year}`}>
+								<Figure src={`/visuals/${p.slug}/${(i % 6) + 1}.svg`} alt="" fig={pad(i + 1)} caption={p.category.toLowerCase()} ratio={ratios[i % ratios.length]} />
+								<div class="mt-4 flex items-end justify-between gap-4">
+									<p class="titre text-[clamp(2.6rem,4.4vw,4.4rem)]">{p.name}</p>
+									<span class="meta mb-2 text-bone/60 transition group-hover:text-acid">open →</span>
+								</div>
+								<Herbarium project={p} compact class="mt-4" />
+							</a>
+						</div>
+					</li>
+				))
+			}
+		</ul>
+	</section>
+
+	<!-- Index : la lecture serrée -->
+	<section class="index relative z-[1] hidden px-4 pb-32 sm:px-6" aria-label="Specimens, index" data-herbarium-view="index">
+		<ol class="border-t border-dashed border-bone/15">
+			{
+				projects.map((p, i) => (
+					<li>
+						<a href={`/work/${p.slug}`} data-portal class="row group" data-row data-preview={`/visuals/${p.slug}.svg`}>
+							<span class="meta tabular-nums text-mineral-dim">{String(i + 1).padStart(3, '0')}</span>
+							<span class="name titre text-[clamp(2.4rem,5vw,4.6rem)]">{p.name}</span>
+							<span class="meta hidden text-bone/70 md:block">{p.latin}</span>
+							<span class="meta hidden text-mineral md:block">{p.category}</span>
+							<span class="meta tabular-nums text-mineral">{p.year}</span>
+						</a>
+					</li>
+				))
+			}
+		</ol>
+		<div class="preview pointer-events-none fixed left-0 top-0 z-[5] hidden w-[300px] md:block" data-preview-box aria-hidden="true">
+			<div class="relative aspect-[16/10] overflow-hidden border border-acid/60">
+				<img alt="" class="absolute inset-0 size-full object-cover" data-preview-img />
+			</div>
+			<p class="meta mt-2 tabular-nums text-acid" data-preview-value>0.00000000</p>
+		</div>
+	</section>
+
+	<canvas class="pointer-events-none relative z-[1] block h-32 w-full opacity-60" data-ascii data-ascii-kind="roots" data-ascii-seed="31" data-ascii-size="10" aria-hidden="true"></canvas>
+
+	<Footer />
+</Layout>
+
+<style>
+	.toggle {
+		padding: 0.25rem 0.5rem;
+		color: rgb(230 228 220 / 0.55);
+		transition: color 0.3s;
+	}
+	.toggle[aria-pressed='true'],
+	.toggle:hover {
+		color: var(--color-acid);
+	}
+
+	@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+		.is-in > .float {
+			animation: drift 9s ease-in-out infinite alternate;
+			animation-delay: var(--float-delay, 0s);
+		}
+	}
+	@keyframes drift {
+		from {
+			translate: 0 -8px;
+		}
+		to {
+			translate: 0 10px;
+		}
+	}
+
+	.row {
+		position: relative;
+		display: grid;
+		grid-template-columns: 3.5rem 1fr auto;
+		align-items: baseline;
+		gap: 1.5rem;
+		padding: 1.4rem 0 1rem;
+		border-bottom: 1px dashed rgb(230 228 220 / 0.15);
+	}
+	@media (min-width: 768px) {
+		.row {
+			grid-template-columns: 4rem 1fr 14rem 11rem 4rem;
+		}
+	}
+	.row .name {
+		position: relative;
+		justify-self: start;
+		transition: translate 0.5s var(--ease-organic);
+	}
+	/* Survol : le nom est détecté */
+	.row .name::after {
+		content: '';
+		position: absolute;
+		inset: -0.04em -0.14em 0.02em;
+		border: 1px solid var(--color-acid);
+		clip-path: inset(0 100% 100% 0);
+		transition: clip-path 0.45s var(--ease-organic);
+	}
+	.row:hover .name,
+	.row:focus-visible .name {
+		translate: 0.6rem 0;
+	}
+	.row:hover .name::after,
+	.row:focus-visible .name::after {
+		clip-path: inset(0 0 0 0);
+	}
+	.preview {
+		opacity: 0;
+		transition: opacity 0.3s;
+	}
+	.preview[data-on] {
+		opacity: 1;
+	}
+</style>
+
+<script>
+	import { mountHyphae } from '../../scripts/hyphae';
+
+	// Lecture : planches ou index, mémorisée pour ce navigateur
+	const KEY = 'hyphe:herbarium';
+	const views = document.querySelectorAll<HTMLElement>('[data-herbarium-view]');
+	const toggles = document.querySelectorAll<HTMLButtonElement>('.toggle');
+	const set = (mode: string) => {
+		views.forEach((v) => v.classList.toggle('hidden', v.dataset.herbariumView !== mode));
+		toggles.forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.mode === mode)));
+		document.documentElement.dataset.herbarium = mode;
+		try {
+			localStorage.setItem(KEY, mode);
+		} catch {}
+		// Les figures d'une vue qui apparaît doivent pouvoir se révéler
+		dispatchEvent(new Event('resize'));
+	};
+	toggles.forEach((t) => t.addEventListener('click', () => set(t.dataset.mode!)));
+	try {
+		const saved = localStorage.getItem(KEY);
+		if (saved === 'index') set('index');
+	} catch {}
+
+	// Index : l'image du spécimen suit le curseur
+	const box = document.querySelector<HTMLElement>('[data-preview-box]')!;
+	const img = document.querySelector<HTMLImageElement>('[data-preview-img]')!;
+	const value = document.querySelector<HTMLElement>('[data-preview-value]')!;
+	const pos = { x: 0, y: 0, tx: 0, ty: 0 };
+	let raf = 0;
+	const follow = () => {
+		pos.x += (pos.tx - pos.x) * 0.18;
+		pos.y += (pos.ty - pos.y) * 0.18;
+		box.style.transform = `translate(${pos.x + 24}px, ${pos.y - 90}px)`;
+		raf = requestAnimationFrame(follow);
+	};
+	document.querySelectorAll<HTMLElement>('[data-row]').forEach((row, i) => {
+		row.addEventListener('pointerenter', (e) => {
+			img.src = row.dataset.preview!;
+			value.textContent = (0.42 + i * 0.11 + 0.00000004).toFixed(8);
+			pos.x = pos.tx = e.clientX;
+			pos.y = pos.ty = e.clientY;
+			box.setAttribute('data-on', '');
+			cancelAnimationFrame(raf);
+			raf = requestAnimationFrame(follow);
+		});
+		row.addEventListener('pointermove', (e) => {
+			pos.tx = e.clientX;
+			pos.ty = e.clientY;
+		});
+		row.addEventListener('pointerleave', () => {
+			box.removeAttribute('data-on');
+			cancelAnimationFrame(raf);
+		});
+	});
+
+	// Les hyphes : des fils qui relient les planches, avec leurs nœuds et leurs valeurs
+	mountHyphae(document.querySelector<HTMLCanvasElement>('[data-hyphae]')!, '[data-sheet] .frame');
+</script>

@@ -26,6 +26,8 @@ export interface OverlayFrame {
 	frames: { x: number; y: number; w: number; h: number; a: number; label: string }[];
 	/** Courbes de légende : du point vers l'étiquette */
 	callouts: { from: Pt; to: { x: number; y: number }; a: number }[];
+	/** Hyphes de la roche vers les projets en orbite */
+	roots: { x: number; y: number; a: number; lit: boolean }[];
 	motion: number;
 }
 
@@ -149,6 +151,48 @@ export function createOverlay(canvas: HTMLCanvasElement) {
 			ctx.textAlign = 'right';
 			ctx.fillText(`${fr.w.toFixed(0)} × ${fr.h.toFixed(0)}`, x + fr.w + 10, y - 13);
 			ctx.textAlign = 'left';
+		}
+
+		// Hyphes : de la roche vers chaque projet, un fil souple et ramifié
+		if (f.focus.r > 0) {
+			f.roots.forEach((r, i) => {
+				if (r.a <= 0.02) return;
+				const dx = r.x - f.focus.x;
+				const dy = r.y - f.focus.y;
+				const d = Math.hypot(dx, dy) || 1;
+				const sx = f.focus.x + (dx / d) * f.focus.r * 0.45;
+				const sy = f.focus.y + (dy / d) * f.focus.r * 0.35 + f.focus.r * 0.2;
+				const sway = Math.sin(f.time * 0.7 + i * 1.7) * 14 * f.motion;
+				const nx = -dy / d;
+				const ny = dx / d;
+				const cx = (sx + r.x) / 2 + nx * (30 + sway);
+				const cy = (sy + r.y) / 2 + ny * (30 + sway) + 24;
+				const color = (a: number) => (r.lit ? `rgba(200,245,60,${(a * r.a).toFixed(3)})` : bone(a * r.a));
+				ctx.strokeStyle = color(r.lit ? 0.95 : 0.5);
+				ctx.beginPath();
+				ctx.moveTo(sx, sy);
+				ctx.quadraticCurveTo(cx, cy, r.x, r.y);
+				const q = (u: number) => ({
+					x: (1 - u) * (1 - u) * sx + 2 * (1 - u) * u * cx + u * u * r.x,
+					y: (1 - u) * (1 - u) * sy + 2 * (1 - u) * u * cy + u * u * r.y,
+				});
+				for (const [u, len, side] of [[0.3, 10, 1], [0.55, 14, -1], [0.75, 8, 1]] as const) {
+					const p = q(u);
+					const p2 = q(u + 0.02);
+					const tx = p2.x - p.x;
+					const ty = p2.y - p.y;
+					const tl = Math.hypot(tx, ty) || 1;
+					ctx.moveTo(p.x, p.y);
+					ctx.lineTo(p.x + (-ty / tl) * len * side + (tx / tl) * len * 0.6, p.y + (tx / tl) * len * side + (ty / tl) * len * 0.6);
+				}
+				ctx.stroke();
+				ctx.fillStyle = color(0.9);
+				ctx.fillRect(Math.round(sx) - 1.5, Math.round(sy) - 1.5, 3, 3);
+				const pulse = q(((f.time * 0.18 + i * 0.27) % 1));
+				ctx.beginPath();
+				ctx.arc(pulse.x, pulse.y, 1.6, 0, Math.PI * 2);
+				ctx.fill();
+			});
 		}
 
 		// Courbes de légende : une ligne fine et souple, un point à chaque bout

@@ -342,7 +342,7 @@ export function createCavern(items: SpecimenInput[], { lowPower }: { lowPower: b
 	/** La sortie ne s'allume qu'une fois le dernier spécimen passé */
 	const setExit = (s: number) => {
 		const k = THREE.MathUtils.smoothstep(s, sEnd - 3, sEnd + 3);
-		exitLight.material.color.setRGB(0.9, 0.95, 0.85).multiplyScalar(0.05 + k * 6);
+		exitLight.material.color.setRGB(0.9, 0.95, 0.85).multiplyScalar(0.05 + k * 0.5);
 	};
 
 	return { scene, curve, length, at, sChap, sEnd, span, specimens, uniforms: u, layout, setExit };

@@ -1,0 +1,48 @@
+---
+// Étiquette d'herbier : chaque projet est un spécimen récolté par le studio.
+import type { Project } from '../data/projects';
+import { projects } from '../data/projects';
+
+interface Props {
+	project: Project;
+	class?: string;
+	compact?: boolean;
+}
+
+const { project: p, class: className, compact = false } = Astro.props;
+const no = String(projects.indexOf(p) + 1).padStart(3, '0');
+---
+
+<div class:list={['herbarium relative', className]}>
+	<span class="tick left-0 top-0 border-l border-t" aria-hidden="true"></span>
+	<span class="tick right-0 top-0 border-r border-t" aria-hidden="true"></span>
+	<span class="tick bottom-0 left-0 border-b border-l" aria-hidden="true"></span>
+	<span class="tick bottom-0 right-0 border-b border-r" aria-hidden="true"></span>
+	<p class="meta flex justify-between gap-4 border-b border-dashed border-bone/15 pb-2 text-mineral">
+		<span>Herbarium Hyphe</span><span class="tabular-nums">No. {no}</span>
+	</p>
+	<p class:list={['titre mt-3 text-bone', compact ? 'text-[1.9rem]' : 'text-[2.4rem]']}>{p.latin}</p>
+	<dl class="meta mt-3 grid grid-cols-[3.2rem_1fr] gap-x-3 gap-y-1 text-bone/80">
+		<dt class="text-mineral-dim">Fam.</dt><dd>{p.category}</dd>
+		<dt class="text-mineral-dim">Leg.</dt><dd>{p.client}</dd>
+		<dt class="text-mineral-dim">Loc.</dt><dd>{p.locality}</dd>
+		{!compact && <><dt class="text-mineral-dim">Cult.</dt><dd>{p.services.join(' · ')}</dd></>}
+		<dt class="text-mineral-dim">Det.</dt><dd>Studio Hyphe, {p.year}</dd>
+	</dl>
+</div>
+
+<style>
+	.herbarium {
+		padding: 0.9rem 1rem 1rem;
+		background: color-mix(in oklab, var(--color-void) 88%, transparent);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
+		border: 1px solid rgb(230 228 220 / 0.12);
+	}
+	.tick {
+		position: absolute;
+		width: 7px;
+		height: 7px;
+		border-color: var(--color-acid);
+	}
+</style>

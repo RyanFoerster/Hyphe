@@ -178,10 +178,29 @@ function bloom(p: Project['visual']) {
 	return paths;
 }
 
-export function projectSvg(project: Project) {
-	const p = project.visual;
-	const body = p.kind === 'topo' ? topo(p) : p.kind === 'strata' ? strata(p) : bloom(p);
+const KINDS = ['topo', 'strata', 'bloom'] as const;
+/** Déclinaisons d'un projet : même palette, autre famille, autre graine, gros plans */
+const VARIANTS = [
+	{ shift: 0, seed: 0, zoom: 1 },
+	{ shift: 0, seed: 31, zoom: 1 },
+	{ shift: 1, seed: 62, zoom: 1 },
+	{ shift: 0, seed: 0, zoom: 2.6 },
+	{ shift: 2, seed: 124, zoom: 1 },
+	{ shift: 0, seed: 155, zoom: 1.7 },
+	{ shift: 1, seed: 62, zoom: 3.2 },
+];
+export const VARIANT_COUNT = VARIANTS.length - 1;
+
+export function projectSvg(project: Project, variant = 0) {
+	const v = VARIANTS[variant] ?? VARIANTS[0];
+	const kind = KINDS[(KINDS.indexOf(project.visual.kind) + v.shift) % KINDS.length];
+	const p = { ...project.visual, kind, seed: project.visual.seed + v.seed };
+	const drawn = p.kind === 'topo' ? topo(p) : p.kind === 'strata' ? strata(p) : bloom(p);
+	// Gros plan : on agrandit autour d'un point qui dépend de la graine
+	const fx = W * (0.35 + ((p.seed * 37) % 30) / 100);
+	const fy = H * (0.4 + ((p.seed * 53) % 20) / 100);
+	const body = v.zoom === 1 ? drawn : `<g transform="translate(${r1(W / 2 - fx * v.zoom)} ${r1(H / 2 - fy * v.zoom)}) scale(${v.zoom})">${drawn}</g>`;
 	// Grille de points discrète, commune aux trois familles
 	const dots = `<pattern id="g" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="${p.line}" fill-opacity=".18"/></pattern>`;
-	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice"><defs>${dots}<radialGradient id="v" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="${p.line}" stop-opacity=".07"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></radialGradient></defs><rect width="${W}" height="${H}" fill="${p.bg}"/><rect width="${W}" height="${H}" fill="url(#g)"/><g fill="none" stroke-linecap="round" stroke-linejoin="round">${body}</g><rect width="${W}" height="${H}" fill="url(#v)"/></svg>`;
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice"><defs>${dots}<radialGradient id="v" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="${p.line}" stop-opacity=".07"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></radialGradient></defs><rect width="${W}" height="${H}" fill="${p.bg}"/><rect width="${W}" height="${H}" fill="url(#g)"/><g fill="none" stroke-linecap="round" stroke-linejoin="round">${body}</g><rect width="${W}" height="${H}" fill="url(#v)"/></svg>`;
 }

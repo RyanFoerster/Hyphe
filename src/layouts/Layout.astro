@@ -1,7 +1,6 @@
 ---
 import '../styles/global.css';
 import Nav from '../components/Nav.astro';
-import AboutWindow from '../components/AboutWindow.astro';
 import { site } from '../data/site';
 
 interface Props {
@@ -52,7 +51,6 @@ const canonical = new URL(Astro.url.pathname, site.url);
 		<main id="main">
 			<slot />
 		</main>
-		<AboutWindow />
 
 		<script>
 			import { mountAscii } from '../scripts/ascii';
@@ -74,7 +72,7 @@ const canonical = new URL(Astro.url.pathname, site.url);
 				},
 				{ threshold: 0.01 },
 			);
-			document.querySelectorAll('[data-reveal], [data-split], mark.hl').forEach((el) => io.observe(el));
+			document.querySelectorAll('[data-reveal], [data-split], [data-tiles], mark.hl').forEach((el) => io.observe(el));
 		</script>
 	</body>
 </html>

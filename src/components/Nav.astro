@@ -1,53 +1,418 @@
 ---
+// L'en-tête : le logo, l'heure du studio, et l'île — une seule forme en haut
+// au centre qui change de taille selon ce qu'elle montre :
+//   bar    une spore, l'état de la page (surface, descente, spécimen…), « menu »
+//   menu   les entrées du site, les projets, les réseaux
+//   about  la fiche du studio
 import { site } from '../data/site';
+import { projects } from '../data/projects';
 
-const isHome = Astro.url.pathname === '/';
+const path = Astro.url.pathname;
+const isHome = path === '/';
+const slug = path.match(/^\/work\/([^/]+)/)?.[1];
+const index = projects.findIndex((p) => p.slug === slug);
+const status = isHome
+	? 'surface — specimen 001'
+	: slug
+		? `${slug}.prj — ${String(index + 1).padStart(2, '0')}/${String(projects.length).padStart(2, '0')}`
+		: path.startsWith('/work')
+			? `herbarium — ${String(projects.length).padStart(2, '0')} specimens`
+			: 'lost — 404';
+const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
 <header class="site-nav pointer-events-none fixed inset-x-0 top-0 z-50">
-	<!-- Voile qui apparaît au défilement, pour que le menu reste lisible -->
+	<!-- Voile qui apparaît au défilement, pour que l'en-tête reste lisible -->
 	<div class="nav-veil absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-void via-void/70 to-transparent opacity-0 transition-opacity duration-500" aria-hidden="true"></div>
-	<nav
-		class="pointer-events-auto relative mx-auto flex items-center gap-4 px-4 pt-4 sm:px-6 sm:pt-5"
-		aria-label="Main"
-	>
-		<a href="/" class="group flex items-center gap-3" aria-label="Studio Hyphe, home">
-			<img src="/HYPHE.svg" alt="" width="555" height="146" class="h-[18px] w-auto opacity-95 transition-opacity group-hover:opacity-70 sm:h-5" />
+
+	<div class="relative flex items-start justify-between px-4 pt-4 sm:px-6 sm:pt-5">
+		<a href="/" class="pointer-events-auto mt-2.5 opacity-95 transition-opacity hover:opacity-70" aria-label="Studio Hyphe, home">
+			<img src="/HYPHE.svg" alt="" width="555" height="146" class="h-[16px] w-auto sm:h-5" />
 		</a>
-
-		<span class="meta hidden text-mineral lg:block">Digital experience studio</span>
-
-		<div class="meta ml-auto flex items-center gap-1 text-bone/80">
-			<a
-				href={isHome ? '#work' : '/#work'}
-				class="rounded-full px-3 py-2 transition hover:bg-bone/8 hover:text-bone"
-			>
-				Work
-			</a>
-			<button
-				type="button"
-				class="rounded-full px-3 py-2 uppercase transition hover:bg-bone/8 hover:text-bone"
-				data-open-about
-				aria-haspopup="dialog"
-			>
-				About
-			</button>
-			<a
-				href={`mailto:${site.email}`}
-				class="hidden rounded-full border border-bone/15 px-3 py-2 transition hover:border-acid/60 hover:text-acid sm:block"
-			>
-				Contact
-			</a>
-		</div>
-
-		<span class="meta hidden w-24 text-right text-mineral md:block" aria-label={`Local time in ${site.city}`}>
+		<span class="meta mt-3 hidden w-24 text-right text-mineral md:block" aria-label={`Local time in ${site.city}`}>
 			<span class="text-mineral-dim">{site.city.slice(0, 3)}</span>
 			<time data-clock data-tz={site.timezone} class="tabular-nums text-bone/80">--:--</time>
 		</span>
+	</div>
+
+	<nav class="island pointer-events-auto" aria-label="Main" data-island data-view="bar">
+		<div class="shell" data-shell>
+			<span class="tick left-0 top-0 border-l border-t" aria-hidden="true"></span>
+			<span class="tick right-0 top-0 border-r border-t" aria-hidden="true"></span>
+			<span class="tick bottom-0 left-0 border-b border-l" aria-hidden="true"></span>
+			<span class="tick bottom-0 right-0 border-b border-r" aria-hidden="true"></span>
+			<!-- Une hyphe fait le tour de l'île : lentement au repos, d'un trait quand elle change de forme -->
+			<svg class="trace" aria-hidden="true">
+				<rect width="100%" height="100%" pathLength="1"></rect>
+			</svg>
+
+			<!-- Fermée : la barre -->
+			<div class="view view-bar" data-view-name="bar" data-active>
+				<button type="button" class="bar meta" data-island-go="menu" aria-expanded="false" aria-controls="island-menu">
+					<span class="spore text-acid" data-spore aria-hidden="true">*</span>
+					<span class="text-bone/85" data-island-status aria-hidden="true">{status}</span>
+					<span class="sep" aria-hidden="true"></span>
+					<span class="text-bone">Menu</span>
+				</button>
+			</div>
+
+			<!-- Ouverte : le menu -->
+			<div class="view view-menu" data-view-name="menu" id="island-menu" inert>
+				<div class="head meta">
+					<span class="flex items-center gap-2 text-mineral"><span class="spore text-acid" data-spore aria-hidden="true">*</span> hyphe os — index</span>
+					<button type="button" class="close" data-island-go="bar" aria-label="Close menu">esc ×</button>
+				</div>
+				<ul class="items">
+					<li data-stagger style="--i: 0">
+						<a href="/work" class="item" data-island-close>
+							<span class="meta idx" data-scramble>01</span>
+							<span class="label titre">Work</span>
+							<span class="meta val">herbarium — {pad(projects.length)}</span>
+						</a>
+					</li>
+					<li data-stagger style="--i: 1">
+						<button type="button" class="item" data-island-go="about">
+							<span class="meta idx" data-scramble>02</span>
+							<span class="label titre">About</span>
+							<span class="meta val">studio.sys</span>
+						</button>
+					</li>
+					<li data-stagger style="--i: 2">
+						<a href={`mailto:${site.email}`} class="item">
+							<span class="meta idx" data-scramble>03</span>
+							<span class="label titre">Contact</span>
+							<span class="meta val">mail ↗</span>
+						</a>
+					</li>
+				</ul>
+				<div class="block" data-stagger style="--i: 3">
+					<p class="meta mb-2 text-mineral-dim">Specimens</p>
+					<ul class="meta grid gap-1">
+						{
+							projects.map((p, i) => (
+								<li>
+									<a href={`/work/${p.slug}`} data-portal class="spec" aria-current={p.slug === slug ? 'page' : undefined}>
+										<span class="text-mineral-dim">{pad(i + 1)}</span>
+										<span data-scramble>{p.slug}.prj</span>
+										<span class="ml-auto text-mineral-dim">{p.year}</span>
+									</a>
+								</li>
+							))
+						}
+					</ul>
+				</div>
+				<div class="foot meta" data-stagger style="--i: 4">
+					<span class="flex gap-3">
+						{site.socials.map((s) => (
+							<a href={s.href} target="_blank" rel="noopener" class="transition hover:text-acid">{s.label}</a>
+						))}
+					</span>
+					<span class="text-mineral">
+						{site.city.slice(0, 3)} <time data-clock data-tz={site.timezone} class="tabular-nums text-bone/80">--:--</time>
+					</span>
+				</div>
+			</div>
+
+			<!-- Ouverte : la fiche du studio -->
+			<section class="view view-about" data-view-name="about" aria-labelledby="about-title" inert>
+				<div class="head meta">
+					<button type="button" class="close" data-island-go="menu">← index</button>
+					<span class="text-mineral">studio.sys — read only</span>
+					<button type="button" class="close" data-island-go="bar" aria-label="Close">×</button>
+				</div>
+				<canvas
+					class="pointer-events-none block h-24 w-full"
+					data-ascii
+					data-ascii-kind="sprout"
+					data-ascii-seed="5"
+					data-ascii-size="9"
+					aria-hidden="true"
+				></canvas>
+				<div class="space-y-6 px-5 pb-6">
+					<h2 id="about-title" class="titre text-[3.4rem]" data-split data-stagger style="--i: 0">Studio Hyphe</h2>
+					<p class="text-[15px] leading-relaxed text-bone/80" data-stagger style="--i: 1">
+						Hyphae are the threads a fungus grows through the soil — invisible, patient,
+						<mark class="hl">connecting</mark> everything. We work the same way: a small studio designing and
+						building digital experiences for brands that want to be felt, not just seen.
+					</p>
+					<div data-stagger style="--i: 2">
+						<p class="meta mb-2 text-mineral-dim">What we do</p>
+						<ul class="meta flex flex-wrap gap-x-3 gap-y-1.5 text-bone/80">
+							{site.services.map((s) => <li><span class="text-mineral-dim">[</span> {s} <span class="text-mineral-dim">]</span></li>)}
+						</ul>
+					</div>
+					<div class="grid grid-cols-2 gap-4 border-t border-dashed border-bone/15 pt-5" data-stagger style="--i: 3">
+						<div>
+							<p class="meta mb-1.5 text-mineral-dim">Contact</p>
+							<a href={`mailto:${site.email}`} class="text-sm text-bone underline decoration-bone/30 underline-offset-4 transition hover:text-acid hover:decoration-acid">
+								{site.email}
+							</a>
+							<p class="mt-1 text-sm text-bone/60">{site.city} — worldwide</p>
+						</div>
+						<div>
+							<p class="meta mb-1.5 text-mineral-dim">Elsewhere</p>
+							<ul class="space-y-0.5 text-sm">
+								{site.socials.map((s) => (
+									<li><a href={s.href} target="_blank" rel="noopener" class="text-bone/85 transition hover:text-acid">{s.label} ↗</a></li>
+								))}
+							</ul>
+						</div>
+					</div>
+				</div>
+			</section>
+		</div>
 	</nav>
 </header>
 
+<style>
+	.island {
+		position: fixed;
+		top: 14px;
+		left: 50%;
+		translate: -50% 0;
+	}
+	@media (min-width: 640px) {
+		.island {
+			top: 18px;
+		}
+	}
+	/* Sur téléphone, l'île se range à droite du logo et grandit vers la gauche */
+	@media (max-width: 639px) {
+		.island {
+			left: auto;
+			right: 12px;
+			translate: none;
+		}
+		.shell {
+			margin-left: auto;
+		}
+	}
+
+	/* La forme : un bloc carré, des coins de visée, une taille qui suit la vue */
+	.shell {
+		position: relative;
+		overflow: hidden;
+		background: color-mix(in oklab, var(--color-void) 90%, transparent);
+		backdrop-filter: blur(18px);
+		-webkit-backdrop-filter: blur(18px);
+		border: 1px solid rgb(230 228 220 / 0.12);
+		box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.8);
+		transition:
+			width 0.62s var(--ease-portal),
+			height 0.62s var(--ease-portal),
+			border-color 0.4s;
+	}
+	.island:not([data-view='bar']) .shell {
+		border-color: rgb(230 228 220 / 0.2);
+	}
+	.tick {
+		position: absolute;
+		z-index: 2;
+		width: 7px;
+		height: 7px;
+		border-color: rgb(230 228 220 / 0.7);
+		transition: border-color 0.4s;
+		pointer-events: none;
+	}
+	.island:not([data-view='bar']) .tick {
+		border-color: var(--color-acid);
+	}
+	/* L'hyphe : un court segment acide qui parcourt le bord de l'île */
+	.trace {
+		position: absolute;
+		inset: 0;
+		z-index: 2;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+		pointer-events: none;
+	}
+	.trace rect {
+		fill: none;
+		stroke: var(--color-acid);
+		/* Centré sur le bord : la coque coupe la moitié extérieure, il reste 1 px */
+		stroke-width: 2;
+		stroke-dasharray: 0.05 0.95;
+		filter: drop-shadow(0 0 3px var(--color-acid));
+		animation: crawl 9s linear infinite;
+	}
+	/* Changement de forme : un long trait fait le tour d'un coup */
+	.shell[data-scan] .trace rect {
+		stroke-dasharray: 0.4 0.6;
+		animation: trace 0.9s var(--ease-portal);
+	}
+	@keyframes crawl {
+		to { stroke-dashoffset: -1; }
+	}
+	@keyframes trace {
+		from { stroke-dashoffset: 0.4; opacity: 1; }
+		to { stroke-dashoffset: -0.6; opacity: 0.6; }
+	}
+
+	/* Les vues : une seule visible, les autres en attente dans la forme */
+	.view {
+		position: absolute;
+		left: 0;
+		top: 0;
+		opacity: 0;
+		filter: blur(4px);
+		pointer-events: none;
+		transition:
+			opacity 0.22s,
+			filter 0.22s;
+	}
+	.view[data-active] {
+		opacity: 1;
+		filter: none;
+		pointer-events: auto;
+		transition-delay: 0.18s;
+	}
+	.view[data-active] [data-stagger] {
+		animation: rise 0.6s var(--ease-organic) both;
+		animation-delay: calc(0.22s + var(--i, 0) * 60ms);
+	}
+	@keyframes rise {
+		from {
+			opacity: 0;
+			translate: 0 10px;
+			clip-path: inset(0 0 100% 0);
+		}
+		to {
+			opacity: 1;
+			translate: 0 0;
+			clip-path: inset(0 0 0 0);
+		}
+	}
+
+	.view-bar {
+		/* Dans le flux : la barre donne sa taille à la coque avant même le JS */
+		position: relative;
+		width: max-content;
+	}
+	.bar {
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+		height: 38px;
+		padding: 0 0.9rem;
+		white-space: nowrap;
+	}
+		.sep {
+		width: 1px;
+		height: 12px;
+		background: var(--color-acid);
+	}
+	.spore {
+		display: inline-block;
+		width: 1ch;
+		text-align: center;
+	}
+
+	.view-menu {
+		width: min(380px, calc(100vw - 24px));
+	}
+	.view-about {
+		width: min(460px, calc(100vw - 24px));
+		max-height: calc(100svh - 36px);
+		overflow-y: auto;
+		scrollbar-width: none;
+	}
+	.head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		height: 38px;
+		padding: 0 0.9rem;
+		border-bottom: 1px dashed rgb(230 228 220 / 0.14);
+	}
+	.close {
+		color: rgb(230 228 220 / 0.75);
+		text-transform: uppercase;
+		transition: color 0.3s;
+	}
+	.close:hover {
+		color: var(--color-acid);
+	}
+
+	.items {
+		padding: 0.5rem 0.4rem;
+	}
+	.item {
+		position: relative;
+		display: grid;
+		grid-template-columns: 2.2rem 1fr auto;
+		align-items: baseline;
+		width: 100%;
+		padding: 0.55rem 0.5rem 0.4rem;
+		text-align: left;
+	}
+	.item .idx {
+		color: var(--color-mineral-dim);
+		transition: color 0.3s;
+	}
+	.item .label {
+		position: relative;
+		justify-self: start;
+		font-size: 2.6rem;
+		transition: translate 0.5s var(--ease-organic);
+	}
+	/* Survol : le mot est détecté — boîte de suivi, point, valeur */
+	.item .label::after {
+		content: '';
+		position: absolute;
+		inset: -0.04em -0.12em 0.02em;
+		border: 1px solid var(--color-acid);
+		clip-path: inset(0 100% 100% 0);
+		transition: clip-path 0.45s var(--ease-organic);
+	}
+	.item .val {
+		color: var(--color-mineral);
+		transition: color 0.3s;
+	}
+	.item:hover .label,
+	.item:focus-visible .label {
+		translate: 0.4rem 0;
+	}
+	.item:hover .label::after,
+	.item:focus-visible .label::after {
+		clip-path: inset(0 0 0 0);
+	}
+	.item:hover .idx,
+	.item:hover .val,
+	.item:focus-visible .idx,
+	.item:focus-visible .val {
+		color: var(--color-acid);
+	}
+
+	.block {
+		margin: 0 0.9rem;
+		padding: 0.9rem 0;
+		border-top: 1px dashed rgb(230 228 220 / 0.14);
+	}
+	.spec {
+		display: flex;
+		gap: 0.75rem;
+		color: rgb(230 228 220 / 0.75);
+		transition: color 0.3s;
+	}
+	.spec:hover,
+	.spec[aria-current] {
+		color: var(--color-acid);
+	}
+	.foot {
+		display: flex;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.75rem 0.9rem;
+		border-top: 1px dashed rgb(230 228 220 / 0.14);
+		color: rgb(230 228 220 / 0.7);
+	}
+</style>
+
 <script>
+	import { mountIsland } from '../scripts/island';
+
 	const clocks = document.querySelectorAll<HTMLElement>('[data-clock]');
 	const tick = () => {
 		for (const el of clocks) {
@@ -65,4 +430,6 @@ const isHome = Astro.url.pathname === '/';
 	const onScroll = () => veil.classList.toggle('opacity-100', scrollY > innerHeight * 0.6);
 	addEventListener('scroll', onScroll, { passive: true });
 	onScroll();
+
+	mountIsland(document.querySelector<HTMLElement>('[data-island]')!);
 </script>

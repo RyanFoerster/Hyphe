@@ -1,0 +1,116 @@
+---
+// Une image du studio : elle se recompose tuile par tuile à l'apparition,
+// porte une légende de planche (fig., valeur) et se fait « détecter » au survol.
+interface Props {
+	src: string;
+	alt: string;
+	fig: string;
+	caption: string;
+	ratio?: string;
+	class?: string;
+	/** Cadrage de l'image dans son cadre (object-position) */
+	position?: string;
+	eager?: boolean;
+}
+
+const { src, alt, fig, caption, ratio = '16/10', class: className, position = '50% 50%', eager = false } = Astro.props;
+
+// Ordre de disparition des tuiles : fixé au build, différent pour chaque image
+let seed = [...src].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+const COLS = 8;
+const ROWS = 5;
+const tiles = Array.from({ length: COLS * ROWS }, (_, i) => {
+	const x = i % COLS;
+	const y = Math.floor(i / COLS);
+	return Math.round((x / COLS) * 380 + rand() * 520 + (y / ROWS) * 120);
+});
+const value = (rand() * 0.6 + 0.4 + 0.00000004).toFixed(8);
+---
+
+<figure class:list={['fig group', className]} data-tiles>
+	<div class="frame relative overflow-hidden" style={`aspect-ratio: ${ratio}`} data-portal-frame>
+		<img
+			src={src}
+			alt={alt}
+			loading={eager ? 'eager' : 'lazy'}
+			decoding="async"
+			class="absolute inset-0 size-full object-cover transition duration-[1400ms] ease-(--ease-organic) group-hover:scale-[1.03]"
+			style={`object-position: ${position}`}
+		/>
+		<slot />
+		<span class="tiles" aria-hidden="true" style={`--cols: ${COLS}; --rows: ${ROWS}`}>
+			{tiles.map((d) => <span style={`--d: ${d}ms`}></span>)}
+		</span>
+	</div>
+	<figcaption class="meta mt-3 flex items-baseline justify-between gap-4 text-mineral">
+		<span><span class="text-bone/85">fig. {fig}</span> — {caption}</span>
+		<span class="tabular-nums text-mineral-dim transition-colors group-hover:text-acid">{value}</span>
+	</figcaption>
+</figure>
+
+<style>
+	.frame {
+		border: 1px solid rgb(230 228 220 / 0.1);
+	}
+	/* Survol : l'image est détectée, un cadre acide se pose autour */
+	.frame::after {
+		content: '';
+		position: absolute;
+		inset: 8px;
+		border: 1px solid var(--color-acid);
+		opacity: 0;
+		scale: 1.02;
+		transition:
+			opacity 0.4s,
+			scale 0.6s var(--ease-organic);
+		pointer-events: none;
+	}
+	.fig:hover .frame::after {
+		opacity: 0.8;
+		scale: 1;
+	}
+
+	.tiles {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		grid-template-columns: repeat(var(--cols), 1fr);
+		grid-template-rows: repeat(var(--rows), 1fr);
+		pointer-events: none;
+	}
+	.tiles span {
+		background: var(--color-void);
+	}
+	/* Sans JS, pas de voile */
+	:global(html:not([data-text])) .tiles {
+		display: none;
+	}
+	.fig:global(.is-in) .tiles span {
+		animation: tile-off 0.55s steps(4, end) both;
+		animation-delay: var(--d);
+	}
+	@keyframes tile-off {
+		0% {
+			background: var(--color-void);
+			box-shadow: none;
+		}
+		35% {
+			background: var(--color-void);
+			box-shadow: inset 0 0 0 1px rgb(200 245 60 / 0.7);
+		}
+		70% {
+			background: rgb(9 12 10 / 0.5);
+			box-shadow: inset 0 0 0 1px rgb(200 245 60 / 0.5);
+		}
+		100% {
+			background: transparent;
+			box-shadow: none;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.tiles {
+			display: none;
+		}
+	}
+</style>

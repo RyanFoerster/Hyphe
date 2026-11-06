@@ -15,6 +15,9 @@ export interface Project {
 	summary: string;
 	/** Le mot du résumé mis en exergue (boîte de suivi) */
 	highlight: string;
+	/** Fiche d'herbier : nom latin (inventé) et lieu de récolte */
+	latin: string;
+	locality: string;
 	intro: string;
 	challenge: string;
 	approach: string[];
@@ -31,6 +34,8 @@ export interface Project {
 export const projects: Project[] = [
 	{
 		slug: 'lichen-archive',
+		latin: 'Cladonia archiva',
+		locality: 'Paris, FR',
 		name: 'Lichen Archive',
 		client: 'Musée des Sols',
 		year: 2026,
@@ -56,6 +61,8 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'nocturne',
+		latin: 'Oenothera nocturna',
+		locality: 'Grasse, FR',
 		name: 'Nocturne',
 		client: 'Maison Ombelle',
 		year: 2025,
@@ -80,6 +87,8 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'strata',
+		latin: 'Saxifraga strata',
+		locality: 'Lyon, FR',
 		name: 'Strata',
 		client: 'Atelier Basalte',
 		year: 2025,
@@ -100,6 +109,8 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'spore-index',
+		latin: 'Mycena reticulata',
+		locality: 'Zurich, CH',
 		name: 'Spore Index',
 		client: 'Mycelia Lab',
 		year: 2024,
@@ -124,6 +135,8 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'halo',
+		latin: 'Lithops lucida',
+		locality: 'Brussels, BE',
 		name: 'Halo',
 		client: 'Oréade',
 		year: 2024,

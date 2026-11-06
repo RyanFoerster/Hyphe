@@ -147,52 +147,14 @@ html.is-loading [data-reveal].is-in {
   filter: blur(6px);
 }
 html.is-loading [data-split].is-in .w,
-html.is-loading [data-split].is-in .w::after {
+html.is-loading [data-split].is-in .w::after,
+html.is-loading [data-split].is-in .l > .g,
+html.is-loading [data-split].is-in .l::before,
+html.is-loading [data-split].is-in .l::after {
   animation-play-state: paused;
 }
-
-/* ---------- Fenêtre « À propos » (dialog modal) ---------- */
-dialog.os-dialog {
-  opacity: 0;
-  scale: 0.96;
-  translate: 0 12px;
-  transition:
-    opacity 0.35s var(--ease-organic),
-    scale 0.45s var(--ease-organic),
-    translate 0.45s var(--ease-organic),
-    overlay 0.45s allow-discrete,
-    display 0.45s allow-discrete;
-}
-dialog.os-dialog[open] {
-  opacity: 1;
-  scale: 1;
-  translate: 0 0;
-}
-@starting-style {
-  dialog.os-dialog[open] {
-    opacity: 0;
-    scale: 0.96;
-    translate: 0 12px;
-  }
-}
-dialog.os-dialog::backdrop {
-  background: rgb(9 12 10 / 0);
-  backdrop-filter: blur(0);
-  transition:
-    background 0.45s,
-    backdrop-filter 0.45s,
-    overlay 0.45s allow-discrete,
-    display 0.45s allow-discrete;
-}
-dialog.os-dialog[open]::backdrop {
-  background: rgb(9 12 10 / 0.45);
-  backdrop-filter: blur(3px);
-}
-@starting-style {
-  dialog.os-dialog[open]::backdrop {
-    background: rgb(9 12 10 / 0);
-    backdrop-filter: blur(0);
-  }
+html.is-loading mark.hl.is-in::before {
+  clip-path: inset(0 100% 100% 0);
 }
 
 /* ---------- Transition en mosaïque ---------- */
@@ -219,15 +181,17 @@ html.tiles-cover body::before {
   pointer-events: none;
 }
 
-/* ---------- Texte : titres découpés en mots ---------- */
-/* Chaque mot se révèle par paliers (comme un balayage de capteur) et passe
-   un instant dans une boîte de suivi. */
-[data-split] .w {
+/* ---------- Texte : titres découpés ---------- */
+/* Deux entrées, choisies par text.ts (html[data-text]). Sans JS, rien n'est
+   masqué : les règles ne s'appliquent qu'une fois le mode posé. */
+
+/* scan : chaque mot se révèle par paliers et passe dans une boîte de suivi */
+html[data-text="scan"] [data-split] .w {
   position: relative;
   display: inline-block;
   clip-path: inset(-25% 100% -25% 0);
 }
-[data-split] .w::after {
+html[data-text="scan"] [data-split] .w::after {
   content: "";
   position: absolute;
   inset: -0.06em -0.08em 0.02em;
@@ -235,11 +199,11 @@ html.tiles-cover body::before {
   opacity: 0;
   pointer-events: none;
 }
-[data-split].is-in .w {
+html[data-text="scan"] [data-split].is-in .w {
   animation: word-in 0.62s steps(6, end) forwards;
   animation-delay: calc(var(--split-delay, 0ms) + var(--i) * 90ms);
 }
-[data-split].is-in .w::after {
+html[data-text="scan"] [data-split].is-in .w::after {
   animation: word-box 0.9s var(--ease-organic) forwards;
   animation-delay: calc(var(--split-delay, 0ms) + var(--i) * 90ms + 120ms);
 }
@@ -254,6 +218,79 @@ html.tiles-cover body::before {
   100% { opacity: 0; inset: -0.12em -0.14em -0.04em; }
 }
 
+/* bloom : chaque lettre est une graine — un caractère monte, une tige pousse,
+   puis la lettre éclot, du centre du titre vers les bords */
+html[data-text="bloom"] [data-split] .w {
+  display: inline-block;
+  white-space: nowrap;
+}
+html[data-text="bloom"] [data-split] .l {
+  position: relative;
+  display: inline-block;
+}
+html[data-text="bloom"] [data-split] .g {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(0.1em);
+  transform: translateY(0.16em) scale(0.5);
+  transform-origin: 50% 88%;
+}
+html[data-text="bloom"] [data-split] .l::before {
+  content: attr(data-seed);
+  position: absolute;
+  left: 50%;
+  bottom: 0.12em;
+  translate: -50% 0;
+  font: 400 max(10px, 0.15em) / 1 var(--font-mono);
+  letter-spacing: 0;
+  color: var(--color-acid);
+  opacity: 0;
+  pointer-events: none;
+}
+html[data-text="bloom"] [data-split] .l::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0.1em;
+  width: 1px;
+  height: 0.62em;
+  background: var(--color-acid);
+  transform-origin: 50% 100%;
+  scale: 1 0;
+  opacity: 0;
+  pointer-events: none;
+}
+html[data-text="bloom"] [data-split].is-in .l::before {
+  animation: seed 0.75s steps(5, end) both;
+  animation-delay: calc(var(--split-delay, 0ms) + var(--j) * 40ms);
+}
+html[data-text="bloom"] [data-split].is-in .l::after {
+  animation: stem 0.8s var(--ease-organic) both;
+  animation-delay: calc(var(--split-delay, 0ms) + var(--j) * 40ms + 140ms);
+}
+html[data-text="bloom"] [data-split].is-in .g {
+  animation: bloom 1s var(--ease-organic) both;
+  animation-delay: calc(var(--split-delay, 0ms) + var(--j) * 40ms + 320ms);
+}
+@keyframes seed {
+  0% { opacity: 0; translate: -50% 0.25em; }
+  25% { opacity: 1; translate: -50% 0; }
+  75% { opacity: 1; translate: -50% -0.35em; }
+  100% { opacity: 0; translate: -50% -0.55em; }
+}
+@keyframes stem {
+  0% { scale: 1 0; opacity: 0.9; }
+  55% { scale: 1 1; opacity: 0.9; }
+  100% { scale: 1 1; opacity: 0; }
+}
+@keyframes bloom {
+  to {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+
 /* ---------- Texte : mots mis en exergue ---------- */
 /* Boîte de suivi, point d'ancrage et valeur brute, comme une détection */
 mark.hl {
@@ -262,13 +299,22 @@ mark.hl {
   color: var(--color-bone);
   padding: 0 0.12em;
 }
+@property --hl {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
 mark.hl::before {
   content: "";
   position: absolute;
   inset: -0.05em -0.02em -0.08em;
   border: 1px solid rgb(222 232 228 / 0.5);
+  background: repeating-linear-gradient(90deg, rgb(200 245 60 / calc(var(--hl) * 0.14)) 0 1px, transparent 1px 3px);
   clip-path: inset(0 100% 100% 0);
-  transition: clip-path 0.9s var(--ease-organic) 0.3s;
+  transition:
+    clip-path 0.9s var(--ease-organic) 0.3s,
+    border-color 0.6s 1.15s,
+    --hl 0.8s 1.15s;
   pointer-events: none;
 }
 mark.hl::after {
@@ -284,15 +330,18 @@ mark.hl::after {
   white-space: nowrap;
   pointer-events: none;
 }
+/* Une fois encadré, le mot reste « détecté » : bord acide et trame */
 mark.hl.is-in::before {
   clip-path: inset(0 0 0 0);
+  border-color: var(--color-acid);
+  --hl: 1;
 }
 mark.hl.is-in::after {
   opacity: 1;
 }
 mark.hl:hover::before {
-  border-color: var(--color-acid);
-  background: repeating-linear-gradient(90deg, rgb(200 245 60 / 0.12) 0 1px, transparent 1px 3px);
+  --hl: 1.8;
+  transition-delay: 0s;
 }
 
 /* Lien pointeur sur les spécimens de la galerie */
@@ -307,7 +356,7 @@ html[data-specimen-hover] body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-split] .w {
+  html[data-text] [data-split] .w {
     clip-path: none;
   }
   [data-reveal] {

@@ -126,12 +126,16 @@ export function createLoader(root: HTMLElement) {
 		}
 	};
 
+	let last = performance.now();
 	const draw = (now: number) => {
 		const elapsed = (now - start) / 1000;
+		const dt = Math.min(0.25, (now - last) / 1000);
+		last = now;
 		// Le réseau avance au rythme réel, sans jamais sembler figé
 		const floor = finished ? 1 : Math.min(0.25, elapsed * 0.12);
 		const goal = Math.max(target, floor);
-		shown = reduced ? goal : shown + (goal - shown) * 0.08;
+		// Lissage réglé sur le temps, pas sur le nombre d'images
+		shown = reduced ? goal : shown + (goal - shown) * (1 - Math.pow(0.006, dt));
 		if (goal - shown < 0.002) shown = goal;
 
 		const r = canvas.getBoundingClientRect();
@@ -170,7 +174,8 @@ export function createLoader(root: HTMLElement) {
 			target = 1;
 			const minimum = 1400 - (performance.now() - start);
 			await new Promise((res) => setTimeout(res, Math.max(reduced ? 0 : 650, minimum)));
-			while (shown < 1) await new Promise((res) => requestAnimationFrame(res));
+			const until = performance.now() + 1200;
+			while (shown < 1 && performance.now() < until) await new Promise((res) => setTimeout(res, 50));
 			await new Promise((res) => setTimeout(res, reduced ? 0 : 280));
 			this.dismiss();
 		},

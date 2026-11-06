@@ -70,6 +70,7 @@ const COMPOSITE_FRAG = /* glsl */ `
 	uniform float uRays;
 	uniform float uBloom;
 	uniform float uFlash;
+	uniform float uFade;
 	uniform float uTile;
 	uniform float uReveal;
 	uniform float uMosaic;
@@ -267,6 +268,13 @@ const COMPOSITE_FRAG = /* glsl */ `
 		col = mix(col, vec3(0.9, 0.92, 0.88), ring * 0.6);
 		cover = max(cover, ring * 0.6);
 
+		// Fin de la galerie : les caractères s'éteignent un à un, le fond revient
+		if (uFade > 0.0) {
+			float keep = smoothstep(uFade, uFade + 0.14, hash(floor(px / uCell) + 7.31) * 0.86 + 0.14 * (1.0 - uFade));
+			col *= keep;
+			cover *= keep;
+		}
+
 		// Passage de la surface : éclair de la teinte
 		col += (uTint * 0.7 + 0.3) * uFlash * 0.55;
 
@@ -347,6 +355,7 @@ export function createPost(renderer: THREE.WebGLRenderer, { lowPower }: { lowPow
 			uRays: { value: lowPower ? 0 : 0.9 },
 			uBloom: { value: 1 },
 			uFlash: { value: 0 },
+			uFade: { value: 0 },
 			uTile: { value: 120 },
 			uReveal: { value: 0 },
 			uMosaic: { value: 0.12 },
