@@ -140,6 +140,16 @@ body::after {
   translate: 0 0;
   filter: blur(0);
 }
+/* Pendant le chargement, les entrées attendent leur tour */
+html.is-loading [data-reveal].is-in {
+  opacity: 0;
+  translate: 0 28px;
+  filter: blur(6px);
+}
+html.is-loading [data-split].is-in .w,
+html.is-loading [data-split].is-in .w::after {
+  animation-play-state: paused;
+}
 
 /* ---------- Fenêtre « À propos » (dialog modal) ---------- */
 dialog.os-dialog {

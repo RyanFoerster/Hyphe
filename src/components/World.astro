@@ -15,9 +15,38 @@ import { projects } from '../data/projects';
 <canvas class="world-gl pointer-events-none fixed inset-0 z-[2] size-full" data-world-gl aria-hidden="true"></canvas>
 <canvas class="pointer-events-none fixed inset-0 z-[3] size-full" data-world-overlay aria-hidden="true"></canvas>
 
-<p class="world-loader meta pointer-events-none fixed left-1/2 top-1/2 z-[3] -translate-x-1/2 -translate-y-1/2 text-mineral" aria-hidden="true">
-	<span class="text-bone/80">specimen</span> loading <span data-progress class="tabular-nums text-acid">000</span>%
-</p>
+<!-- Chargement : une spore qui germe (voir scripts/loader.ts) -->
+<div class="loader fixed inset-0 z-[150] flex flex-col bg-void px-4 py-4 sm:px-6 sm:py-5" data-loader role="status" aria-live="polite">
+	<span class="sr-only">Loading the specimen</span>
+	<div class="meta flex items-center justify-between text-mineral" aria-hidden="true">
+		<span class="flex items-center gap-3">
+			<img src="/HYPHE.svg" alt="" width="555" height="146" class="h-[18px] w-auto sm:h-5" />
+			<span class="hidden sm:inline">os v1.0 — boot</span>
+		</span>
+		<span>[ germination ]</span>
+	</div>
+
+	<div class="flex flex-1 flex-col items-center justify-center gap-5" aria-hidden="true">
+		<div class="frame relative h-[min(360px,44svh)] w-[min(560px,88vw)]">
+			<span class="corner left-0 top-0 border-l border-t"></span>
+			<span class="corner right-0 top-0 border-r border-t"></span>
+			<span class="corner bottom-0 left-0 border-b border-l"></span>
+			<span class="corner bottom-0 right-0 border-b border-r"></span>
+			<p class="meta absolute -top-5 left-0 text-bone/80">specimen 001 — germinating</p>
+			<p class="meta absolute -top-5 right-0 tabular-nums text-acid" data-loader-value>0.00000000</p>
+			<canvas class="absolute inset-3 size-[calc(100%-1.5rem)]" data-loader-canvas></canvas>
+		</div>
+		<p class="meta flex gap-3 tabular-nums text-bone/70">
+			<span data-loader-bar>[::::::::::::::::::::::::]</span>
+			<span class="text-acid" data-loader-pct>000%</span>
+		</p>
+	</div>
+
+	<div class="meta flex items-end justify-between gap-6 text-mineral" aria-hidden="true">
+		<ul class="space-y-1" data-loader-log></ul>
+		<span class="hidden text-right sm:block">Studio Hyphe<br />Digital experience studio</span>
+	</div>
+</div>
 
 <div class="pointer-events-none fixed right-[7%] top-[27%] z-[3] hidden w-48 opacity-0 md:block" data-callout-label aria-hidden="true">
 	<p class="meta text-bone/90">01. Gazania rigens</p>
@@ -37,24 +66,33 @@ import { projects } from '../data/projects';
 	:global(html[data-world='on']) .world-gl {
 		opacity: 1;
 	}
-	.world-loader {
-		transition: opacity 0.6s;
+	/* Sans WebGL (ou sans JS), pas de chargement à attendre */
+	:global(html:not(.world)) .loader {
+		display: none;
 	}
-	:global(html[data-world='on']) .world-loader,
-	:global(html[data-world='off']) .world-loader {
-		opacity: 0;
+	.corner {
+		position: absolute;
+		width: 14px;
+		height: 14px;
+		border-color: rgb(230 228 220 / 0.6);
 	}
 </style>
 
 <script>
 	import { mountAscii } from '../scripts/ascii';
+	import { createLoader } from '../scripts/loader';
 
 	const root = document.documentElement;
 	const canvas = document.querySelector<HTMLCanvasElement>('[data-world-gl]')!;
 	const overlay = document.querySelector<HTMLCanvasElement>('[data-world-overlay]')!;
-	const progress = document.querySelector<HTMLElement>('[data-progress]')!;
+	const loaderEl = document.querySelector<HTMLElement>('[data-loader]');
+	const loader = loaderEl && root.classList.contains('world') ? createLoader(loaderEl) : null;
+	// Filet de sécurité : jamais plus de 20 s derrière le loader
+	const safety = setTimeout(() => loader?.dismiss(), 20_000);
 
 	const fallback = () => {
+		clearTimeout(safety);
+		loader?.dismiss();
 		root.dataset.world = 'off';
 		root.classList.remove('world');
 		const hero = document.querySelector<HTMLElement>('[data-hero]');
@@ -76,10 +114,12 @@ import { projects } from '../data/projects';
 			await createWorld({
 				canvas,
 				overlay,
-				onProgress: (f) => (progress.textContent = String(Math.round(f * 100)).padStart(3, '0')),
+				onProgress: (f) => loader?.progress(f),
 				onReady: ({ triangles }) => {
 					document.querySelector('[data-triangles]')!.textContent = triangles.toLocaleString('en-US');
 					root.dataset.world = 'on';
+					clearTimeout(safety);
+					void loader?.done();
 				},
 			});
 		} catch (error) {

@@ -25,8 +25,9 @@ function overlay() {
 	return { c, ctx };
 }
 
-/** Anime la mosaïque : `cover` = les tuiles apparaissent, sinon elles partent */
-async function run(origin: { x: number; y: number }, cover: boolean, duration: number) {
+/** Anime la mosaïque : `cover` = les tuiles apparaissent, sinon elles partent (le voile
+ *  est alors plein dès la première image, il peut donc remplacer un écran) */
+export async function mosaic(origin: { x: number; y: number }, cover: boolean, duration: number) {
 	const { c, ctx } = overlay();
 	const size = innerWidth < 768 ? 56 : 80;
 	const cols = Math.ceil(innerWidth / size);
@@ -94,7 +95,7 @@ export function mountTiles() {
 	const root = document.documentElement;
 	if (root.classList.contains('tiles-cover')) {
 		const o: Origin = raw ? JSON.parse(raw) : { x: innerWidth / 2, y: innerHeight / 2, t: 0 };
-		void run(o, false, 1050);
+		void mosaic(o, false, 1050);
 		root.classList.remove('tiles-cover');
 	}
 
@@ -114,7 +115,7 @@ export function mountTiles() {
 		const r = frame.getBoundingClientRect();
 		const origin = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
 		sessionStorage.setItem(KEY, JSON.stringify({ ...origin, t: Date.now() }));
-		run(origin, true, 700).then(() => (location.href = url.href));
+		mosaic(origin, true, 700).then(() => (location.href = url.href));
 	});
 
 	// Retour arrière depuis le cache : on enlève un éventuel voile resté en place

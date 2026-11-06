@@ -174,6 +174,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 	let energy = 0;
 	let reveal = reduced ? 1 : 0;
 	let readyAt = -1;
+	let revealArmed = false;
 
 	const sAt = (y: number) => {
 		if (y <= knots[0][0]) return 0;
@@ -205,6 +206,8 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 		smooth.y += (pointer.y - smooth.y) * k * 0.6;
 		smooth.lx += (pointer.px - smooth.lx) * (reduced ? 1 : Math.min(1, k * 2.2));
 		smooth.ly += (pointer.py - smooth.ly) * (reduced ? 1 : Math.min(1, k * 2.2));
+		// La roche se recompose une fois le loader parti
+		if (readyAt < 0 && revealArmed && !document.documentElement.classList.contains('is-loading')) readyAt = now;
 		if (readyAt >= 0 && !reduced) reveal = clamp01((now - readyAt) / 2400);
 
 		const inside = sy >= diveEnd;
@@ -481,7 +484,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 	frame(performance.now());
 	cancelAnimationFrame(raf);
 	start();
-	readyAt = performance.now();
+	revealArmed = true;
 	onReady?.({ triangles: ext.triangles });
 	if (import.meta.env.DEV) Object.assign(window, { __world: { ext, cave, camera, post, knots: () => knots } });
 
