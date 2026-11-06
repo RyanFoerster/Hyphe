@@ -1,14 +1,5 @@
 {
   "extends": "astro/tsconfigs/strict",
-  "include": [".astro/types.d.ts", "**/*.astro", "**/*.ts"],
-  "exclude": ["dist", ".design-src"],
-  "compilerOptions": {
-    "ignoreDeprecations": "6.0",
-    "strictNullChecks": true,
-    "allowJs": true,
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["src/*"]
-    }
-  }
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"]
 }

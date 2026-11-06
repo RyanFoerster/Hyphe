@@ -1,0 +1,185 @@
+---
+// Le hero : la roche au centre (rendue par World), le titre de part et
+// d'autre, les projets en orbite autour d'elle.
+import Window from './os/Window.astro';
+import { projects } from '../data/projects';
+import { site } from '../data/site';
+---
+
+<section class="hero relative h-[100svh] min-h-[620px]" data-hero aria-labelledby="hero-title">
+	<!-- Secours sans WebGL : la fleur en ASCII -->
+	<div class="fallback absolute inset-x-0 top-[24%] bottom-[30%] hidden" aria-hidden="true">
+		<canvas class="mx-auto block h-full w-full max-w-md" data-ascii-deferred data-ascii-kind="flower" data-ascii-seed="9" data-ascii-size="12" data-ascii-accent="ember"></canvas>
+	</div>
+
+	<p class="meta pointer-events-none absolute inset-x-0 top-[calc(4.5rem+1svh)] z-[3] text-center text-mineral" data-reveal>
+		<span data-scramble>[ Specimen 001 ] — Hyphe ecosystem</span>
+	</p>
+
+	<!-- Titre : la roche se loge entre les deux lignes -->
+	<h1 id="hero-title" class="titre pointer-events-none absolute inset-0 z-[3] text-center text-[clamp(2.9rem,7.6vw,9.4rem)]" data-split>
+		<span class="absolute inset-x-4 top-[15svh] block">Digital experiences,</span>
+		<span class="absolute inset-x-4 top-[72svh] block md:top-[73svh]">grown differently.</span>
+	</h1>
+
+	<!-- Bas de l'écran : manifeste, invitation à plonger, lentille -->
+	<div class="absolute inset-x-4 bottom-5 z-[3] flex items-end justify-between gap-6 sm:inset-x-6">
+		<div class="max-w-[19rem] space-y-3" data-reveal style="--reveal-delay: 500ms">
+			<p class="hidden text-[14px] leading-relaxed text-bone/70 md:block">
+				We design and build websites, interfaces and interactive worlds for brands that want to be
+				<mark class="hl">felt</mark>, not just seen.
+			</p>
+			<p class="meta flex items-center gap-2 text-mineral">
+				<span class="relative flex size-1.5">
+					<span class="absolute inset-0 animate-ping rounded-full bg-acid/60"></span>
+					<span class="relative size-1.5 rounded-full bg-acid"></span>
+				</span>
+				<span data-scramble>Open for projects — {site.city}</span>
+			</p>
+		</div>
+
+		<a href="#work" class="scroll-cue meta group absolute bottom-0 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-bone/70 transition hover:text-acid sm:flex" data-reveal style="--reveal-delay: 800ms">
+			<span data-scramble>Scroll to enter the specimen</span>
+			<span class="cue-line block h-8 w-px bg-bone/30" aria-hidden="true"></span>
+		</a>
+
+		<div class="lens-slot hidden md:block" data-reveal style="--reveal-delay: 900ms">
+			<Window title="artefact.scan" meta="lens 01" lens draggable class="h-[150px] w-[200px] lg:h-[176px] lg:w-[236px]">
+				<p class="meta pointer-events-none absolute bottom-2 left-2.5 text-bone/45">drag to scan</p>
+			</Window>
+		</div>
+	</div>
+
+	<!-- Les projets, en orbite autour de la roche (positionnés par World) -->
+	<ul class="orbit" aria-label="Selected work">
+		{
+			projects.map((p, i) => (
+				<li>
+					<a
+						href={`/work/${p.slug}`}
+						data-portal
+						data-orbit-item
+						data-accent={p.visual.accent}
+						class="orbit-item glass group"
+						aria-label={`${p.name} — ${p.category}, ${p.year}`}
+					>
+						<span data-portal-frame class="thumb">
+							<img src={`/visuals/${p.slug}.svg`} alt="" width="64" height="40" />
+						</span>
+						<span class="body">
+							<span class="meta text-mineral">
+								{String(i + 1).padStart(2, '0')} — {p.year}
+							</span>
+							<span class="name">{p.name}</span>
+						</span>
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</section>
+
+<style>
+	.hero[data-fallback] .fallback {
+		display: block;
+	}
+	.hero[data-fallback] .lens-slot {
+		display: none;
+	}
+
+	/* Sans le monde 3D : les projets en rangée sous la roche */
+	.orbit {
+		position: absolute;
+		inset-inline: 1rem;
+		top: 58svh;
+		z-index: 4;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.5rem;
+	}
+	.orbit-item {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.3rem 0.85rem 0.3rem 0.3rem;
+		border-radius: 10px;
+		transition:
+			border-color 0.4s,
+			background-color 0.4s;
+	}
+	.orbit-item:hover,
+	.orbit-item:focus-visible {
+		border-color: rgb(200 245 60 / 0.45);
+		background-color: color-mix(in oklab, var(--color-soil) 75%, transparent);
+	}
+	.thumb {
+		display: block;
+		width: 56px;
+		height: 36px;
+		overflow: hidden;
+		border-radius: 6px;
+		border: 1px solid rgb(230 228 220 / 0.1);
+	}
+	.thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: scale 0.7s var(--ease-organic);
+	}
+	.orbit-item:hover .thumb img {
+		scale: 1.3;
+	}
+	.body {
+		display: flex;
+		flex-direction: column;
+		white-space: nowrap;
+	}
+	.name {
+		font-size: 13px;
+		line-height: 1.2;
+		color: var(--color-bone);
+	}
+	@media (max-width: 767px) {
+		.orbit-item {
+			padding: 0.25rem;
+		}
+		.orbit-item .body {
+			display: none;
+		}
+		.thumb {
+			width: 44px;
+			height: 30px;
+		}
+	}
+
+	/* Avec le monde 3D : chaque carte est placée sur l'anneau */
+	:global(html[data-world='on']) .orbit {
+		position: static;
+	}
+	:global(html[data-world='on']) .orbit-item {
+		position: fixed;
+		left: 0;
+		top: 0;
+		opacity: 0;
+		will-change: transform, opacity;
+	}
+
+	.cue-line {
+		transform-origin: top;
+		animation: cue 2.4s var(--ease-organic) infinite;
+	}
+	@keyframes cue {
+		0% { scale: 1 0; }
+		50% { scale: 1 1; transform-origin: top; }
+		51% { transform-origin: bottom; }
+		100% { scale: 1 0; transform-origin: bottom; }
+	}
+</style>
+
+<script>
+	import { makeDraggable } from '../scripts/drag';
+
+	const host = document.querySelector<HTMLElement>('[data-hero]')!;
+	host.querySelectorAll<HTMLElement>('[data-draggable]').forEach((win) => makeDraggable(win, host));
+</script>

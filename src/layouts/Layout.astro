@@ -1,0 +1,80 @@
+---
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+import AboutWindow from '../components/AboutWindow.astro';
+import { site } from '../data/site';
+
+interface Props {
+	title?: string;
+	description?: string;
+	image?: string;
+}
+
+const { title, description = site.description, image } = Astro.props;
+const fullTitle = title ? `${title} — ${site.name}` : `${site.name} — ${site.tagline}`;
+const canonical = new URL(Astro.url.pathname, site.url);
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="theme-color" content="#090c0a" />
+		<title>{fullTitle}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={fullTitle} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical} />
+		{image && <meta property="og:image" content={new URL(image, site.url)} />}
+		<meta name="twitter:card" content="summary_large_image" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="generator" content={Astro.generator} />
+		<link rel="preload" href="/fonts/Parceh.otf" as="font" type="font/otf" crossorigin />
+
+		<!-- Transition en mosaïque : si on arrive d'un clic, la page reste voilée
+		     jusqu'à ce que les tuiles la révèlent (voile retiré seul après 2,5 s) -->
+		<script is:inline>
+			try {
+				const r = JSON.parse(sessionStorage.getItem('hyphe:tiles') || 'null');
+				if (r && Date.now() - r.t < 5000 && !matchMedia('(prefers-reduced-motion: reduce)').matches)
+					document.documentElement.classList.add('tiles-cover');
+			} catch {}
+		</script>
+	</head>
+	<body>
+		<a href="#main" class="meta sr-only z-[60] rounded bg-bone px-3 py-2 text-void focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
+			Skip to content
+		</a>
+		<Nav />
+		<main id="main">
+			<slot />
+		</main>
+		<AboutWindow />
+
+		<script>
+			import { mountAscii } from '../scripts/ascii';
+			import { mountText } from '../scripts/text';
+			import { mountTiles } from '../scripts/tiles';
+
+			mountTiles();
+			mountText();
+			mountAscii();
+
+			// Les éléments marqués apparaissent en entrant dans la vue
+			const io = new IntersectionObserver(
+				(entries) => {
+					for (const entry of entries) {
+						if (!entry.isIntersecting) continue;
+						entry.target.classList.add('is-in');
+						io.unobserve(entry.target);
+					}
+				},
+				{ threshold: 0.01 },
+			);
+			document.querySelectorAll('[data-reveal], [data-split], mark.hl').forEach((el) => io.observe(el));
+		</script>
+	</body>
+</html>

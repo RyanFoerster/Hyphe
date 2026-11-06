@@ -6,9 +6,23 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": [
         "run",
-        "dev"
+        "dev",
+        "--",
+        "--host"
       ],
       "port": 4321
+    },
+    {
+      "name": "studio-hyphe-build",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "preview",
+        "--",
+        "--port",
+        "4322"
+      ],
+      "port": 4322
     }
   ]
 }

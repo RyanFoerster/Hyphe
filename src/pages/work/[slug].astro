@@ -1,0 +1,173 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Layout from '../../layouts/Layout.astro';
+import Window from '../../components/os/Window.astro';
+import Footer from '../../components/Footer.astro';
+import { projects, type Project } from '../../data/projects';
+
+export const getStaticPaths = (() =>
+	projects.map((project, i) => ({
+		params: { slug: project.slug },
+		props: { project, next: projects[(i + 1) % projects.length], index: i },
+	}))) satisfies GetStaticPaths;
+
+interface Props {
+	project: Project;
+	next: Project;
+	index: number;
+}
+
+const { project: p, next, index } = Astro.props;
+const visual = `/visuals/${p.slug}.svg`;
+const organism = { topo: 'mycelium', strata: 'roots', bloom: 'flower' }[p.visual.kind];
+const accent = p.visual.accent === '#f07a2a' ? 'ember' : 'acid';
+const domain = `${p.name.toLowerCase().replace(/\s+/g, '')}.com`;
+// Le mot mis en exergue dans l'introduction, s'il y figure
+const word = [p.highlight, p.client].find((w) => p.intro.includes(w)) ?? '';
+const at = word ? p.intro.indexOf(word) : -1;
+const intro = at < 0 ? [p.intro, '', ''] : [p.intro.slice(0, at), word, p.intro.slice(at + word.length)];
+---
+
+<Layout title={p.name} description={p.summary} image={visual}>
+	<!-- L'environnement du projet : on y entre par le portail -->
+	<section class="relative h-[100svh] min-h-[600px] overflow-hidden" aria-labelledby="project-title">
+		<img src={visual} alt="" class="absolute inset-0 size-full scale-105 object-cover" fetchpriority="high" />
+		<div class="absolute inset-0 bg-gradient-to-b from-void/30 via-transparent to-void"></div>
+		<canvas
+			class="pointer-events-none absolute inset-y-[12%] right-0 w-full opacity-80 md:w-1/2"
+			data-ascii
+			data-ascii-kind={organism}
+			data-ascii-seed={p.visual.seed}
+			data-ascii-size="11"
+			data-ascii-accent={accent}
+			aria-hidden="true"
+		></canvas>
+
+		<div class="relative flex h-full flex-col justify-end gap-10 px-4 pb-6 pt-24 sm:px-6 md:flex-row md:items-end md:justify-between md:pb-8">
+			<div>
+				<p class="meta mb-6 text-mineral">
+					<a href="/#work" class="transition hover:text-bone">Work</a>
+					<span class="text-mineral-dim"> / </span><span class="text-bone/80" data-scramble>{p.slug}.prj</span>
+				</p>
+				<h1 id="project-title" class="titre text-[clamp(4rem,13vw,13rem)]" data-split style="--split-delay: 700ms">{p.name}</h1>
+			</div>
+
+			<Window title="info.sys" meta={`${String(index + 1).padStart(2, '0')} / ${String(projects.length).padStart(2, '0')}`} class="w-full shrink-0 md:w-[320px]">
+				<dl class="meta grid grid-cols-[5.5rem_1fr] gap-y-2 p-4 text-bone/85">
+					<dt class="text-mineral">Client</dt><dd>{p.client}</dd>
+					<dt class="text-mineral">Year</dt><dd>{p.year}</dd>
+					<dt class="text-mineral">Type</dt><dd>{p.category}</dd>
+					<dt class="text-mineral">Services</dt><dd>{p.services.join(', ')}</dd>
+				</dl>
+			</Window>
+		</div>
+	</section>
+
+	<!-- Introduction -->
+	<section class="grid gap-8 px-4 py-28 sm:px-6 md:grid-cols-12 md:py-40">
+		<p class="meta text-mineral md:col-span-3" data-reveal><span data-scramble>[ 01 ] Introduction</span></p>
+		<p class="text-[clamp(1.5rem,2.9vw,2.75rem)] leading-[1.15] tracking-[-0.01em] text-bone md:col-span-9" data-reveal>
+			{intro[0]}{intro[1] && <mark class="hl">{intro[1]}</mark>}{intro[2]}
+		</p>
+	</section>
+
+	<!-- Aperçu du site dans une fenêtre de navigateur de l'OS -->
+	<section class="px-4 sm:px-6" aria-label="Website preview">
+		<div data-reveal>
+			<Window title={domain} meta="1440 × 900 — live preview" class="mx-auto max-w-[1400px]">
+				<div class="relative aspect-[16/9] overflow-hidden">
+					<img src={visual} alt={`${p.name} website, home page`} loading="lazy" class="absolute inset-0 size-full object-cover" />
+					<div class="absolute inset-0 bg-gradient-to-r from-void/80 via-void/20 to-transparent"></div>
+					<div class="absolute inset-x-[4%] top-[5%] flex items-center justify-between">
+						<span class="text-[clamp(0.6rem,1.1vw,0.95rem)] tracking-wide text-bone/90">{p.name}</span>
+						<span class="meta hidden gap-6 text-bone/60 sm:flex"><span>Index</span><span>About</span><span>Shop</span></span>
+					</div>
+					<div class="absolute bottom-[10%] left-[4%] max-w-[55%]">
+						<p class="titre text-[clamp(1.6rem,6vw,6rem)]">{p.name}</p>
+						<p class="mt-[3%] max-w-[80%] text-[clamp(0.55rem,1.05vw,0.95rem)] leading-snug text-bone/70">{p.summary}</p>
+					</div>
+				</div>
+			</Window>
+		</div>
+	</section>
+
+	<!-- Défi et approche -->
+	<section class="grid gap-x-6 gap-y-16 px-4 py-28 sm:px-6 md:grid-cols-12 md:py-40">
+		<div class="md:col-span-4" data-reveal>
+			<p class="meta mb-5 text-mineral"><span data-scramble>[ 02 ] Challenge</span></p>
+			<p class="text-lg leading-relaxed text-bone/85">{p.challenge}</p>
+		</div>
+		<div class="md:col-span-7 md:col-start-6" data-reveal style="--reveal-delay: 120ms">
+			<p class="meta mb-5 text-mineral"><span data-scramble>[ 03 ] Approach</span></p>
+			<ol class="space-y-8">
+				{
+					p.approach.map((step, i) => (
+						<li class="grid grid-cols-[2.5rem_1fr] gap-4 border-t border-bone/10 pt-6">
+							<span class="meta text-acid/80">{String(i + 1).padStart(2, '0')}</span>
+							<p class="text-lg leading-relaxed text-bone/85">{step}</p>
+						</li>
+					))
+				}
+			</ol>
+		</div>
+	</section>
+
+	<!-- Mobile : deux écrans, décalés -->
+	<section class="grid grid-cols-2 gap-4 px-4 sm:px-6 md:grid-cols-12 md:gap-6" aria-label="Mobile screens">
+		{
+			[0, 1].map((n) => (
+				<div class:list={['md:col-span-3', n === 0 ? 'md:col-start-4' : 'md:col-start-8 md:mt-32']} data-reveal style={`--reveal-delay: ${n * 150}ms`}>
+					<div class="glass overflow-hidden rounded-[28px] p-2">
+						<div class="relative aspect-[9/19] overflow-hidden rounded-[22px]">
+							<img src={visual} alt={`${p.name} on mobile, screen ${n + 1}`} loading="lazy" class="absolute inset-0 size-full object-cover" style={`object-position: ${n ? '78%' : '22%'} 50%`} />
+							<div class="absolute inset-0 bg-gradient-to-t from-void/90 via-transparent to-void/40"></div>
+							<p class="meta absolute left-4 top-5 text-bone/80">{p.name}</p>
+							<p class="titre absolute bottom-6 left-4 right-4 text-[clamp(1.6rem,3vw,2.6rem)]">{n === 0 ? p.name : p.client}</p>
+						</div>
+					</div>
+				</div>
+			))
+		}
+	</section>
+
+	<!-- Services et résultats -->
+	<section class="grid gap-x-6 gap-y-16 px-4 py-28 sm:px-6 md:grid-cols-12 md:py-40">
+		<div class="md:col-span-4" data-reveal>
+			<p class="meta mb-5 text-mineral">[ 04 ] Services</p>
+			<ul class="flex flex-wrap gap-2">
+				{p.services.map((s) => <li class="meta rounded-full border border-bone/15 px-3 py-1.5 text-bone/85">{s}</li>)}
+			</ul>
+		</div>
+		{
+			p.results && (
+				<div class="md:col-span-7 md:col-start-6" data-reveal style="--reveal-delay: 120ms">
+					<p class="meta mb-5 text-mineral">[ 05 ] Results</p>
+					<dl class="grid gap-6 sm:grid-cols-3">
+						{p.results.map((r) => (
+							<div class="flex flex-col border-t border-bone/10 pt-5">
+								<dt class="meta order-2 mt-2 text-mineral">{r.label}</dt>
+								<dd class="text-[clamp(2.4rem,4vw,3.6rem)] leading-none tracking-[-0.03em] text-bone">{r.value}</dd>
+							</div>
+						))}
+					</dl>
+				</div>
+			)
+		}
+	</section>
+
+	<!-- Projet suivant : on repasse par un portail -->
+	<section class="px-4 sm:px-6" aria-label="Next project">
+		<a href={`/work/${next.slug}`} data-portal class="group block" data-reveal>
+			<p class="meta mb-4 flex justify-between text-mineral">
+				<span>Next specimen</span><span>{next.client} — {next.year}</span>
+			</p>
+			<div data-portal-frame class="relative h-[42vh] min-h-[260px] overflow-hidden rounded-[12px] border border-bone/10">
+				<img src={`/visuals/${next.slug}.svg`} alt="" loading="lazy" class="absolute inset-0 size-full object-cover transition duration-[1400ms] ease-(--ease-organic) group-hover:scale-105" />
+				<div class="absolute inset-0 bg-gradient-to-t from-void/80 to-transparent"></div>
+				<p class="titre absolute bottom-5 left-5 text-[clamp(3rem,9vw,9rem)] transition-transform duration-700 ease-(--ease-organic) group-hover:translate-x-3" data-split>{next.name}</p>
+			</div>
+		</a>
+	</section>
+
+	<Footer />
+</Layout>
