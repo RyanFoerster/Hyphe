@@ -73,6 +73,8 @@ const total = String(projects.length).padStart(2, '0');
 </style>
 
 <script>
+	import { scrollToY } from '../scripts/scroll';
+
 	const zone = document.querySelector<HTMLElement>('[data-next]');
 	if (zone && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
 		const href = zone.dataset.href!;
@@ -103,7 +105,7 @@ const total = String(projects.length).padStart(2, '0');
 			e.preventDefault();
 			e.stopPropagation();
 			const top = zone.getBoundingClientRect().top + scrollY;
-			scrollTo({ top: top + zone.offsetHeight - innerHeight, behavior: 'smooth' });
+			scrollToY(top + zone.offsetHeight - innerHeight);
 		});
 
 		// On n'enchaîne que si le visiteur est vraiment descendu jusque-là

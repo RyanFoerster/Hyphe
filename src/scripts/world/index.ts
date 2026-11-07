@@ -13,6 +13,7 @@ import { createArtefact, ROCK_SIZE } from './artefact';
 import { createCavern } from './cavern';
 import { createOverlay, type Pt } from './overlay';
 import { clamp01, lerp, smoothstep } from './shared';
+import { smoothed } from '../scroll';
 
 interface Options {
 	canvas: HTMLCanvasElement;
@@ -249,7 +250,8 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 		}
 
 		const k = 1 - Math.pow(0.001, dt);
-		sy = reduced ? scrollY : sy + (scrollY - sy) * Math.min(1, k * 1.6);
+		// Lenis adoucit déjà le défilement : inutile de lisser une seconde fois
+		sy = reduced || smoothed() ? scrollY : sy + (scrollY - sy) * Math.min(1, k * 1.6);
 		smooth.x += (pointer.x - smooth.x) * k * 0.6;
 		smooth.y += (pointer.y - smooth.y) * k * 0.6;
 		smooth.lx += (pointer.px - smooth.lx) * (reduced ? 1 : Math.min(1, k * 2.2));
@@ -372,7 +374,10 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			P.uAscii.value = reduced ? (d > 0.5 ? 1 : 0) : smoothstep(0.6, 1, d);
 			P.uAura.value = (1 - smoothstep(0.5, 0.95, d)) * reveal;
 			P.uBloom.value = 1 + d * 0.6;
-			P.uFlash.value = smoothstep(0.86, 1, d) * 0.7;
+			// Fin de plongée : les caractères s'éteignent du centre vers les bords,
+			// on tombe dans le trou ; la galerie s'allume ensuite depuis les bords
+			P.uWipe.value = reduced ? 0 : smoothstep(0.8, 1, d);
+			P.uFlash.value = smoothstep(0.6, 0.85, d) * (1 - smoothstep(0.85, 0.97, d)) * 0.35;
 			P.uMosaic.value = narrow ? 0.08 : 0.11;
 			P.uExposure.value = 1.25;
 			P.uCell.value.set(7 * dpr * (1 + smoothstep(0.7, 1, d) * 1.4), 12 * dpr * (1 + smoothstep(0.7, 1, d) * 1.4));
@@ -480,7 +485,8 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			P.uAscii.value = 1;
 			P.uAura.value = 0;
 			P.uBloom.value = 0.85;
-			P.uFlash.value = (1 - smoothstep(0, 3, s)) * 0.7;
+			P.uWipe.value = reduced ? 0 : 1 - smoothstep(-0.4, 3.2, s);
+			P.uFlash.value = 0;
 			P.uFade.value = smoothstep(cave.sEnd - 6, cave.sEnd + 2.5, s);
 			P.uExposure.value = 1.0;
 			const zoom = 1 + (1 - smoothstep(0, 3.5, s)) * 1.4;

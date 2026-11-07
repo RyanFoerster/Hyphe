@@ -71,6 +71,7 @@ const COMPOSITE_FRAG = /* glsl */ `
 	uniform float uBloom;
 	uniform float uFlash;
 	uniform float uFade;
+	uniform float uWipe;
 	uniform float uScanAll;
 	uniform float uTile;
 	uniform float uReveal;
@@ -281,6 +282,26 @@ const COMPOSITE_FRAG = /* glsl */ `
 			cover *= keep;
 		}
 
+		// Passage dans la roche : un front de caractères. Dehors il s'éteint du
+		// centre vers les bords ; dedans, la galerie se rallume des bords au centre.
+		// Au point de bascule l'écran est noir : le changement de scène ne se voit pas.
+		if (uWipe > 0.0) {
+			vec2 cell = floor(px / uCell);
+			vec2 cc = (cell + 0.5) * uCell;
+			float r = length((cc - uFocus * uRes) / uRes.y);
+			float order = clamp(r / 0.95, 0.0, 1.0) * 0.82 + hash(cell + 1.7) * 0.18;
+			float w = mix(-0.1, 1.1, uWipe);
+			float keep = smoothstep(w - 0.1, w, order);
+			float front = (1.0 - smoothstep(0.0, 0.07, abs(order - w + 0.05))) * step(0.001, uWipe) * step(uWipe, 0.999);
+			col *= keep;
+			cover *= keep;
+			// Le front : une rangée de caractères qui brûle à la teinte
+			vec2 g = fract(px / uCell);
+			float glyph = step(0.25, g.x) * step(g.x, 0.75) * step(0.2, g.y) * step(g.y, 0.8) * step(0.45, hash(cell + floor(uTime * 12.0)));
+			col += (uTint * 0.8 + 0.2) * front * glyph * 0.9;
+			cover = max(cover, front * glyph * 0.9);
+		}
+
 		// Passage de la surface : éclair de la teinte
 		col += (uTint * 0.7 + 0.3) * uFlash * 0.55;
 
@@ -362,6 +383,7 @@ export function createPost(renderer: THREE.WebGLRenderer, { lowPower }: { lowPow
 			uBloom: { value: 1 },
 			uFlash: { value: 0 },
 			uFade: { value: 0 },
+			uWipe: { value: 0 },
 			uScanAll: { value: 1 },
 			uTile: { value: 120 },
 			uReveal: { value: 0 },

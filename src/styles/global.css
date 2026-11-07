@@ -360,8 +360,9 @@ html[data-specimen-hover] body {
   cursor: pointer;
 }
 
+/* Défilement doux natif, seulement si Lenis n'a pas pris la main */
 @media (prefers-reduced-motion: no-preference) {
-  html {
+  html:not(.lenis) {
     scroll-behavior: smooth;
   }
 }
