@@ -60,7 +60,7 @@ import { site } from '../data/site';
 						aria-label={`${p.name} — ${p.category}, ${p.year}`}
 					>
 						<span data-portal-frame class="thumb">
-							<img src={coverOf(p)} alt="" width="64" height="36" />
+							<img src={coverOf(p)} alt="" width="64" height="36" draggable="false" />
 						</span>
 						<span class="body">
 							<span class="meta text-mineral">
@@ -159,6 +159,29 @@ import { site } from '../data/site';
 		top: 0;
 		opacity: 0;
 		will-change: transform, opacity;
+	}
+
+	/* La scène s'attrape : pas de sélection de texte, curseur main */
+	.hero {
+		user-select: none;
+		-webkit-user-select: none;
+	}
+	:global(html[data-world='on']) .hero {
+		cursor: grab;
+		touch-action: pan-y;
+	}
+	:global(html[data-world='on']) .orbit-hint {
+		display: block;
+	}
+	:global(html[data-world='on']) .orbit-item {
+		user-select: none;
+		-webkit-user-select: none;
+		touch-action: pan-y;
+	}
+	:global(html.orbit-grabbing),
+	:global(html.orbit-grabbing *) {
+		cursor: grabbing !important;
+		user-select: none !important;
 	}
 
 	.cue-line {

@@ -30,7 +30,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 			<img src="/HYPHE.svg" alt="" width="555" height="146" class="h-[16px] w-auto sm:h-5" />
 		</a>
 		<span class="meta mt-3 hidden w-24 text-right text-mineral md:block" aria-label={`Local time in ${site.city}`}>
-			<span class="text-mineral-dim">{site.city.slice(0, 3)}</span>
+			<span class="text-mineral-dim">{site.cityCode}</span>
 			<time data-clock data-tz={site.timezone} class="tabular-nums text-bone/80">--:--</time>
 		</span>
 	</div>
@@ -108,7 +108,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 						))}
 					</span>
 					<span class="text-mineral">
-						{site.city.slice(0, 3)} <time data-clock data-tz={site.timezone} class="tabular-nums text-bone/80">--:--</time>
+						{site.cityCode} <time data-clock data-tz={site.timezone} class="tabular-nums text-bone/80">--:--</time>
 					</span>
 				</div>
 			</div>

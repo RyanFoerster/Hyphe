@@ -96,21 +96,39 @@ const parts = (text: string, word: string) => {
 		}
 	</ol>
 
-	<div class="relative h-[120svh]" data-exit>
-		<div class="sticky top-0 z-[3] flex h-[100svh] flex-col items-center justify-center px-4 text-center">
-			<canvas
-				class="pointer-events-none h-40 w-full max-w-sm"
-				data-ascii
-				data-ascii-kind="sprout"
-				data-ascii-seed="12"
-				data-ascii-size="10"
-				aria-hidden="true"
-			></canvas>
-			<p class="meta mt-4 text-mineral"><span data-scramble>{pad(projects.length)} specimens collected — end of the gallery</span></p>
-			<p class="titre mt-6 text-[clamp(2.8rem,6vw,6rem)]" data-split>Back to the surface.</p>
-			<a href="/work" class="meta mt-8 inline-flex items-center gap-3 border border-bone/20 px-4 py-2.5 text-bone transition hover:border-acid hover:text-acid">
-				<span data-scramble>Open the herbarium</span><span aria-hidden="true">→</span>
-			</a>
+	<!-- Fin de la galerie : les caractères s'éteignent, les spécimens se rangent
+	     dans l'herbier, reliés par un même fil. Puis le studio remonte par-dessus. -->
+	<div class="exit relative h-[200svh]" data-exit>
+		<div class="sticky top-0 z-[5] flex h-[100svh] items-center px-4 sm:px-6">
+			<div class="mx-auto w-full max-w-5xl">
+				<p class="meta flex items-baseline justify-between gap-4 text-mineral">
+					<span class="ex-in" style="--t: 0.12">[ {pad(projects.length)} / {pad(projects.length)} ] Specimens collected</span>
+					<span class="ex-in tabular-nums text-acid" style="--t: 0.12" data-exit-value>0.00000000</span>
+				</p>
+				<ol class="collected relative mt-6">
+					<span class="thread" aria-hidden="true"></span>
+					{
+						projects.map((p, i) => (
+							<li class="ex-row" style={`--t: ${(0.2 + i * 0.07).toFixed(2)}`}>
+								<a href={`/work/${p.slug}`} data-portal class="crow group">
+									<span class="node" aria-hidden="true" />
+									<span class="meta tabular-nums text-mineral-dim">{String(i + 1).padStart(3, '0')}</span>
+									<span class="cname titre text-[clamp(2.2rem,4.6vw,4.4rem)]">{p.name}</span>
+									<span class="meta hidden text-bone/60 md:block">{p.latin}</span>
+									<span class="meta hidden text-mineral md:block">{p.locality}</span>
+									<span class="meta tabular-nums text-mineral transition group-hover:text-acid">{p.year} →</span>
+								</a>
+							</li>
+						))
+					}
+				</ol>
+				<div class="ex-in mt-8 flex flex-wrap items-center justify-between gap-4" style="--t: 0.62">
+					<p class="meta text-mineral-dim">End of the gallery — pressed and labelled</p>
+					<a href="/work" class="meta inline-flex items-center gap-3 border border-bone/20 px-4 py-2.5 text-bone transition hover:border-acid hover:text-acid">
+						<span>Open the herbarium</span><span aria-hidden="true">→</span>
+					</a>
+				</div>
+			</div>
 		</div>
 	</div>
 </section>
@@ -138,8 +156,91 @@ const parts = (text: string, word: string) => {
 	:global(html:not(.world)) .dive {
 		height: 70svh;
 	}
-	:global(html:not(.world)) [data-exit] {
-		display: none;
+	/* Fin de galerie, pilotée par --x (0 → 1 au fil du bloc) */
+	.exit {
+		--x: 0;
+	}
+	.ex-in,
+	.ex-row {
+		opacity: clamp(0, (var(--x) - var(--t)) * 8, 1);
+		translate: 0 calc(clamp(0, 1 - (var(--x) - var(--t)) * 8, 1) * 18px);
+	}
+	.ex-row {
+		filter: blur(calc(clamp(0, 1 - (var(--x) - var(--t)) * 8, 1) * 6px));
+	}
+	.collected {
+		border-top: 1px dashed rgb(230 228 220 / 0.15);
+	}
+	/* Le fil qui relie les spécimens, il pousse vers le bas */
+	.thread {
+		position: absolute;
+		left: 3px;
+		top: 0;
+		bottom: 0;
+		width: 1px;
+		background: var(--color-acid);
+		transform-origin: top;
+		scale: 1 clamp(0, (var(--x) - 0.18) * 2.4, 1);
+		opacity: 0.6;
+	}
+	.crow {
+		position: relative;
+		display: grid;
+		grid-template-columns: 2.25rem 3rem 1fr auto;
+		align-items: baseline;
+		gap: 1rem;
+		padding: 1rem 0 0.75rem;
+		border-bottom: 1px dashed rgb(230 228 220 / 0.15);
+	}
+	@media (min-width: 768px) {
+		.crow {
+			grid-template-columns: 2.25rem 3.5rem 1fr 12rem 9rem 5rem;
+		}
+	}
+	.node {
+		align-self: center;
+		width: 7px;
+		height: 7px;
+		border: 1px solid var(--color-acid);
+		background: var(--color-void);
+		transition: background-color 0.3s;
+	}
+	.crow:hover .node,
+	.crow:focus-visible .node {
+		background: var(--color-acid);
+	}
+	.cname {
+		position: relative;
+		justify-self: start;
+		transition: translate 0.5s var(--ease-organic);
+	}
+	.cname::after {
+		content: '';
+		position: absolute;
+		inset: -0.04em -0.14em 0.02em;
+		border: 1px solid var(--color-acid);
+		clip-path: inset(0 100% 100% 0);
+		transition: clip-path 0.45s var(--ease-organic);
+	}
+	.crow:hover .cname,
+	.crow:focus-visible .cname {
+		translate: 0.6rem 0;
+	}
+	.crow:hover .cname::after,
+	.crow:focus-visible .cname::after {
+		clip-path: inset(0 0 0 0);
+	}
+	:global(html:not(.world)) .exit,
+	:global(html:not(.world)) .exit > div {
+		--x: 1;
+		height: auto;
+		position: relative;
+		padding-block: 10svh;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.exit {
+			--x: 1;
+		}
 	}
 	:global(html:not(.world)) .chapter {
 		height: auto;
@@ -150,3 +251,26 @@ const parts = (text: string, word: string) => {
 		height: auto;
 	}
 </style>
+
+<script>
+	// Progression du bloc de fin, et sa valeur qui défile
+	const exit = document.querySelector<HTMLElement>('[data-exit]');
+	const value = exit?.querySelector<HTMLElement>('[data-exit-value]');
+	if (exit && value && document.documentElement.classList.contains('world') && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		let shown = 0;
+		let raf = 0;
+		const tick = () => {
+			const r = exit.getBoundingClientRect();
+			const x = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight)));
+			shown += (x - shown) * 0.16;
+			if (Math.abs(x - shown) < 0.0005) shown = x;
+			exit.style.setProperty('--x', shown.toFixed(4));
+			value.textContent = (shown + (shown > 0 && shown < 1 ? 0.00000001 : 0)).toFixed(8);
+			raf = shown === x ? 0 : requestAnimationFrame(tick);
+		};
+		const wake = () => raf || (raf = requestAnimationFrame(tick));
+		addEventListener('scroll', wake, { passive: true });
+		addEventListener('resize', wake);
+		wake();
+	}
+</script>

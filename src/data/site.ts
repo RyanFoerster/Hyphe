@@ -6,7 +6,9 @@ export const site = {
 	description:
 		'Studio Hyphe is a digital experience studio. We design and build websites, interfaces and interactive worlds for brands that want to be felt, not just seen.',
 	email: 'hello@studiohyphe.com',
-	city: 'Brussels',
+	city: 'Liège',
+	/** Code court de l'horloge */
+	cityCode: 'LGE',
 	timezone: 'Europe/Brussels',
 	socials: [
 		{ label: 'Instagram', href: 'https://instagram.com/' },

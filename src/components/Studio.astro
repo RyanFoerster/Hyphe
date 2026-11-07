@@ -1,0 +1,72 @@
+---
+// Après la galerie : le studio remonte par-dessus la roche éteinte.
+// Un manifeste, ce que l'on fait pousser, et la façon de le faire.
+import { site } from '../data/site';
+
+const steps = [
+	{ name: 'Seed', text: 'We listen, dig and find the one idea worth growing.' },
+	{ name: 'Grow', text: 'Design and code move together, in small living prototypes.' },
+	{ name: 'Bloom', text: 'Launch, then tend: measure, prune and keep it alive.' },
+];
+---
+
+<section class="studio relative z-10 bg-void" aria-labelledby="studio-title">
+	<!-- Le fil sort de la galerie et devient la lisière de la section -->
+	<canvas
+		class="pointer-events-none block h-28 w-full opacity-70"
+		data-ascii
+		data-ascii-kind="mycelium"
+		data-ascii-seed="23"
+		data-ascii-size="10"
+		aria-hidden="true"
+	></canvas>
+
+	<div class="grid gap-8 px-4 pb-24 pt-16 sm:px-6 md:grid-cols-12 md:pb-36 md:pt-24">
+		<p class="meta text-mineral md:col-span-3" data-reveal><span data-scramble>[ 02 ] The studio</span></p>
+		<div class="md:col-span-9">
+			<h2 id="studio-title" class="sr-only">The studio</h2>
+			<p class="text-[clamp(1.6rem,3.2vw,3rem)] leading-[1.12] tracking-[-0.01em] text-bone" data-reveal>
+				Hyphae are the threads a fungus grows to find, connect and feed. We work the same way: patiently, below the surface,
+				until something <mark class="hl">blooms</mark>.
+			</p>
+			<p class="meta mt-8 text-mineral" data-reveal style="--reveal-delay: 120ms">
+				Independent studio — {site.city}, working worldwide
+			</p>
+		</div>
+	</div>
+
+	<div class="grid gap-x-6 gap-y-16 px-4 pb-32 sm:px-6 md:grid-cols-12 md:pb-44">
+		<div class="md:col-span-5 md:col-start-4" data-reveal>
+			<p class="meta mb-5 text-mineral"><span data-scramble>What we grow</span></p>
+			<ul class="border-t border-dashed border-bone/15">
+				{
+					site.services.map((s, i) => (
+						<li class="service flex items-baseline gap-4 border-b border-dashed border-bone/15 py-3">
+							<span class="meta tabular-nums text-acid/80">{String(i + 1).padStart(2, '0')}</span>
+							<span class="text-lg text-bone/90">{s}</span>
+						</li>
+					))
+				}
+			</ul>
+		</div>
+		<div class="md:col-span-4" data-reveal style="--reveal-delay: 120ms">
+			<p class="meta mb-5 text-mineral"><span data-scramble>How it grows</span></p>
+			<ol class="space-y-6">
+				{
+					steps.map((s, i) => (
+						<li class="grid grid-cols-[2.5rem_1fr] gap-4 border-t border-dashed border-bone/15 pt-5">
+							<span class="meta text-mineral-dim">{['.', ':', '*'][i]}</span>
+							<div>
+								<p class="titre text-[2rem]">{s.name}</p>
+								<p class="mt-1 text-[15px] leading-relaxed text-bone/70">{s.text}</p>
+							</div>
+						</li>
+					))
+				}
+			</ol>
+			<button type="button" data-open-about class="meta mt-8 inline-flex items-center gap-3 border border-bone/20 px-4 py-2.5 text-bone transition hover:border-acid hover:text-acid">
+				<span>Open about.sys</span><span aria-hidden="true">→</span>
+			</button>
+		</div>
+	</div>
+</section>

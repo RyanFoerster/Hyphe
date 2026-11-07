@@ -142,6 +142,53 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 		el.addEventListener('blur', () => focused === i && (focused = -1));
 	});
 
+	// Orbite à la main : on attrape la scène et on la fait tourner, avec de l'élan.
+	// Un glisser qui part d'une carte ne l'ouvre pas.
+	const spinDrag = { on: false, id: -1, x: 0, t: 0, moved: 0, vel: 0 };
+	const hero = $<HTMLElement>('[data-hero]');
+	const onDown = (e: PointerEvent) => {
+		if (e.button !== 0 || !hero || scrollY > diveEnd * 0.3) return;
+		const t = e.target as HTMLElement | null;
+		if (t?.closest('[data-lens], [data-draggable], [data-island], header, nav, dialog, button, input')) return;
+		if (!t?.closest('[data-hero]')) return;
+		Object.assign(spinDrag, { on: true, id: e.pointerId, x: e.clientX, t: e.timeStamp, moved: 0, vel: 0 });
+		document.documentElement.classList.add('orbit-grabbing');
+	};
+	const onDrag = (e: PointerEvent) => {
+		if (!spinDrag.on || e.pointerId !== spinDrag.id) return;
+		const dx = e.clientX - spinDrag.x;
+		const dtMs = Math.max(1, e.timeStamp - spinDrag.t);
+		spinDrag.x = e.clientX;
+		spinDrag.t = e.timeStamp;
+		spinDrag.moved += Math.abs(dx);
+		const da = -(dx / Math.max(1, width)) * Math.PI * 1.6;
+		orbitAngle += da;
+		spinAngle -= da * 0.6;
+		spinDrag.vel = lerp(spinDrag.vel, (da / dtMs) * 1000, 0.5);
+	};
+	const onUp = (e: PointerEvent) => {
+		if (!spinDrag.on || e.pointerId !== spinDrag.id) return;
+		spinDrag.on = false;
+		document.documentElement.classList.remove('orbit-grabbing');
+		if (e.timeStamp - spinDrag.t > 90) spinDrag.vel = 0;
+		if (spinDrag.moved > 6) {
+			const swallow = (ev: Event) => {
+				ev.preventDefault();
+				ev.stopImmediatePropagation();
+			};
+			addEventListener('click', swallow, { capture: true, once: true });
+			setTimeout(() => removeEventListener('click', swallow, { capture: true }), 0);
+		}
+	};
+	const onDragStart = (e: DragEvent) => {
+		if ((e.target as HTMLElement | null)?.closest?.('[data-hero], [data-orbit-item]')) e.preventDefault();
+	};
+	addEventListener('pointerdown', onDown);
+	addEventListener('pointermove', onDrag, { passive: true });
+	addEventListener('pointerup', onUp);
+	addEventListener('pointercancel', onUp);
+	addEventListener('dragstart', onDragStart);
+
 	// Spécimens cliquables dans la galerie
 	let hoverSpecimen = -1;
 	const onClick = (e: MouseEvent) => {
@@ -263,7 +310,13 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 				const want = Math.PI / 2 - (focused * Math.PI * 2) / orbitItems.length;
 				const diff = Math.atan2(Math.sin(want - orbitAngle), Math.cos(want - orbitAngle));
 				orbitAngle += diff * k * 1.2;
-			} else if (!paused) orbitAngle += dt * 0.07 * motion;
+			} else if (spinDrag.vel && !spinDrag.on) {
+				// Élan après un lâcher
+				orbitAngle += spinDrag.vel * dt;
+				spinAngle -= spinDrag.vel * 0.6 * dt;
+				spinDrag.vel *= Math.pow(0.05, dt);
+				if (Math.abs(spinDrag.vel) < 0.02) spinDrag.vel = 0;
+			} else if (!paused && !spinDrag.on) orbitAngle += dt * 0.07 * motion;
 			const centreDepth = viewDepth(ext.artefact.position);
 			const fadeOut = 1 - smoothstep(0.06, 0.32, d);
 			const reveal2 = smoothstep(0.35, 1, reveal);
@@ -522,6 +575,11 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			removeEventListener('resize', resize);
 			removeEventListener('pointermove', onMove);
 			removeEventListener('click', onClick);
+			removeEventListener('pointerdown', onDown);
+			removeEventListener('pointermove', onDrag);
+			removeEventListener('pointerup', onUp);
+			removeEventListener('pointercancel', onUp);
+			removeEventListener('dragstart', onDragStart);
 			document.removeEventListener('visibilitychange', onVisibility);
 			document.removeEventListener('pointerleave', onLeave);
 			renderer.dispose();
