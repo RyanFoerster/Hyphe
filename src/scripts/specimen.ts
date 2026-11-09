@@ -6,9 +6,6 @@
 //                                      suivent le bout de leur pétale
 //   <canvas data-specimen="drift">      fin de galerie : pétales et pollen qui flottent
 //   <canvas data-specimen="footer">    une grande fleur qui s'ouvre au bord de la page
-//   <canvas data-specimen="sheet">     l'herbier : la fleur d'un projet (data-variant,
-//                                      data-petals, data-veil, data-shape…), ses
-//                                      savoir-faire légendés au bout des pétales
 //
 // Chaque toile ne dessine que lorsqu'elle est à l'écran.
 
@@ -337,99 +334,6 @@ function corolla(canvas: HTMLCanvasElement) {
 	});
 }
 
-/** Une planche de l'herbier : chaque projet a sa fleur (sa forme, sa teinte),
- *  qui pousse quand la planche arrive, tourne lentement et s'éclaire au
- *  survol. Les savoir-faire du projet sont légendés au bout des pétales. */
-function sheet(canvas: HTMLCanvasElement) {
-	const host = canvas.parentElement!;
-	const plate = canvas.closest<HTMLElement>('[data-plate]') ?? host;
-	const labels = [...host.querySelectorAll<HTMLElement>('[data-petal-label]')];
-	const d = canvas.dataset;
-	const variant = Number(d.variant ?? 0);
-	const petals = Number(d.petals ?? 6);
-	const st = stage(canvas, 32, { aura: 0.85 });
-	const p = plant(st.u, {
-		petals,
-		stem: 1.3,
-		leaves: Number(d.leaves ?? 2),
-		big: true,
-		glow: Number(d.glow ?? 1.25),
-		veil: parseInt(d.veil ?? '9ab4f0', 16),
-		shape: JSON.parse(d.shape ?? '{}'),
-		variant,
-	});
-	st.scene.add(p.root);
-	st.u.uFocusDist.value = 5.6;
-	// Chaque spécimen penche un peu à sa façon
-	p.root.rotation.z = Math.sin(variant * 2.3) * 0.07;
-	// Les légendes se répartissent sur les pétales
-	const of = labels.map((_, i) => Math.round((i * petals) / labels.length) % petals);
-	const widths: number[] = [];
-	addEventListener('resize', () => (widths.length = 0));
-
-	let grow = reduced() ? 1 : 0;
-	let shown = false;
-	new IntersectionObserver(([e]) => e.isIntersecting && (shown = true), { threshold: 0.2 }).observe(canvas);
-	let hover = false;
-	plate.addEventListener('pointerenter', () => (hover = true));
-	plate.addEventListener('pointerleave', () => (hover = false));
-	let energy = 0;
-	let spin = variant * 1.1;
-	let last = 0;
-	const v = new THREE.Vector3();
-	const c = new THREE.Vector3();
-	const cam = new THREE.Vector3();
-	st.loop((t) => {
-		const dt = Math.min(0.05, t - (last || t));
-		last = t;
-		if (shown) grow = Math.min(1, grow + dt * 0.42);
-		const open = smoothstep(0.35, 1, grow);
-		const breathe = reduced() ? 1 : 0.94 + Math.sin(t * 0.6 + variant) * 0.06;
-		p.set(Math.min(1, grow * 1.5), (1 - (1 - open) ** 3) * breathe * (hover ? 1.04 : 1));
-		// Elle tourne lentement ; au survol, elle ralentit et s'éclaire
-		spin += reduced() ? 0 : dt * (hover ? 0.05 : 0.14);
-		p.root.rotation.y = spin;
-		energy += ((hover ? 2.2 : 0) - energy) * 0.08;
-		p.mats.forEach((m) => (m.uniforms.uEnergy.value = energy));
-
-		// La toile se cadre sur la plante, quel que soit son format
-		const { w, h } = st.size();
-		const aspect = w / h;
-		const dist = 5.6 * Math.max(1, 0.95 / aspect);
-		st.camera.position.set(0, 1.9, dist);
-		st.camera.lookAt(0, 0.6, 0);
-		p.root.position.y = -0.55;
-		p.root.scale.setScalar(1.12);
-		p.root.updateMatrixWorld(true);
-		if (!widths.length || !widths[0]) labels.forEach((l, i) => (widths[i] = l.getBoundingClientRect().width));
-
-		// Les légendes : un repère au bout du pétale, poussé vers l'extérieur
-		p.head.getWorldPosition(c);
-		const hz = c.clone().applyMatrix4(st.camera.matrixWorldInverse).z;
-		c.project(st.camera);
-		const cx = (c.x * 0.5 + 0.5) * w;
-		const cy = (-c.y * 0.5 + 0.5) * h;
-		labels.forEach((l, i) => {
-			p.tips[of[i]].getWorldPosition(v);
-			cam.copy(v).applyMatrix4(st.camera.matrixWorldInverse);
-			v.project(st.camera);
-			let x = (v.x * 0.5 + 0.5) * w;
-			let y = (-v.y * 0.5 + 0.5) * h;
-			x = cx + (x - cx) * 1.1;
-			y = cy + (y - cy) * 1.1;
-			const left = x < cx;
-			if ((l.dataset.side === 'left') !== left) l.dataset.side = left ? 'left' : 'right';
-			// La légende reste dans la planche : elle glisse plutôt que d'être coupée
-			x = left ? Math.max(widths[i] + 6, x) : Math.min(w - widths[i] - 6, x);
-			// Derrière la fleur, la légende s'efface à moitié
-			const behind = cam.z < hz - 0.05;
-			l.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(${left ? 'calc(-100% + 4px)' : '-4px'}, -50%)`;
-			// (sur téléphone, elle se cache : la place manque)
-			l.style.opacity = String(Math.min(1, smoothstep(0.55, 0.9, grow) * (behind ? (w < 560 ? 0 : 0.32) : 1)));
-		});
-	});
-}
-
 /** Le pied de page : une grande fleur qui s'ouvre et respire */
 function footer(canvas: HTMLCanvasElement) {
 	const st = stage(canvas, 32);
@@ -590,6 +494,5 @@ export function mountSpecimens(root: ParentNode = document) {
 		if (kind === 'corolla') corolla(c);
 		else if (kind === 'drift') drift(c);
 		else if (kind === 'footer') footer(c);
-		else if (kind === 'sheet') sheet(c);
 	}
 }

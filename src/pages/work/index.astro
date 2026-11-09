@@ -1,29 +1,16 @@
 ---
 // L'herbier : tous les projets du studio. Deux lectures :
-//   sheets  des planches d'herbier : la fleur du projet (sa forme, sa teinte),
-//           ses savoir-faire légendés au bout des pétales, une règle, l'image
-//           pressée à côté et l'étiquette
+//   sheets  une grille serrée de planches au même format (4:5), l'étiquette
+//           d'herbier posée dans la photo, une ligne de méta dessous
 //   index   une liste serrée, l'image suit le curseur
 import Layout from '../../layouts/Layout.astro';
 import Footer from '../../components/Footer.astro';
 import Figure from '../../components/Figure.astro';
 import Herbarium from '../../components/Herbarium.astro';
-import { coverOf, projects } from '../../data/projects';
+import { coverOf, portraitOf, projects } from '../../data/projects';
 
 const years = projects.map((p) => p.year);
 const pad = (n: number) => String(n).padStart(2, '0');
-const letters = 'abcdefgh';
-
-// Un spécimen par projet : nombre de pétales, teinte du voile, port des pétales
-const SPECIMENS = [
-	{ petals: 6, veil: '9ab4f0', leaves: 2, shape: { len: 1.2, width: 0.9 } },
-	{ petals: 5, veil: 'f0b98a', leaves: 1, shape: { len: 1.05, width: 1.05, tip: -0.2, ruffle: 0.14 } },
-	{ petals: 9, veil: '9fe0c8', leaves: 2, shape: { len: 1.1, width: 0.45, tip: -0.7, twist: 0.6 } },
-	{ petals: 7, veil: 'c8a6f0', leaves: 2, shape: { len: 1.3, width: 0.75, base: 0.85, tip: -0.9, cup: 0.32 } },
-	{ petals: 6, veil: 'd8dccf', leaves: 1, shape: { len: 1.0, width: 0.8, base: 0.35, tip: 0.1, ruffle: 0.04 } },
-	{ petals: 8, veil: '8fd4e8', leaves: 2, shape: { len: 1.15, width: 0.6, ruffle: 0.18, twist: 0.8 } },
-	{ petals: 5, veil: 'e8b8c8', leaves: 1, shape: { len: 1.3, width: 1.1, tip: -0.55, cup: 0.3 } },
-];
 ---
 
 <Layout title="Herbarium" description="Every specimen grown by Studio Hyphe: websites, interfaces and interactive worlds.">
@@ -51,87 +38,50 @@ const SPECIMENS = [
 		</div>
 	</section>
 
-	<!-- Planches : une feuille d'herbier par projet -->
-	<section class="relative z-[1] px-4 pb-24 sm:px-6" aria-label="Specimens, sheets" data-herbarium-view="sheets">
-		<ol class="flex flex-col gap-10 md:gap-16">
+	<!-- Planches : une grille serrée, toutes au même format -->
+	<section class="relative z-[1] px-4 pb-28 sm:px-6" aria-label="Specimens, sheets" data-herbarium-view="sheets">
+		<ol class="grid gap-x-5 gap-y-14 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-20 xl:grid-cols-4">
 			{
-				projects.map((p, i) => {
-					const sp = SPECIMENS[i % SPECIMENS.length];
-					const no = String(i + 1).padStart(3, '0');
-					return (
-						<li data-reveal>
-							<a
-								href={`/work/${p.slug}`}
-								data-portal
-								data-plate
-								class:list={['plate group', i % 2 === 1 && 'is-flip']}
-								aria-label={`${p.name} — ${p.latin}, ${p.client}, ${p.year}`}
-							>
-								<span class="tick left-0 top-0 border-l border-t" aria-hidden="true" />
-								<span class="tick right-0 top-0 border-r border-t" aria-hidden="true" />
-								<span class="tick bottom-0 left-0 border-b border-l" aria-hidden="true" />
-								<span class="tick bottom-0 right-0 border-b border-r" aria-hidden="true" />
-
-								<p class="meta flex items-center justify-between gap-4 border-b border-dashed border-bone/12 pb-3 text-mineral" aria-hidden="true">
-									<span>
-										<span class="text-acid">Sheet {pad(i + 1)}</span> / {pad(projects.length)}
-									</span>
-									<span class="hidden md:inline">Herbarium Hyphe — {p.locality}</span>
-									<span class="tabular-nums">No. {no}</span>
-								</p>
-
-								<div class="body">
-									<!-- Le spécimen : la fleur du projet, sa règle, ses légendes -->
-									<div class="specimen" aria-hidden="true">
-										<canvas
-											class="absolute inset-0 size-full"
-											data-specimen="sheet"
-											data-variant={i}
-											data-petals={sp.petals}
-											data-veil={sp.veil}
-											data-leaves={sp.leaves}
-											data-shape={JSON.stringify(sp.shape)}
-										/>
-										<span class="ruler">
-											<span style="bottom: 0%">0</span>
-											<span style="bottom: 50%">50</span>
-											<span style="bottom: 100%">100 mm</span>
-										</span>
-										<ul class="petals">
-											{p.services.map((s, k) => (
-												<li class="petal" data-petal-label>
-													<span class="node" />
-													<span class="meta tag">
-														<span class="text-acid">{letters[k]}</span> — {s}
-													</span>
-												</li>
-											))}
-										</ul>
-										<p class="caption meta text-mineral">
-											fig. {pad(i + 1)} — <span class="italic text-bone/70">{p.latin}</span>, {sp.petals} petals
-										</p>
-									</div>
-
-									<!-- La fiche : le nom, l'image pressée, l'étiquette -->
-									<div class="info">
-										<p class="meta text-mineral">
-											<span class="kicker">{p.category}</span>
-											<span class="ml-2 tabular-nums">{p.year}</span>
-										</p>
-										<h2 class="name titre mt-5 text-[clamp(3.4rem,6.4vw,6.8rem)]">{p.name}</h2>
-										<p class="mt-5 max-w-md text-[15px] leading-relaxed text-bone/70">{p.summary}</p>
-										<Figure src={coverOf(p)} alt="" fig={`${pad(i + 1)}b`} caption="pressed sample" ratio="16/9" class="mt-8" />
-										<Herbarium project={p} compact class="mt-6" />
-										<span class="meta mt-6 inline-flex items-center gap-2 text-bone/60 transition group-hover:text-acid">
-											Open the sheet <span class="arrow">→</span>
-										</span>
-									</div>
-								</div>
-							</a>
-						</li>
-					);
-				})
+				projects.map((p, i) => (
+					<li data-reveal style={`--reveal-delay: ${(i % 4) * 100}ms`}>
+						<a href={`/work/${p.slug}`} data-portal class="card group block" aria-label={`${p.name} — ${p.latin}, ${p.client}, ${p.year}`}>
+							<Figure src={portraitOf(p)} alt="" fig={pad(i + 1)} caption={p.category.toLowerCase()} ratio="4/5">
+								<!-- L'étiquette d'herbier est posée dans la planche, comme sur une vraie feuille -->
+								<span class="label-shade" aria-hidden="true" />
+								<Herbarium project={p} inset class="label-in" />
+							</Figure>
+							<div class="mt-2 flex items-baseline justify-between gap-4 border-t border-dashed border-bone/12 pt-3">
+								<p class="name titre min-w-0 truncate pb-1 text-[clamp(2rem,2.3vw,2.7rem)]">{p.name}</p>
+								<span class="meta shrink-0 tabular-nums text-mineral">
+									<span class="open mr-2 text-acid">open →</span>
+									{p.year}
+								</span>
+							</div>
+						</a>
+					</li>
+				))
 			}
+			<!-- La planche suivante attend sa graine : elle mène au contact -->
+			<li data-reveal style={`--reveal-delay: ${(projects.length % 4) * 100}ms`}>
+				<a href="#footer-title" class="next group flex flex-col">
+					<span class="seed relative flex aspect-[4/5] flex-col justify-between p-4">
+						<span class="tick left-0 top-0 border-l border-t" aria-hidden="true"></span>
+						<span class="tick right-0 top-0 border-r border-t" aria-hidden="true"></span>
+						<span class="tick bottom-0 left-0 border-b border-l" aria-hidden="true"></span>
+						<span class="tick bottom-0 right-0 border-b border-r" aria-hidden="true"></span>
+						<span class="meta flex justify-between text-mineral">
+							<span>Herbarium Hyphe</span><span class="tabular-nums">No. {String(projects.length + 1).padStart(3, '0')}</span>
+						</span>
+						<span class="dot mx-auto" aria-hidden="true"></span>
+						<span class="meta text-center text-mineral">Not yet grown — <span class="text-bone/80">a seed, waiting</span></span>
+					</span>
+					<span class="meta mt-3 text-mineral"><span class="text-bone/85">fig. {pad(projects.length + 1)}</span> — your project</span>
+					<span class="mt-2 flex items-baseline justify-between gap-4 border-t border-dashed border-bone/12 pt-3">
+						<span class="name titre min-w-0 truncate pb-1 text-[clamp(2rem,2.3vw,2.7rem)]">Yours?</span>
+						<span class="meta shrink-0 text-acid">grow it →</span>
+					</span>
+				</a>
+			</li>
 		</ol>
 	</section>
 
@@ -180,24 +130,27 @@ const SPECIMENS = [
 		color: var(--color-acid);
 	}
 
-	/* ---------- La planche : un cadre de visée, une feuille d'herbier ---------- */
-	.plate {
-		position: relative;
-		display: block;
-		padding: 1rem;
-		border: 1px solid rgb(230 228 220 / 0.08);
-		transition: border-color 0.5s var(--ease-organic);
+	/* ---------- La grille ---------- */
+	/* L'étiquette dans la planche : un dégradé discret pour qu'elle se lise */
+	.label-shade {
+		position: absolute;
+		inset: 45% 0 0;
+		background: linear-gradient(to top, rgb(9 12 10 / 0.7), transparent);
+		pointer-events: none;
 	}
-	@media (min-width: 768px) {
-		.plate {
-			padding: 1.25rem 1.5rem 1.5rem;
-		}
+	:global(.label-in) {
+		position: absolute !important;
+		left: 0.75rem;
+		bottom: 0.75rem;
+		z-index: 1;
+		width: min(17rem, calc(100% - 1.5rem));
 	}
-	.plate:hover,
-	.plate:focus-visible {
-		border-color: rgb(230 228 220 / 0.16);
+	/* La planche vide : une graine qui pulse, le cadre se resserre au survol */
+	.seed {
+		border: 1px dashed rgb(230 228 220 / 0.18);
+		transition: border-color 0.4s;
 	}
-	.tick {
+	.seed .tick {
 		position: absolute;
 		width: 9px;
 		height: 9px;
@@ -206,125 +159,50 @@ const SPECIMENS = [
 			width 0.5s var(--ease-organic),
 			height 0.5s var(--ease-organic);
 	}
-	.plate:is(:hover, :focus-visible) > .tick {
+	.next:is(:hover, :focus-visible) .seed {
+		border-color: rgb(200 245 60 / 0.4);
+	}
+	.next:is(:hover, :focus-visible) .seed .tick {
 		width: 22px;
 		height: 22px;
 	}
-	.body {
-		display: grid;
-		gap: 2rem;
-		padding-top: 1.25rem;
-	}
-	@media (min-width: 900px) {
-		.body {
-			grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-			gap: 3rem;
-			align-items: center;
-		}
-		.is-flip .body {
-			grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-		}
-		.is-flip .specimen {
-			order: 2;
-		}
-	}
-
-	/* Le spécimen : la toile, la règle d'herbier, les légendes des pétales */
-	.specimen {
-		position: relative;
-		aspect-ratio: 1 / 1;
-		max-height: 82svh;
-		width: 100%;
-		overflow: hidden;
-	}
-	.ruler {
-		position: absolute;
-		left: 0;
-		top: 8%;
-		bottom: 12%;
-		width: 3rem;
-		border-left: 1px solid rgb(230 228 220 / 0.2);
-		background:
-			repeating-linear-gradient(to top, rgb(230 228 220 / 0.32) 0 1px, transparent 1px 10%) left / 10px 100% no-repeat,
-			repeating-linear-gradient(to top, rgb(230 228 220 / 0.16) 0 1px, transparent 1px 2%) left / 5px 100% no-repeat;
-	}
-	.is-flip .ruler {
-		left: auto;
-		right: 0;
-		border-left: 0;
-		border-right: 1px solid rgb(230 228 220 / 0.2);
-		background-position: right, right;
-	}
-	.ruler > span {
-		position: absolute;
-		left: 14px;
-		translate: 0 50%;
-		font: 9px/1 var(--font-mono);
-		letter-spacing: 0.04em;
-		color: rgb(230 228 220 / 0.38);
-		white-space: nowrap;
-	}
-	.is-flip .ruler > span {
-		left: auto;
-		right: 14px;
-	}
-	.petals {
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-	}
-	.petal {
-		position: absolute;
-		left: 0;
-		top: 0;
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		opacity: 0;
-		white-space: nowrap;
-		will-change: transform;
-	}
-	.petal[data-side='left'] {
-		flex-direction: row-reverse;
-	}
-	.node {
+	.dot {
 		width: 8px;
 		height: 8px;
-		flex: none;
-		border: 1px solid var(--color-acid);
-		background: rgb(200 245 60 / 0.25);
+		background: var(--color-acid);
+		box-shadow: 0 0 0 6px rgb(200 245 60 / 0.12);
+		animation: seed 2.4s ease-in-out infinite;
 	}
-	.tag {
-		padding: 0.15rem 0.4rem;
-		color: rgb(230 228 220 / 0.85);
-		background: color-mix(in oklab, var(--color-void) 72%, transparent);
+	@keyframes seed {
+		50% {
+			box-shadow: 0 0 0 14px rgb(200 245 60 / 0.04);
+		}
 	}
-	.caption {
-		position: absolute;
-		left: 3.75rem;
-		bottom: 0.25rem;
+	@media (prefers-reduced-motion: reduce) {
+		.dot {
+			animation: none;
+		}
 	}
-	.is-flip .caption {
-		left: auto;
-		right: 3.75rem;
-		text-align: right;
-	}
-
-	/* La fiche */
-	.info {
-		position: relative;
-	}
-	.name {
+	.card .name,
+	.next .name {
 		transition: translate 0.6s var(--ease-organic);
 	}
-	.plate:is(:hover, :focus-visible) .name {
-		translate: 0.4rem 0;
+	.card:is(:hover, :focus-visible) .name,
+	.next:is(:hover, :focus-visible) .name {
+		translate: 0.3rem 0;
 	}
-	.arrow {
-		transition: translate 0.5s var(--ease-organic);
+	/* « open → » se glisse devant l'année au survol */
+	.open {
+		display: inline-block;
+		opacity: 0;
+		translate: -0.4rem 0;
+		transition:
+			opacity 0.35s,
+			translate 0.5s var(--ease-organic);
 	}
-	.plate:is(:hover, :focus-visible) .arrow {
-		translate: 0.3em 0;
+	.card:is(:hover, :focus-visible) .open {
+		opacity: 1;
+		translate: 0 0;
 	}
 
 	/* ---------- L'index ---------- */
@@ -372,6 +250,8 @@ const SPECIMENS = [
 		opacity: 1;
 	}
 	.preview .tick {
+		position: absolute;
+		border-color: var(--color-acid);
 		width: 7px;
 		height: 7px;
 		margin: -4px;
