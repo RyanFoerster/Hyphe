@@ -24,6 +24,23 @@ const SPECIMENS = [
 	{ petals: 8, veil: '8fd4e8', leaves: 2, shape: { len: 1.15, width: 0.6, ruffle: 0.18, twist: 0.8 } },
 	{ petals: 5, veil: 'e8b8c8', leaves: 1, shape: { len: 1.3, width: 1.1, tip: -0.55, cup: 0.3 } },
 ];
+
+/** La fleur d'un projet, au trait et vue d'en haut : ses pétales, sa largeur */
+const glyph = (i: number) => {
+	const sp = SPECIMENS[i % SPECIMENS.length];
+	const n = sp.petals;
+	const R = 12.5;
+	const c = 14;
+	const spread = Math.min(0.85, (sp.shape.width ?? 0.9) * 0.75);
+	const pt = (a: number, r: number) => `${(c + Math.cos(a) * r).toFixed(1)} ${(c + Math.sin(a) * r).toFixed(1)}`;
+	let d = '';
+	for (let k = 0; k < n; k++) {
+		const a = (k / n) * Math.PI * 2 - Math.PI / 2 + i * 0.4;
+		const w = (Math.PI / n) * spread * 1.6;
+		d += `M${c} ${c}Q${pt(a - w, R * 0.75)} ${pt(a, R)}Q${pt(a + w, R * 0.75)} ${c} ${c}`;
+	}
+	return d;
+};
 ---
 
 <Layout title="Herbarium" description="Every specimen grown by Studio Hyphe: websites, interfaces and interactive worlds.">
@@ -141,8 +158,24 @@ const SPECIMENS = [
 			{
 				projects.map((p, i) => (
 					<li>
-						<a href={`/work/${p.slug}`} data-portal class="row group" data-row data-preview={coverOf(p)} data-latin={`fig. ${pad(i + 1)} — ${p.latin}`}>
-							<span class="meta tabular-nums text-mineral-dim">{String(i + 1).padStart(3, '0')}</span>
+						<a
+							href={`/work/${p.slug}`}
+							data-portal
+							class="row group"
+							data-row
+							data-index={i}
+							data-preview={coverOf(p)}
+							data-latin={`fig. ${pad(i + 1)} — ${p.latin}`}
+							data-petals={SPECIMENS[i % SPECIMENS.length].petals}
+							data-services={p.services.join('|')}
+						>
+							<span class="meta flex items-center gap-3 tabular-nums text-mineral-dim">
+								<svg class="glyph" viewBox="0 0 28 28" width="28" height="28" aria-hidden="true" style={`--veil: #${SPECIMENS[i % SPECIMENS.length].veil}`}>
+									<path d={glyph(i)} />
+									<rect x="12.5" y="12.5" width="3" height="3" />
+								</svg>
+								{String(i + 1).padStart(3, '0')}
+							</span>
 							<span class="name titre text-[clamp(2.4rem,5vw,4.6rem)]" data-frame-word>{p.name}</span>
 							<span class="meta hidden text-bone/70 md:block">{p.latin}</span>
 							<span class="meta hidden text-mineral md:block">{p.category}</span>
@@ -152,15 +185,21 @@ const SPECIMENS = [
 				))
 			}
 		</ol>
-		<div class="preview pointer-events-none fixed left-0 top-0 z-[5] hidden w-[320px] md:block" data-preview-box aria-hidden="true">
-			<div class="relative aspect-video overflow-hidden border border-bone/15">
-				<img alt="" class="absolute inset-0 size-full object-cover" data-preview-img />
+		<!-- La loupe : le spécimen de la ligne survolée y éclot, posé sur son image pressée -->
+		<div class="loupe pointer-events-none fixed left-0 top-0 z-[5] w-[300px]" data-preview-box aria-hidden="true">
+			<div class="lens relative aspect-square overflow-hidden border border-bone/15 bg-void">
+				<img alt="" class="sample absolute inset-0 size-full object-cover" data-preview-img />
+				<canvas class="absolute inset-0 size-full" data-specimen="loupe" data-specimens={JSON.stringify(SPECIMENS)} data-show=""></canvas>
+				<span class="tick left-0 top-0 border-l border-t"></span>
+				<span class="tick right-0 top-0 border-r border-t"></span>
+				<span class="tick bottom-0 left-0 border-b border-l"></span>
+				<span class="tick bottom-0 right-0 border-b border-r"></span>
+				<span class="meta absolute left-2.5 top-2 text-mineral" data-preview-petals></span>
 			</div>
-			<span class="tick left-0 top-0 border-l border-t"></span>
-			<span class="tick right-0 top-0 border-r border-t"></span>
-			<span class="tick bottom-[1.6rem] left-0 border-b border-l"></span>
-			<span class="tick bottom-[1.6rem] right-0 border-b border-r"></span>
-			<p class="meta mt-2 inline-block bg-void/85 px-1 text-bone/80" data-preview-cap></p>
+			<div class="mt-2 bg-void/85 px-2 py-1.5">
+				<p class="meta text-bone/85" data-preview-cap></p>
+				<ul class="meta mt-1 text-mineral" data-preview-services></ul>
+			</div>
 		</div>
 	</section>
 
@@ -331,7 +370,7 @@ const SPECIMENS = [
 	.row {
 		position: relative;
 		display: grid;
-		grid-template-columns: 3.5rem 1fr auto;
+		grid-template-columns: 5.5rem 1fr auto;
 		align-items: baseline;
 		gap: 1.5rem;
 		padding: 1.4rem 0 1rem;
@@ -339,8 +378,40 @@ const SPECIMENS = [
 	}
 	@media (min-width: 768px) {
 		.row {
-			grid-template-columns: 4rem 1fr 14rem 11rem 4rem;
+			grid-template-columns: 6.5rem 1fr 14rem 11rem 4rem;
 		}
+	}
+	/* La fleur de la ligne, au trait : elle tourne et s'allume au survol */
+	.glyph {
+		flex: none;
+		align-self: center;
+		overflow: visible;
+		transition: rotate 0.9s var(--ease-organic);
+	}
+	.glyph path {
+		stroke: var(--veil);
+		stroke-width: 0.9;
+		stroke-opacity: 0.45;
+		transition:
+			stroke-opacity 0.4s,
+			fill-opacity 0.4s;
+		fill: var(--veil);
+		fill-opacity: 0;
+	}
+	.glyph rect {
+		fill: var(--color-acid);
+		opacity: 0.5;
+		transition: opacity 0.4s;
+	}
+	.row:is(:hover, :focus-visible) .glyph {
+		rotate: 72deg;
+	}
+	.row:is(:hover, :focus-visible) .glyph path {
+		stroke-opacity: 1;
+		fill-opacity: 0.12;
+	}
+	.row:is(:hover, :focus-visible) .glyph rect {
+		opacity: 1;
 	}
 	.row .name {
 		position: relative;
@@ -364,17 +435,29 @@ const SPECIMENS = [
 	.row:focus-visible .name::after {
 		clip-path: inset(0 0 0 0);
 	}
-	.preview {
+	.loupe {
+		display: none;
 		opacity: 0;
-		transition: opacity 0.3s;
+		scale: 0.96;
+		transition:
+			opacity 0.3s,
+			scale 0.4s var(--ease-organic);
 	}
-	.preview[data-on] {
+	.loupe[data-live] {
+		display: block;
+	}
+	.loupe[data-on] {
 		opacity: 1;
+		scale: 1;
 	}
-	.preview .tick {
-		width: 7px;
-		height: 7px;
-		margin: -4px;
+	/* L'image du projet, pressée sous le spécimen */
+	.sample {
+		opacity: 0.2;
+		filter: grayscale(0.6) contrast(1.1);
+	}
+	.loupe .tick {
+		width: 9px;
+		height: 9px;
 	}
 </style>
 
@@ -399,25 +482,58 @@ const SPECIMENS = [
 		if (saved === 'index') set('index');
 	} catch {}
 
-	// Index : l'image du spécimen suit le curseur, avec sa légende
+	// Index : la loupe suit le curseur ; le spécimen de la ligne y éclot, sur
+	// son image pressée, avec ses savoir-faire
 	const box = document.querySelector<HTMLElement>('[data-preview-box]')!;
 	const img = document.querySelector<HTMLImageElement>('[data-preview-img]')!;
 	const cap = document.querySelector<HTMLElement>('[data-preview-cap]')!;
+	const petals = document.querySelector<HTMLElement>('[data-preview-petals]')!;
+	const services = document.querySelector<HTMLElement>('[data-preview-services]')!;
+	const lens = box.querySelector<HTMLCanvasElement>('[data-specimen="loupe"]')!;
+	const letters = 'abcdefgh';
+	const fine = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 768px)');
 	const pos = { x: 0, y: 0, tx: 0, ty: 0 };
 	let raf = 0;
+	let rest = 0;
+	let mounted = false;
 	const follow = () => {
 		pos.x += (pos.tx - pos.x) * 0.18;
 		pos.y += (pos.ty - pos.y) * 0.18;
-		box.style.transform = `translate(${pos.x + 24}px, ${pos.y - 100}px)`;
+		// La loupe reste dans l'écran : elle passe à gauche du curseur près du bord
+		const w = box.offsetWidth;
+		const h = box.offsetHeight;
+		const x = pos.x + 28 + w > innerWidth - 12 ? pos.x - 28 - w : pos.x + 28;
+		const y = Math.min(innerHeight - h - 12, Math.max(12, pos.y - h * 0.45));
+		box.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
 		raf = requestAnimationFrame(follow);
 	};
 	document.querySelectorAll<HTMLElement>('[data-row]').forEach((row) => {
 		row.addEventListener('pointerenter', (e) => {
+			if (!fine.matches) return;
+			// three.js n'arrive qu'au premier survol
+			if (!mounted) {
+				mounted = true;
+				import('../../scripts/specimen').then((m) => m.mountSpecimens());
+			}
+			clearTimeout(rest);
 			img.src = row.dataset.preview!;
 			cap.textContent = row.dataset.latin ?? '';
-			pos.x = pos.tx = e.clientX;
-			pos.y = pos.ty = e.clientY;
-			box.setAttribute('data-on', '');
+			petals.textContent = `${row.dataset.petals} petals`;
+			services.replaceChildren(
+				...(row.dataset.services ?? '').split('|').map((s, k) => {
+					const li = document.createElement('li');
+					li.innerHTML = `<span class="text-acid">${letters[k]}</span> — `;
+					li.append(s);
+					return li;
+				}),
+			);
+			lens.dataset.show = row.dataset.index;
+			if (!box.hasAttribute('data-live')) {
+				pos.x = pos.tx = e.clientX;
+				pos.y = pos.ty = e.clientY;
+			}
+			box.setAttribute('data-live', '');
+			requestAnimationFrame(() => box.setAttribute('data-on', ''));
 			cancelAnimationFrame(raf);
 			raf = requestAnimationFrame(follow);
 		});
@@ -427,7 +543,12 @@ const SPECIMENS = [
 		});
 		row.addEventListener('pointerleave', () => {
 			box.removeAttribute('data-on');
-			cancelAnimationFrame(raf);
+			// La loupe se range (et sa toile s'arrête) si l'on ne survole plus rien
+			rest = window.setTimeout(() => {
+				box.removeAttribute('data-live');
+				lens.dataset.show = '';
+				cancelAnimationFrame(raf);
+			}, 320);
 		});
 	});
 </script>
