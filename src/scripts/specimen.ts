@@ -164,8 +164,10 @@ function plant(u: Uniforms, o: PlantOptions) {
 
 /** Une toile, une scène, une caméra ; ne tourne que lorsqu'elle est visible */
 function stage(canvas: HTMLCanvasElement, fov: number) {
-	const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, premultipliedAlpha: true });
-	renderer.setClearColor(0x000000, 0);
+	// Toile opaque, du noir de la page : la fleur est de la lumière additive
+	// (alpha nul), que Safari et Firefox jettent sur une toile transparente
+	const renderer = new THREE.WebGLRenderer({ canvas, alpha: false, antialias: true });
+	renderer.setClearColor(0x090c0a, 1);
 	const scene = new THREE.Scene();
 	const camera = new THREE.PerspectiveCamera(fov, 1, 0.05, 50);
 	const u = uniforms();
