@@ -246,8 +246,11 @@ const parts = (text: string, word: string) => {
 	.all:focus-visible .arrow {
 		translate: 0.3em 0;
 	}
-	/* Le fond flottant apparaît quand la fleur s'éteint */
+	/* Le fond flottant apparaît quand la fleur s'éteint. Il porte le même
+	   terreau que le studio : sans lui, le monde fixe transparaît dessous et
+	   la fin de galerie reste un ton plus claire que la section suivante. */
 	.drift {
+		background: var(--color-void);
 		opacity: clamp(0, var(--x) * 3.5, 1);
 	}
 	/* Les noms de l'herbier : chacun dérive à sa profondeur, suit un peu le

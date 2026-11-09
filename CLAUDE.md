@@ -9,7 +9,9 @@ sur Cloudflare (voir `wrangler.jsonc`). Dépôt : github.com/RyanFoerster/Hyphe.
 ## Façon de travailler (préférences de Ryan)
 
 - Échanger **en français**, sans longue narration : faire, vérifier, résumer.
-- Quand une demande est terminée : **commit + push sur `main` sans demander**.
+- Quand une demande est terminée : **commit sur `main`, mais ne pas pousser**
+  à chaque modif — pousser seulement quand Ryan le demande (chaque push
+  redéploie le site).
   Messages de commit en français, qui décrivent le résultat visible
   (ex. « Le défilement ne fait plus de bruit »), terminés par
   `Co-Authored-By: Claude <noreply@anthropic.com>`.

@@ -182,6 +182,7 @@ function stage(canvas: HTMLCanvasElement, fov: number, opts: { aura?: number; as
 	P.uExposure.value = 1.15;
 	P.uVignette.value = 0;
 	P.uFloor.value = 0.04;
+	P.uGrainMask.value = 1;
 	// La passe finale écrit sa propre opacité (comme le hero) : le fond de la
 	// page transparaît, rien à ajouter
 	const scene = new THREE.Scene();

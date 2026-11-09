@@ -69,6 +69,7 @@ const COMPOSITE_FRAG = /* glsl */ `
 	uniform float uAscii;
 	uniform vec3 uBg;
 	uniform float uFloor;
+	uniform float uGrainMask;
 	uniform float uVignette;
 	uniform float uInside;
 	uniform float uAura;
@@ -293,7 +294,11 @@ const COMPOSITE_FRAG = /* glsl */ `
 		col *= mix(1.0 - uVignette * 0.5, 1.0, vig);
 		// Toiles opaques : le voile lointain du halo ne doit pas éclaircir le fond
 		col = max(col - uFloor, 0.0) / (1.0 - uFloor);
-		col += (hash(px + fract(uTime) * 61.0) - 0.5) * 0.026;
+		// Le grain. Sur les toiles isolées (uGrainMask), il ne touche que la
+		// lumière : rogné à zéro, il éclaircirait le noir d'un demi-ton et la
+		// toile se détacherait du terreau de la page.
+		float grain = mix(1.0, smoothstep(0.0, 0.03, max(col.r, max(col.g, col.b))), uGrainMask);
+		col += (hash(px + fract(uTime) * 61.0) - 0.5) * 0.026 * grain;
 		col = max(col, 0.0) + uBg;
 		gl_FragColor = vec4(col, max(cover, max(col.r, max(col.g, col.b))));
 	}
@@ -367,6 +372,7 @@ export function createPost(renderer: THREE.WebGLRenderer, { lowPower }: { lowPow
 			uBg: { value: new THREE.Color(0, 0, 0) },
 			uVignette: { value: 1 },
 			uFloor: { value: 0 },
+			uGrainMask: { value: 0 },
 			uInside: { value: 0 },
 			uAura: { value: 1 },
 			uRays: { value: lowPower ? 0 : 0.9 },
