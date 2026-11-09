@@ -9,8 +9,6 @@
 //   <canvas data-specimen="sheet">     l'herbier : la fleur d'un projet (data-variant,
 //                                      data-petals, data-veil, data-shape…), ses
 //                                      savoir-faire légendés au bout des pétales
-//   <canvas data-specimen="loupe">     l'index : la loupe qui suit le curseur, le
-//                                      spécimen de la ligne survolée y éclot (data-show)
 //
 // Chaque toile ne dessine que lorsqu'elle est à l'écran.
 
@@ -432,50 +430,6 @@ function sheet(canvas: HTMLCanvasElement) {
 	});
 }
 
-/** L'index de l'herbier : une loupe qui suit le curseur. Le spécimen de la
- *  ligne survolée y éclot (data-show = son rang ; vide, la loupe se repose). */
-function loupe(canvas: HTMLCanvasElement) {
-	type Spec = { petals: number; veil: string; leaves: number; shape: PlantOptions['shape'] };
-	const list = JSON.parse(canvas.dataset.specimens ?? '[]') as Spec[];
-	const st = stage(canvas, 32, { aura: 0.85 });
-	st.u.uFocusDist.value = 5.6;
-	const plants = list.map((sp, i) => {
-		const p = plant(st.u, { petals: sp.petals, stem: 1.3, leaves: sp.leaves, big: true, glow: 1.3, veil: parseInt(sp.veil, 16), shape: sp.shape, variant: i });
-		p.root.visible = false;
-		// Sans légendes autour, la loupe cadre plus serré que la planche
-		p.root.position.y = -0.85;
-		p.root.scale.setScalar(1.36);
-		p.root.rotation.z = Math.sin(i * 2.3) * 0.07;
-		st.scene.add(p.root);
-		return p;
-	});
-	st.camera.position.set(0, 1.9, 5.6);
-	st.camera.lookAt(0, 0.6, 0);
-	let cur = -1;
-	let grow = 0;
-	let last = 0;
-	st.loop((t) => {
-		const dt = Math.min(0.05, t - (last || t));
-		last = t;
-		const raw = canvas.dataset.show;
-		const want = raw === undefined || raw === '' ? -1 : Number(raw);
-		if (want !== cur) {
-			if (cur >= 0) plants[cur].root.visible = false;
-			cur = want;
-			// Chaque nouvelle ligne : son spécimen repousse depuis le bouton
-			grow = reduced() ? 1 : 0.15;
-			if (cur >= 0) plants[cur].root.visible = true;
-		}
-		if (cur < 0) return;
-		const p = plants[cur];
-		grow = Math.min(1, grow + dt * 1.3);
-		const open = smoothstep(0.3, 1, grow);
-		p.set(Math.min(1, grow * 1.6), 1 - (1 - open) ** 3);
-		p.root.rotation.y = cur * 1.1 + (reduced() ? 0 : t * 0.35);
-		p.mats.forEach((m) => (m.uniforms.uEnergy.value = (1 - open) * 2));
-	});
-}
-
 /** Le pied de page : une grande fleur qui s'ouvre et respire */
 function footer(canvas: HTMLCanvasElement) {
 	const st = stage(canvas, 32);
@@ -637,6 +591,5 @@ export function mountSpecimens(root: ParentNode = document) {
 		else if (kind === 'drift') drift(c);
 		else if (kind === 'footer') footer(c);
 		else if (kind === 'sheet') sheet(c);
-		else if (kind === 'loupe') loupe(c);
 	}
 }

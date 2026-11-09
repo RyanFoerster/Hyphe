@@ -64,11 +64,8 @@ npx astro build             # build statique dans dist/
   07 »), avec la fleur 3D du projet (`data-specimen="sheet"`, forme et teinte
   propres à chaque projet, dans `SPECIMENS`), ses savoir-faire légendés au
   bout des pétales, une règle en mm, puis le nom, l'image « pressed sample » et
-  l'étiquette. Les planches alternent gauche/droite. **Index** : liste, chaque
-  ligne a sa petite fleur au trait (SVG, teinte du voile, tourne au survol) ;
-  une loupe suit le curseur, le spécimen 3D de la ligne y éclot
-  (`data-specimen="loupe"`, `data-show`) sur l'image pressée, avec nom latin
-  et savoir-faire. three.js n'est chargé qu'au premier survol.
+  l'étiquette. Les planches alternent gauche/droite. **Index** : liste,
+  l'aperçu suit le curseur avec coins de visée et nom latin.
 - `src/pages/work/[slug].astro` : fiche projet (`ProjectHero` plein écran),
   qui se termine sur `NextSpecimen` (le hero du projet suivant pousse en
   bas de page, puis on change de page sans que rien ne bouge).
