@@ -289,7 +289,6 @@ function stages(canvas: HTMLCanvasElement) {
 function footer(canvas: HTMLCanvasElement) {
 	const st = stage(canvas, 32);
 	const p = plant(st.u, { petals: 7, stem: 1.6, leaves: 2, big: true });
-	p.root.position.set(0, -1.35, 0);
 	st.scene.add(p.root);
 	st.camera.position.set(0, 1.1, 4.2);
 	st.camera.lookAt(0, 0.15, 0);
@@ -310,6 +309,13 @@ function footer(canvas: HTMLCanvasElement) {
 		p.set(Math.min(1, open * 1.6), (1 - (1 - open) ** 3) * breathe);
 		p.root.rotation.y = t * 0.08 + px * 0.5;
 		p.root.rotation.z = Math.sin(t * 0.5) * 0.05;
+		// La toile couvre tout le pied de page : la fleur se tient à droite, la
+		// tige plantée dans le bas, sans jamais toucher un bord de la toile
+		const { w, h } = st.size();
+		const half = Math.tan(THREE.MathUtils.degToRad(16)) * 4.2 * (w / h);
+		const scale = Math.min(1, Math.max(0.55, h / 900));
+		p.root.scale.setScalar(scale * (w < 768 ? 0.8 : 1));
+		p.root.position.set(w < 768 ? half * 0.35 : half * 0.48, -1.4 + (1 - scale) * 0.6, 0);
 	});
 }
 
