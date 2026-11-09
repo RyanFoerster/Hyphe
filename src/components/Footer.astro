@@ -1,51 +1,195 @@
 ---
+// Le pied de page : un bandeau de savoir-faire qui défile, l'invitation et
+// l'adresse, une grande fleur (la même que celle du hero) qui s'ouvre sur le
+// bord droit, et le nom du studio en filigrane, traversé par une lueur.
 import { site } from '../data/site';
+
+const ticker = [...site.services, 'Grown in ' + site.city, 'Open for projects'];
 ---
 
-<footer class="relative z-10 overflow-hidden border-t border-bone/8 bg-void" aria-labelledby="footer-title">
-	<canvas
-		class="pointer-events-none absolute inset-x-0 top-0 h-[70%] w-full opacity-70"
-		data-ascii
-		data-ascii-kind="roots"
-		data-ascii-seed="14"
-		data-ascii-size="11"
-		aria-hidden="true"
-	></canvas>
+<footer class="foot relative z-10 overflow-hidden bg-void" aria-labelledby="footer-title">
+	<!-- Bandeau : ce que l'on fait pousser, en boucle -->
+	<div class="ticker meta border-y border-dashed border-bone/15 py-3 text-bone/70" aria-hidden="true">
+		<div class="track">
+			{
+				[0, 1].map(() => (
+					<span class="run">
+						{ticker.map((t) => (
+							<>
+								<span>{t}</span>
+								<span class="dot" />
+							</>
+						))}
+					</span>
+				))
+			}
+		</div>
+	</div>
 
-	<div class="relative grid gap-12 px-4 pb-8 pt-40 sm:px-6 md:grid-cols-12 md:pt-56">
+	<!-- La fleur, qui s'ouvre quand on arrive en bas de page -->
+	<canvas class="bloom pointer-events-none absolute bottom-0 right-[-8%] h-[92%] w-[70%] md:right-[-4%] md:w-[52%]" data-specimen="footer" aria-hidden="true"></canvas>
+	<div class="glow pointer-events-none absolute bottom-[-20%] right-[-10%] h-[80%] w-[60%]" aria-hidden="true"></div>
+
+	<div class="relative grid gap-12 px-4 pb-8 pt-28 sm:px-6 md:grid-cols-12 md:pt-40">
 		<div class="md:col-span-7" data-reveal>
-			<p class="meta mb-6 text-mineral"><span data-scramble>[ Contact ]</span></p>
+			<p class="meta mb-6"><span class="kicker" data-scramble>[ Contact ]</span></p>
 			<h2 id="footer-title" class="titre text-[clamp(3.2rem,8vw,9rem)]" data-split>Grow something with us.</h2>
-			<a
-				href={`mailto:${site.email}`}
-				class="mt-10 inline-flex items-center gap-3 text-[clamp(1.25rem,2.2vw,1.9rem)] text-bone underline decoration-bone/25 decoration-1 underline-offset-[10px] transition hover:text-acid hover:decoration-acid"
-			>
-				{site.email} <span aria-hidden="true" class="text-[0.8em]">↗</span>
+			<a href={`mailto:${site.email}`} class="mail group mt-12 inline-flex items-baseline gap-4 text-[clamp(1.4rem,2.6vw,2.4rem)] text-bone">
+				<span class="word">{site.email}</span>
+				<span class="arrow text-acid" aria-hidden="true">↗</span>
 			</a>
+			<p class="meta mt-6 flex items-center gap-2 text-mineral">
+				<span class="relative flex size-1.5">
+					<span class="absolute inset-0 animate-ping rounded-full bg-acid/60"></span>
+					<span class="relative size-1.5 rounded-full bg-acid"></span>
+				</span>
+				Taking on new projects for {new Date().getFullYear()}
+			</p>
 		</div>
 
-		<div class="grid grid-cols-2 gap-8 self-end md:col-span-4 md:col-start-9" data-reveal style="--reveal-delay: 150ms">
+		<div class="grid max-w-xl grid-cols-2 gap-8 md:col-span-7" data-reveal style="--reveal-delay: 150ms">
 			<div>
-				<p class="meta mb-3 text-mineral">Elsewhere</p>
-				<ul class="space-y-1.5 text-sm">
-					{site.socials.map((s) => (
-						<li>
-							<a href={s.href} target="_blank" rel="noopener" class="text-bone/80 transition hover:text-acid">{s.label} ↗</a>
-						</li>
-					))}
+				<p class="meta mb-4"><span class="kicker">Elsewhere</span></p>
+				<ul class="space-y-2 text-[15px]">
+					{
+						site.socials.map((s) => (
+							<li>
+								<a href={s.href} target="_blank" rel="noopener" class="social text-bone/85">
+									{s.label} <span aria-hidden="true">↗</span>
+								</a>
+							</li>
+						))
+					}
 				</ul>
 			</div>
 			<div>
-				<p class="meta mb-3 text-mineral">Studio</p>
-				<p class="text-sm text-bone/80">{site.city}<br />Working worldwide</p>
-				<button type="button" data-open-about class="meta mt-4 text-bone/70 transition hover:text-acid">About the studio</button>
+				<p class="meta mb-4"><span class="kicker">Studio</span></p>
+				<p class="text-[15px] text-bone/85">{site.city}<br />Working worldwide</p>
+				<p class="meta mt-2 text-mineral">
+					Local time <time data-clock data-tz={site.timezone} class="tabular-nums text-bone/80">--:--</time>
+				</p>
+				<button type="button" data-open-about class="social meta mt-4 text-bone/70">About the studio →</button>
 			</div>
 		</div>
+	</div>
 
-		<div class="meta flex flex-wrap items-center justify-between gap-4 border-t border-bone/8 pt-5 text-mineral-dim md:col-span-12">
-			<span>© {new Date().getFullYear()} {site.name}</span>
-			<span class="hidden sm:inline">Hyphae floralis — grown in code, no seed</span>
-			<a href="#main" class="transition hover:text-bone">Back to surface ↑</a>
-		</div>
+	<!-- Le nom du studio en filigrane, à moitié sous le bord -->
+	<p class="wordmark titre pointer-events-none select-none" aria-hidden="true">Hyphe</p>
+
+	<div class="meta relative flex flex-wrap items-center justify-between gap-4 border-t border-bone/8 px-4 py-5 text-mineral-dim sm:px-6">
+		<span>© {new Date().getFullYear()} {site.name}</span>
+		<span class="hidden sm:inline">Hyphae floralis — grown in code, no seed</span>
+		<a href="#main" class="top group inline-flex items-center gap-2 transition hover:text-acid">
+			Back to the flower <span class="up" aria-hidden="true">↑</span>
+		</a>
 	</div>
 </footer>
+
+<style>
+	/* ---- Bandeau ---- */
+	.ticker {
+		overflow: hidden;
+		white-space: nowrap;
+	}
+	.track {
+		display: flex;
+		width: max-content;
+		animation: run 46s linear infinite;
+	}
+	.ticker:hover .track {
+		animation-play-state: paused;
+	}
+	.run {
+		display: flex;
+		align-items: center;
+		gap: 1.6rem;
+		padding-right: 1.6rem;
+	}
+	.dot {
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--color-acid);
+		box-shadow: 0 0 10px 1px rgb(200 245 60 / 0.6);
+	}
+	@keyframes run {
+		to {
+			translate: -50% 0;
+		}
+	}
+
+	.glow {
+		background: radial-gradient(closest-side, rgb(154 180 240 / 0.1), rgb(200 245 60 / 0.04) 55%, transparent);
+	}
+
+	/* ---- L'adresse : encadrée au survol, la flèche s'envole ---- */
+	.mail .word {
+		position: relative;
+	}
+	.mail .word::after {
+		content: '';
+		position: absolute;
+		inset: -0.12em -0.25em -0.1em;
+		border: 1px solid var(--color-acid);
+		clip-path: inset(0 100% 100% 0);
+		transition: clip-path 0.5s var(--ease-organic);
+	}
+	.mail:hover .word::after,
+	.mail:focus-visible .word::after {
+		clip-path: inset(0 0 0 0);
+	}
+	.mail .arrow {
+		transition: translate 0.5s var(--ease-organic);
+	}
+	.mail:hover .arrow,
+	.mail:focus-visible .arrow {
+		translate: 0.2em -0.2em;
+	}
+	.social {
+		background: linear-gradient(var(--color-acid), var(--color-acid)) 0 100% / 0 1px no-repeat;
+		transition:
+			background-size 0.45s var(--ease-organic),
+			color 0.3s;
+	}
+	.social:hover,
+	.social:focus-visible {
+		color: var(--color-acid);
+		background-size: 100% 1px;
+	}
+
+	/* ---- Le filigrane ---- */
+	.wordmark {
+		position: relative;
+		margin: 2rem 0 -0.24em;
+		padding-inline: 0.04em;
+		font-size: 31vw;
+		line-height: 0.75;
+		color: transparent;
+		-webkit-text-stroke: 1px rgb(230 228 220 / 0.18);
+		background: linear-gradient(100deg, transparent 38%, rgb(200 245 60 / 0.55) 50%, transparent 62%) 120% 0 / 250% 100% no-repeat;
+		-webkit-background-clip: text;
+		background-clip: text;
+		animation: sweep 9s var(--ease-organic) infinite;
+	}
+	@keyframes sweep {
+		0% {
+			background-position: 120% 0;
+		}
+		60%,
+		100% {
+			background-position: -20% 0;
+		}
+	}
+	.top .up {
+		transition: translate 0.4s var(--ease-organic);
+	}
+	.top:hover .up {
+		translate: 0 -0.25em;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.track,
+		.wordmark {
+			animation: none;
+		}
+	}
+</style>

@@ -18,7 +18,7 @@ const parts = (text: string, word: string) => {
 <section id="work" class="relative" aria-labelledby="work-title">
 	<div class="dive relative h-[170svh]" data-dive>
 		<div class="dive-title sticky top-0 z-[3] flex h-[100svh] flex-col items-center justify-center px-4 text-center">
-			<p class="meta text-mineral"><span data-scramble>[ 01 ] Selected work — {Math.min(...years)} / {Math.max(...years)}</span></p>
+			<p class="meta text-mineral"><span class="kicker" data-scramble>[ 01 ] Selected work — {Math.min(...years)} / {Math.max(...years)}</span></p>
 			<h2 id="work-title" class="titre mt-7 text-[clamp(3.2rem,9vw,10rem)]" data-split>Enter the specimen</h2>
 			<p class="meta mt-7 text-bone/60"><span data-scramble>{pad(selected.length)} projects grown inside</span></p>
 		</div>
@@ -101,7 +101,7 @@ const parts = (text: string, word: string) => {
 	<!-- Fin de la galerie : la fleur s'éteint, et l'herbier entier s'ouvre -->
 	<div class="exit relative h-[150svh]" data-exit>
 		<div class="sticky top-0 z-[5] flex h-[100svh] flex-col items-center justify-center px-4 text-center">
-			<p class="ex-in meta text-mineral" style="--t: 0.12">{pad(selected.length)} of {pad(projects.length)} specimens — end of the selection</p>
+			<p class="ex-in meta" style="--t: 0.12"><span class="kicker">{pad(selected.length)} of {pad(projects.length)} specimens — end of the selection</span></p>
 			<a href="/work" data-portal class="all ex-in group mt-8 inline-flex items-baseline gap-[0.25em]" style="--t: 0.22">
 				<span class="titre text-[clamp(3rem,8vw,8.5rem)]" data-frame-word>View all projects</span>
 				<span class="arrow titre text-[clamp(2rem,5vw,5rem)] text-acid" aria-hidden="true">→</span>

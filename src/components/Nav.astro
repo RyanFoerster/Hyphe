@@ -104,37 +104,29 @@ const pad = (n: number) => String(n).padStart(2, '0');
 					<span class="text-mineral">the studio</span>
 					<button type="button" class="close" data-island-go="bar" aria-label="Close">×</button>
 				</div>
-				<canvas
-					class="pointer-events-none block h-24 w-full"
-					data-ascii
-					data-ascii-kind="sprout"
-					data-ascii-seed="5"
-					data-ascii-size="9"
-					aria-hidden="true"
-				></canvas>
-				<div class="space-y-6 px-5 pb-6">
-					<h2 id="about-title" class="titre text-[3.4rem]" data-split data-stagger style="--i: 0">Studio Hyphe</h2>
+				<div class="space-y-6 px-5 pb-6 pt-7">
+					<h2 id="about-title" class="titre pb-[0.18em] text-[3.4rem]" data-split data-stagger style="--i: 0">Studio Hyphe</h2>
 					<p class="text-[15px] leading-relaxed text-bone/80" data-stagger style="--i: 1">
 						Hyphae are the threads a fungus grows through the soil — invisible, patient,
 						<mark class="hl">connecting</mark> everything. We work the same way: a small studio designing and
 						building digital experiences for brands that want to be felt, not just seen.
 					</p>
 					<div data-stagger style="--i: 2">
-						<p class="meta mb-2 text-mineral-dim">What we do</p>
+						<p class="meta mb-2"><span class="kicker">What we do</span></p>
 						<ul class="meta flex flex-wrap gap-x-3 gap-y-1.5 text-bone/80">
 							{site.services.map((s) => <li><span class="text-mineral-dim">[</span> {s} <span class="text-mineral-dim">]</span></li>)}
 						</ul>
 					</div>
 					<div class="grid grid-cols-2 gap-4 border-t border-dashed border-bone/15 pt-5" data-stagger style="--i: 3">
 						<div>
-							<p class="meta mb-1.5 text-mineral-dim">Contact</p>
+							<p class="meta mb-1.5"><span class="kicker">Contact</span></p>
 							<a href={`mailto:${site.email}`} class="text-sm text-bone underline decoration-bone/30 underline-offset-4 transition hover:text-acid hover:decoration-acid">
 								{site.email}
 							</a>
 							<p class="mt-1 text-sm text-bone/60">{site.city} — worldwide</p>
 						</div>
 						<div>
-							<p class="meta mb-1.5 text-mineral-dim">Elsewhere</p>
+							<p class="meta mb-1.5"><span class="kicker">Elsewhere</span></p>
 							<ul class="space-y-0.5 text-sm">
 								{site.socials.map((s) => (
 									<li><a href={s.href} target="_blank" rel="noopener" class="text-bone/85 transition hover:text-acid">{s.label} ↗</a></li>
@@ -184,10 +176,16 @@ const pad = (n: number) => String(n).padStart(2, '0');
 		transition:
 			width 0.62s var(--ease-portal),
 			height 0.62s var(--ease-portal),
-			border-color 0.4s;
+			border-color 0.4s,
+			background-color 0.4s;
 	}
+	/* Ouverte, la coque devient pleine : le hero ne transparaît plus derrière le texte */
 	.island:not([data-view='bar']) .shell {
 		border-color: rgb(230 228 220 / 0.2);
+		background: color-mix(in oklab, var(--color-void) 97%, transparent);
+	}
+	.view:focus {
+		outline: none;
 	}
 	.tick {
 		position: absolute;
@@ -256,15 +254,16 @@ const pad = (n: number) => String(n).padStart(2, '0');
 		animation-delay: calc(0.22s + var(--i, 0) * 60ms);
 	}
 	@keyframes rise {
+		/* Le cadre déborde : jambages et cadres de surlignage ne sont pas rognés */
 		from {
 			opacity: 0;
 			translate: 0 10px;
-			clip-path: inset(0 0 100% 0);
+			clip-path: inset(-40% -6% 100% -6%);
 		}
 		to {
 			opacity: 1;
 			translate: 0 0;
-			clip-path: inset(0 0 0 0);
+			clip-path: inset(-40% -6% -40% -6%);
 		}
 	}
 

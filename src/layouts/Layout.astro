@@ -64,6 +64,20 @@ const canonical = new URL(Astro.url.pathname, site.url);
 			import { mountScroll } from '../scripts/scroll';
 
 			mountScroll();
+			// Les fleurs isolées (studio, pied de page) : three.js n'est chargé
+			// qu'à l'approche de la première
+			const specimens = document.querySelectorAll('canvas[data-specimen]');
+			if (specimens.length) {
+				const near = new IntersectionObserver(
+					(entries) => {
+						if (!entries.some((e) => e.isIntersecting)) return;
+						near.disconnect();
+						import('../scripts/specimen').then((m) => m.mountSpecimens());
+					},
+					{ rootMargin: '800px 0px' },
+				);
+				specimens.forEach((c) => near.observe(c));
+			}
 			mountTiles();
 			mountText();
 			mountAscii();

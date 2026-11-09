@@ -396,3 +396,12 @@ html[data-specimen-hover] body {
     filter: blur(4px);
   }
 }
+
+/* Sous-titres : une étiquette acide, comme un mot sélectionné */
+.kicker {
+  display: inline-block;
+  padding: 0.28em 0.5em 0.2em;
+  background: var(--color-acid);
+  color: var(--color-void);
+  line-height: 1.2;
+}

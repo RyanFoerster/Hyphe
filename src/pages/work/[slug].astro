@@ -61,7 +61,7 @@ const palette = [
 
 	<!-- Introduction -->
 	<section class="grid gap-8 px-4 py-28 sm:px-6 md:grid-cols-12 md:py-40">
-		<p class="meta text-mineral md:col-span-3" data-reveal><span data-scramble>[ 01 ] Introduction</span></p>
+		<p class="meta text-mineral md:col-span-3" data-reveal><span class="kicker" data-scramble>[ 01 ] Introduction</span></p>
 		<p class="text-[clamp(1.5rem,2.9vw,2.75rem)] leading-[1.15] tracking-[-0.01em] text-bone md:col-span-9" data-reveal>
 			{intro[0]}{intro[1] && <mark class="hl">{intro[1]}</mark>}{intro[2]}
 		</p>
@@ -108,11 +108,11 @@ const palette = [
 	<!-- Défi et approche -->
 	<section class="grid gap-x-6 gap-y-16 px-4 py-24 sm:px-6 md:grid-cols-12 md:py-32">
 		<div class="md:col-span-4" data-reveal>
-			<p class="meta mb-5 text-mineral"><span data-scramble>[ 02 ] Challenge</span></p>
+			<p class="meta mb-5 text-mineral"><span class="kicker" data-scramble>[ 02 ] Challenge</span></p>
 			<p class="text-lg leading-relaxed text-bone/85">{p.challenge}</p>
 		</div>
 		<div class="md:col-span-7 md:col-start-6" data-reveal style="--reveal-delay: 120ms">
-			<p class="meta mb-5 text-mineral"><span data-scramble>[ 03 ] Approach</span></p>
+			<p class="meta mb-5 text-mineral"><span class="kicker" data-scramble>[ 03 ] Approach</span></p>
 			<ol class="space-y-8">
 				{
 					p.approach.map((step, i) => (
@@ -189,7 +189,7 @@ const palette = [
 	<!-- Services et résultats -->
 	<section class="grid gap-x-6 gap-y-16 px-4 py-24 sm:px-6 md:grid-cols-12 md:py-32">
 		<div class="md:col-span-4" data-reveal>
-			<p class="meta mb-5 text-mineral"><span data-scramble>[ 04 ] Services</span></p>
+			<p class="meta mb-5 text-mineral"><span class="kicker" data-scramble>[ 04 ] Services</span></p>
 			<ul class="meta flex flex-wrap gap-x-3 gap-y-2 text-bone/85">
 				{p.services.map((s) => <li><span class="text-mineral-dim">[</span> {s} <span class="text-mineral-dim">]</span></li>)}
 			</ul>
@@ -197,7 +197,7 @@ const palette = [
 		{
 			p.results && (
 				<div class="md:col-span-7 md:col-start-6" data-reveal style="--reveal-delay: 120ms">
-					<p class="meta mb-5 text-mineral"><span data-scramble>[ 05 ] Results</span></p>
+					<p class="meta mb-5 text-mineral"><span class="kicker" data-scramble>[ 05 ] Results</span></p>
 					<dl class="grid gap-6 sm:grid-cols-3">
 						{p.results.map((r) => (
 							<div class="flex flex-col border-t border-dashed border-bone/15 pt-5">

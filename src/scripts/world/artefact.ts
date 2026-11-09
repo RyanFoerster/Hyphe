@@ -124,7 +124,7 @@ function stemMaterial(u: Record<string, THREE.IUniform>) {
 
 /** Pétales et feuilles : verre tramé (la grille du relevé), nervures fines,
  *  réseau de fibres, nappes irisées qui glissent. Lumière additive. */
-function veilMaterial(u: Record<string, THREE.IUniform>, opts: { base: THREE.Color; iris: number; flutter: number; grid: THREE.Vector2 }) {
+export function veilMaterial(u: Record<string, THREE.IUniform>, opts: { base: THREE.Color; iris: number; flutter: number; grid: THREE.Vector2 }) {
 	return additive(
 		new THREE.ShaderMaterial({
 			uniforms: {
@@ -402,7 +402,7 @@ function taperedTube(curve: THREE.Curve<THREE.Vector3>, frames: ReturnType<THREE
 	return g;
 }
 
-interface PetalSpec {
+export interface PetalSpec {
 	len: number;
 	width: number;
 	/** Angle au-dessus de l'horizontale, à la base puis au bout (radians) */
@@ -416,7 +416,7 @@ interface PetalSpec {
 
 /** Un pétale (ou une feuille) : il part selon +x, se relève puis retombe,
  *  se creuse en gouttière, ondule sur ses bords. uv = (longueur, largeur). */
-function petalGeometry(p: PetalSpec, nu = 44, nv = 18) {
+export function petalGeometry(p: PetalSpec, nu = 44, nv = 18) {
 	const spine: [number, number, number][] = [];
 	let x = 0;
 	let y = 0;
@@ -464,7 +464,7 @@ function petalGeometry(p: PetalSpec, nu = 44, nv = 18) {
 }
 
 /** Tampon de traits (paires de points) avec couleur et balancement */
-class Strands {
+export class Strands {
 	pos: number[] = [];
 	col: number[] = [];
 	sway: number[] = [];
@@ -492,7 +492,7 @@ class Strands {
 }
 
 /** Tampon de points fleuris */
-class Blooms {
+export class Blooms {
 	pos: number[] = [];
 	col: number[] = [];
 	info: number[] = [];

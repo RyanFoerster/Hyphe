@@ -51,7 +51,9 @@ export function mountIsland(island: HTMLElement) {
 		if (next === 'bar') {
 			if (from !== 'bar') trigger.focus({ preventScroll: true });
 		} else {
-			v.querySelector<HTMLElement>('a, button:not(.close)')?.focus({ preventScroll: true });
+			// Le focus va à la vue elle-même : pas de cadre posé d'office sur un lien
+			v.setAttribute('tabindex', '-1');
+			v.focus({ preventScroll: true });
 		}
 	};
 
