@@ -21,20 +21,18 @@ const status = isHome
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
+<!-- Le logo et l'heure, hors de l'en-tête : en exclusion, ils restent lisibles sur toutes les images -->
+<div class="brand pointer-events-none fixed inset-x-0 top-0 z-50 flex items-start justify-between px-4 pt-4 sm:px-6 sm:pt-5">
+	<a href="/" class="pointer-events-auto mt-2.5 transition-opacity hover:opacity-70" aria-label="Studio Hyphe, home">
+		<img src="/HYPHE.svg" alt="" width="555" height="146" class="h-[16px] w-auto sm:h-5" />
+	</a>
+	<span class="meta mt-3 hidden w-24 text-right text-bone/70 md:block" aria-label={`Local time in ${site.city}`}>
+		<span>{site.cityCode}</span>
+		<time data-clock data-tz={site.timezone} class="tabular-nums text-bone">--:--</time>
+	</span>
+</div>
+
 <header class="site-nav pointer-events-none fixed inset-x-0 top-0 z-50">
-	<!-- Voile qui apparaît au défilement, pour que l'en-tête reste lisible -->
-	<div class="nav-veil absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-void via-void/70 to-transparent opacity-0 transition-opacity duration-500" aria-hidden="true"></div>
-
-	<div class="relative flex items-start justify-between px-4 pt-4 sm:px-6 sm:pt-5">
-		<a href="/" class="pointer-events-auto mt-2.5 opacity-95 transition-opacity hover:opacity-70" aria-label="Studio Hyphe, home">
-			<img src="/HYPHE.svg" alt="" width="555" height="146" class="h-[16px] w-auto sm:h-5" />
-		</a>
-		<span class="meta mt-3 hidden w-24 text-right text-mineral md:block" aria-label={`Local time in ${site.city}`}>
-			<span class="text-mineral-dim">{site.cityCode}</span>
-			<time data-clock data-tz={site.timezone} class="tabular-nums text-bone/80">--:--</time>
-		</span>
-	</div>
-
 	<nav class="island pointer-events-auto" aria-label="Main" data-island data-view="bar">
 		<div class="shell" data-shell>
 			<span class="tick left-0 top-0 border-l border-t" aria-hidden="true"></span>
@@ -114,7 +112,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 					<div data-stagger style="--i: 2">
 						<p class="meta mb-2"><span class="kicker">What we do</span></p>
 						<ul class="meta flex flex-wrap gap-x-3 gap-y-1.5 text-bone/80">
-							{site.services.map((s) => <li><span class="text-mineral-dim">[</span> {s} <span class="text-mineral-dim">]</span></li>)}
+							{site.services.map((s) => <li><span class="text-mineral-dim">[</span> {s.name} <span class="text-mineral-dim">]</span></li>)}
 						</ul>
 					</div>
 					<div class="grid grid-cols-2 gap-4 border-t border-dashed border-bone/15 pt-5" data-stagger style="--i: 3">
@@ -141,6 +139,9 @@ const pad = (n: number) => String(n).padStart(2, '0');
 </header>
 
 <style>
+	.brand {
+		mix-blend-mode: exclusion;
+	}
 	.island {
 		position: fixed;
 		top: 14px;
@@ -408,11 +409,6 @@ const pad = (n: number) => String(n).padStart(2, '0');
 	};
 	tick();
 	setInterval(tick, 20_000);
-
-	const veil = document.querySelector<HTMLElement>('.nav-veil')!;
-	const onScroll = () => veil.classList.toggle('opacity-100', scrollY > innerHeight * 0.6);
-	addEventListener('scroll', onScroll, { passive: true });
-	onScroll();
 
 	mountIsland(document.querySelector<HTMLElement>('[data-island]')!);
 </script>

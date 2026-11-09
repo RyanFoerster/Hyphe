@@ -184,8 +184,16 @@ import { site } from '../data/site';
 	}
 
 	.title-block {
+		--hx: 0;
 		bottom: 7svh;
 		isolation: isolate;
+	}
+	/* En quittant la surface, les lettres du titre s'envolent comme des spores
+	   (--hx de 0 à 1, posé par World au début de la plongée) */
+	.title-block h1 :global(.l) {
+		translate: calc(var(--hx) * var(--o, 0) * 0.8em) calc(var(--hx) * (-0.3em - var(--j, 0) * 0.1em));
+		opacity: calc(1 - var(--hx) * (0.5 + var(--j, 0) * 0.08));
+		filter: blur(calc(var(--hx) * var(--j, 0) * 0.5px));
 	}
 	.roots {
 		height: calc(100% + 7svh);

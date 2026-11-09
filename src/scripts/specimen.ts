@@ -12,6 +12,7 @@
 
 import * as THREE from 'three';
 import { Blooms, Strands, petalGeometry, veilMaterial } from './world/artefact';
+import { createPost } from './world/post';
 import { smoothstep } from './world/shared';
 
 type Uniforms = Record<string, THREE.IUniform>;
@@ -162,12 +163,28 @@ function plant(u: Uniforms, o: PlantOptions) {
 	return { root, tips, mats, set };
 }
 
-/** Une toile, une scène, une caméra ; ne tourne que lorsqu'elle est visible */
-function stage(canvas: HTMLCanvasElement, fov: number) {
+/** Une toile, une scène, une caméra ; ne tourne que lorsqu'elle est visible.
+ *  Même chaîne de rendu que le hero : tons, halo, grain, et la lumière de la
+ *  fleur redessinée en caractères autour d'elle. */
+function stage(canvas: HTMLCanvasElement, fov: number, opts: { aura?: number; ascii?: number } = {}) {
 	// Toile opaque, du noir de la page : la fleur est de la lumière additive
 	// (alpha nul), que Safari et Firefox jettent sur une toile transparente
-	const renderer = new THREE.WebGLRenderer({ canvas, alpha: false, antialias: true });
+	const renderer = new THREE.WebGLRenderer({ canvas, alpha: false, antialias: false });
 	renderer.setClearColor(0x090c0a, 1);
+	const lowPower = matchMedia('(pointer: coarse)').matches || (navigator.hardwareConcurrency ?? 8) <= 4;
+	const post = createPost(renderer, { lowPower });
+	const P = post.uniforms;
+	P.uReveal.value = 1;
+	P.uScanAll.value = 0;
+	P.uMosaic.value = 0;
+	P.uAura.value = opts.aura ?? 0.8;
+	P.uAscii.value = opts.ascii ?? 0;
+	P.uRays.value = lowPower ? 0 : 0.6;
+	P.uExposure.value = 1.15;
+	P.uVignette.value = 0;
+	P.uFloor.value = 0.04;
+	// La passe finale écrit sa propre opacité (comme le hero) : le fond de la
+	// page transparaît, rien à ajouter
 	const scene = new THREE.Scene();
 	const camera = new THREE.PerspectiveCamera(fov, 1, 0.05, 50);
 	const u = uniforms();
@@ -177,9 +194,11 @@ function stage(canvas: HTMLCanvasElement, fov: number) {
 		const r = canvas.getBoundingClientRect();
 		w = Math.max(1, r.width);
 		h = Math.max(1, r.height);
-		const dpr = Math.min(devicePixelRatio, 1.75);
+		const dpr = Math.min(devicePixelRatio, lowPower ? 1.25 : 1.6);
 		renderer.setPixelRatio(dpr);
 		renderer.setSize(w, h, false);
+		post.setSize(w, h, dpr);
+		P.uCell.value.set(7 * dpr, 12 * dpr);
 		camera.aspect = w / h;
 		camera.updateProjectionMatrix();
 		u.uScale.value = dpr * (h / 900) * 1.6 + 0.6;
@@ -192,15 +211,17 @@ function stage(canvas: HTMLCanvasElement, fov: number) {
 		const tick = (now: number) => {
 			raf = visible ? requestAnimationFrame(tick) : 0;
 			u.uTime.value = now / 1000;
+			P.uTime.value = now / 1000;
 			frame(now / 1000);
-			renderer.render(scene, camera);
+			camera.updateMatrixWorld();
+			post.render(scene, camera);
 		};
 		new IntersectionObserver(([e]) => {
 			visible = e.isIntersecting;
 			if (visible && !raf) raf = requestAnimationFrame(tick);
 		}).observe(canvas);
 	};
-	return { scene, camera, u, loop, size: () => ({ w, h }) };
+	return { scene, camera, u, P, loop, size: () => ({ w, h }) };
 }
 
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -216,36 +237,79 @@ function corolla(canvas: HTMLCanvasElement) {
 	st.camera.position.set(0, 3.1, 2.5);
 	st.camera.lookAt(0, -0.05, 0);
 	st.u.uFocusDist.value = 4;
+	let spinT = 0;
 
-	// Survol d'une étiquette : son pétale s'éclaire
-	let hot = -1;
+	// Survol d'un repère, ou du pétale lui-même : le pétale s'éclaire et sa
+	// fenêtre s'ouvre
+	let hover = -1;
 	labels.forEach((l, i) => {
-		l.addEventListener('pointerenter', () => (hot = i));
-		l.addEventListener('pointerleave', () => hot === i && (hot = -1));
+		l.addEventListener('pointerenter', () => (hover = i));
+		l.addEventListener('pointerleave', () => hover === i && (hover = -1));
 	});
+	const pointer = { x: 0, y: 0, in: false };
+	host.addEventListener('pointermove', (e) => {
+		const r = host.getBoundingClientRect();
+		pointer.x = e.clientX - r.left;
+		pointer.y = e.clientY - r.top;
+		pointer.in = true;
+	});
+	host.addEventListener('pointerleave', () => (pointer.in = false));
+	let hot = -1;
 	let open = reduced() ? 1 : 0;
 	let shown = false;
 	new IntersectionObserver(([e]) => e.isIntersecting && (shown = true), { threshold: 0.25 }).observe(canvas);
 	let last = 0;
 	const v = new THREE.Vector3();
+	const c = new THREE.Vector3();
+	const pts: { x: number; y: number }[] = [];
 	st.loop((t) => {
 		const dt = Math.min(0.05, t - (last || t));
 		last = t;
 		if (shown) open = Math.min(1, open + dt * 0.45);
 		p.set(1, 1 - (1 - open) ** 3);
-		p.root.rotation.y = reduced() ? 0 : t * 0.06 + (hot >= 0 ? 0 : 0);
+		// La fleur s'arrête de tourner quand on lit l'un de ses pétales
+		spinT += hot >= 0 || reduced() ? 0 : dt * 0.06;
+		p.root.rotation.y = spinT;
 		p.root.updateMatrixWorld(true);
 		const { w, h } = st.size();
+		c.set(0, 0, 0).applyMatrix4(p.root.matrixWorld).project(st.camera);
+		const cx = (c.x * 0.5 + 0.5) * w;
+		const cy = (-c.y * 0.5 + 0.5) * h;
+		p.tips.forEach((tip, i) => {
+			tip.getWorldPosition(v);
+			v.multiplyScalar(1.18).project(st.camera);
+			pts[i] = { x: (v.x * 0.5 + 0.5) * w, y: (-v.y * 0.5 + 0.5) * h };
+		});
+		// Le pétale sous le curseur : le plus proche en angle, dans le rayon de la fleur
+		let petal = -1;
+		if (pointer.in && hover < 0) {
+			const a = Math.atan2(pointer.y - cy, pointer.x - cx);
+			const dist = Math.hypot(pointer.x - cx, pointer.y - cy);
+			let best = Infinity;
+			pts.forEach((q, i) => {
+				const r = Math.hypot(q.x - cx, q.y - cy);
+				if (dist < r * 0.18 || dist > r * 1.05) return;
+				const da = Math.abs(Math.atan2(Math.sin(a - Math.atan2(q.y - cy, q.x - cx)), Math.cos(a - Math.atan2(q.y - cy, q.x - cx))));
+				if (da < best && da < Math.PI / labels.length) {
+					best = da;
+					petal = i;
+				}
+			});
+		}
+		hot = hover >= 0 ? hover : petal;
+		host.style.cursor = petal >= 0 ? 'pointer' : '';
 		p.mats.forEach((m, i) => {
 			const on = i === hot ? 1 : 0;
 			m.uniforms.uEnergy.value += (on * 6 - m.uniforms.uEnergy.value) * 0.12;
 		});
-		p.tips.forEach((tip, i) => {
+		pts.forEach((q, i) => {
 			const l = labels[i];
 			if (!l) return;
-			tip.getWorldPosition(v);
-			v.multiplyScalar(1.18).project(st.camera);
-			l.style.transform = `translate(${((v.x * 0.5 + 0.5) * w).toFixed(1)}px, ${((-v.y * 0.5 + 0.5) * h).toFixed(1)}px) translate(-50%, -50%)`;
+			const left = q.x < cx;
+			if ((l.dataset.side === 'left') !== left) l.dataset.side = left ? 'left' : 'right';
+			l.toggleAttribute('data-hot', i === hot && hover < 0);
+			// Le repère carré se pose sur le bout du pétale
+			l.style.transform = `translate(${q.x.toFixed(1)}px, ${q.y.toFixed(1)}px) translate(${left ? 'calc(-100% + 5px)' : '-5px'}, -50%)`;
 			l.style.opacity = String(Math.min(1, open * 1.5));
 		});
 	});
@@ -319,6 +383,113 @@ function footer(canvas: HTMLCanvasElement) {
 	});
 }
 
+/** Fin de galerie : des pétales détachés et du pollen qui flottent dans tout
+ *  l'écran, la caméra suit doucement le curseur */
+function drift(canvas: HTMLCanvasElement) {
+	const st = stage(canvas, 40, { aura: 0.9 });
+	st.camera.position.set(0, 0, 6);
+	st.u.uFocusDist.value = 6;
+	let seed = 7;
+	const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+	const N = 34;
+	const petals = new THREE.InstancedMesh(
+		petalGeometry({ len: 1, width: 0.6, base: 0.3, tip: -0.35, cup: 0.2, ruffle: 0.06, twist: 0.45, seed: 3 }, 20, 9),
+		veilMaterial(st.u, { base: C(0x9ab4f0).multiplyScalar(1.5), iris: 1.4, flutter: 1, grid: new THREE.Vector2(14, 7) }),
+		N,
+	);
+	petals.frustumCulled = false;
+	st.scene.add(petals);
+	const data = Array.from({ length: N }, () => ({
+		p: new THREE.Vector3((rand() - 0.5) * 14, (rand() - 0.5) * 8, -rand() * 7 + 1.5),
+		v: 0.08 + rand() * 0.16,
+		s: 0.25 + rand() * 0.55,
+		r: new THREE.Vector3(rand() * 6, rand() * 6, rand() * 6),
+		w: new THREE.Vector3(rand() - 0.5, rand() - 0.5, rand() - 0.5).multiplyScalar(0.9),
+		ph: rand() * 10,
+	}));
+
+	// Le pollen : des grains de lumière qui montent, acides et ambrés
+	const M = 420;
+	const pos = new Float32Array(M * 3);
+	const col = new Float32Array(M * 3);
+	const tints = [C(0xc8f53c), C(0xf07a2a), C(0x9ab4f0), C(0xe6e4dc)];
+	for (let i = 0; i < M; i++) {
+		pos.set([(rand() - 0.5) * 16, (rand() - 0.5) * 10, -rand() * 8 + 2], i * 3);
+		const c = tints[i % 7 === 0 ? 1 : i % 3 === 0 ? 2 : i % 5 === 0 ? 3 : 0];
+		col.set([c.r, c.g, c.b], i * 3);
+	}
+	const geo = new THREE.BufferGeometry();
+	geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+	geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+	const pollen = new THREE.Points(
+		geo,
+		new THREE.ShaderMaterial({
+			uniforms: { uTime: st.u.uTime, uScale: st.u.uScale },
+			vertexShader: /* glsl */ `
+				uniform float uTime;
+				uniform float uScale;
+				attribute vec3 color;
+				varying vec3 vColor;
+				varying float vA;
+				void main() {
+					vec3 p = position;
+					float k = fract(sin(dot(position.xy, vec2(12.9898, 78.233))) * 43758.5453);
+					p.y = mod(p.y + uTime * (0.08 + k * 0.2) + 5.0, 10.0) - 5.0;
+					p.x += sin(uTime * 0.4 + k * 30.0) * 0.25;
+					vec4 mv = modelViewMatrix * vec4(p, 1.0);
+					gl_Position = projectionMatrix * mv;
+					gl_PointSize = (2.0 + k * 4.0) * uScale * (5.0 / -mv.z);
+					vColor = color;
+					vA = (0.45 + 0.55 * sin(uTime * (1.0 + k * 2.0) + k * 40.0)) * smoothstep(5.0, 3.6, abs(p.y));
+				}
+			`,
+			fragmentShader: /* glsl */ `
+				varying vec3 vColor;
+				varying float vA;
+				void main() {
+					float d = length(gl_PointCoord - 0.5);
+					float a = smoothstep(0.5, 0.0, d);
+					gl_FragColor = vec4(vColor * a * a * vA * 2.2, 0.0);
+				}
+			`,
+			blending: THREE.AdditiveBlending,
+			depthWrite: false,
+			transparent: true,
+		}),
+	);
+	pollen.frustumCulled = false;
+	st.scene.add(pollen);
+
+	let tx = 0;
+	let ty = 0;
+	let px = 0;
+	let py = 0;
+	addEventListener('pointermove', (e) => ((tx = (e.clientX / innerWidth) * 2 - 1), (ty = (e.clientY / innerHeight) * 2 - 1)), { passive: true });
+	const dummy = new THREE.Object3D();
+	let last = 0;
+	st.loop((t) => {
+		const dt = Math.min(0.05, t - (last || t));
+		last = t;
+		const still = reduced();
+		px += (tx - px) * 0.03;
+		py += (ty - py) * 0.03;
+		st.camera.position.set(px * 0.6, -py * 0.35, 6);
+		st.camera.lookAt(0, 0, 0);
+		data.forEach((d, i) => {
+			if (!still) {
+				d.p.y += d.v * dt;
+				if (d.p.y > 4.8) d.p.y = -4.8;
+			}
+			dummy.position.set(d.p.x + Math.sin(t * 0.3 + d.ph) * 0.4, d.p.y, d.p.z);
+			dummy.rotation.set(d.r.x + t * d.w.x, d.r.y + t * d.w.y, d.r.z + t * d.w.z);
+			dummy.scale.setScalar(d.s);
+			dummy.updateMatrix();
+			petals.setMatrixAt(i, dummy.matrix);
+		});
+		petals.instanceMatrix.needsUpdate = true;
+	});
+}
+
 export function mountSpecimens(root: ParentNode = document) {
 	const canvases = root.querySelectorAll<HTMLCanvasElement>('canvas[data-specimen]:not([data-specimen-ready])');
 	if (!canvases.length) return;
@@ -330,6 +501,7 @@ export function mountSpecimens(root: ParentNode = document) {
 		c.dataset.specimenReady = '';
 		const kind = c.dataset.specimen;
 		if (kind === 'corolla') corolla(c);
+		else if (kind === 'drift') drift(c);
 		else if (kind === 'stages') stages(c);
 		else if (kind === 'footer') footer(c);
 	}

@@ -67,6 +67,9 @@ const COMPOSITE_FRAG = /* glsl */ `
 	uniform int uLensCount;
 	uniform vec4 uCursor;
 	uniform float uAscii;
+	uniform vec3 uBg;
+	uniform float uFloor;
+	uniform float uVignette;
 	uniform float uInside;
 	uniform float uAura;
 	uniform float uRays;
@@ -287,9 +290,11 @@ const COMPOSITE_FRAG = /* glsl */ `
 		col += (uTint * 0.7 + 0.3) * uFlash * 0.55;
 
 		float vig = smoothstep(1.3, 0.35, length((vUv - 0.5) * vec2(1.1, 1.0)));
-		col *= mix(0.5, 1.0, vig);
+		col *= mix(1.0 - uVignette * 0.5, 1.0, vig);
+		// Toiles opaques : le voile lointain du halo ne doit pas éclaircir le fond
+		col = max(col - uFloor, 0.0) / (1.0 - uFloor);
 		col += (hash(px + fract(uTime) * 61.0) - 0.5) * 0.026;
-		col = max(col, 0.0);
+		col = max(col, 0.0) + uBg;
 		gl_FragColor = vec4(col, max(cover, max(col.r, max(col.g, col.b))));
 	}
 `;
@@ -358,6 +363,10 @@ export function createPost(renderer: THREE.WebGLRenderer, { lowPower }: { lowPow
 			uLensCount: { value: 0 },
 			uCursor: { value: new THREE.Vector4(-1e3, -1e3, 0, 0) },
 			uAscii: { value: 0 },
+			/** Fond ajouté (toiles opaques des spécimens) et force du vignettage */
+			uBg: { value: new THREE.Color(0, 0, 0) },
+			uVignette: { value: 1 },
+			uFloor: { value: 0 },
 			uInside: { value: 0 },
 			uAura: { value: 1 },
 			uRays: { value: lowPower ? 0 : 0.9 },

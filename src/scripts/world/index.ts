@@ -77,6 +77,14 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 	let diveEnd = 1;
 	let groundTop = 0;
 	const titleBlock = $<HTMLElement>('[data-hero-title]');
+	// Chaque lettre d'un titre découpé reçoit sa place, de -1 (gauche) à 1 (droite)
+	const spread = (el: HTMLElement | null | undefined) => {
+		if (!el || el.dataset.spread !== undefined) return;
+		const ls = el.querySelectorAll<HTMLElement>('.l');
+		if (!ls.length) return;
+		el.dataset.spread = '';
+		ls.forEach((l, i) => l.style.setProperty('--o', (((i - (ls.length - 1) / 2) / ls.length) * 2).toFixed(3)));
+	};
 	const halfTan = (fov: number) => Math.tan(THREE.MathUtils.degToRad(fov / 2));
 
 	const measure = () => {
@@ -409,7 +417,8 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			// En plongeant, tout bascule en caractères, comme la galerie.
 			P.uScanAll.value = 0;
 			P.uAscii.value = reduced ? (d > 0.5 ? 1 : 0) : smoothstep(0.6, 1, d);
-			P.uAura.value = 0;
+			// Le halo de la fleur, redessiné en caractères : l'ASCII reste présent à la surface
+			P.uAura.value = 0.55 + d * 0.4;
 			P.uBloom.value = 1 + d * 0.6;
 			// Fin de plongée : les caractères s'éteignent du centre vers les bords,
 			// on tombe dans le trou ; la galerie s'allume ensuite depuis les bords
@@ -543,6 +552,17 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			dispatchEvent(new CustomEvent('hyphe:status', { detail: status }));
 		}
 		dive.style.setProperty('--t', String(inside ? 0 : smoothstep(0.35, 0.6, d) * (1 - smoothstep(0.88, 1, d))));
+		// Changement de section en typo : le titre du hero s'envole, le trait
+		// traverse, le numéro passe à 01, le titre de la galerie se resserre
+		if (!reduced) {
+			const raw = clamp01(sy / diveEnd);
+			spread(titleBlock?.querySelector('h1'));
+			spread(dive.querySelector('h2'));
+			titleBlock?.style.setProperty('--hx', smoothstep(0.03, 0.34, raw).toFixed(3));
+			dive.style.setProperty('--num', smoothstep(0.3, 0.52, raw).toFixed(3));
+			dive.style.setProperty('--tin', (inside ? 1 : smoothstep(0.34, 0.64, raw)).toFixed(3));
+			dive.style.setProperty('--tout', (inside ? 1 : smoothstep(0.86, 1, raw)).toFixed(3));
+		}
 		if (!inside) chapters.forEach((c) => c.style.setProperty('--focus', '0'));
 
 		// Lentilles (dehors) : fenêtres de verre clair et curseur
