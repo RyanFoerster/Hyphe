@@ -1,15 +1,15 @@
 // Le monde de la page d'accueil : un seul canvas fixe, piloté par le défilement.
 //
-//   hero      la roche au centre, les projets en orbite autour d'elle
-//   plongée   la caméra fonce sur la roche, qui se dissout en particules ;
+//   hero      la fleur au centre, les projets en orbite autour d'elle
+//   plongée   la caméra entre dans le cœur de la fleur, qui se défait en pollen ;
 //             l'image bascule en caractères au passage de la surface
-//   galerie   on avance dans la roche ; chaque chapitre du DOM correspond à un
+//   galerie   on avance dans la fleur ; chaque chapitre du DOM correspond à un
 //             spécimen posé dans la matière
 //   sortie    une lumière au bout, puis le pied de page recouvre tout
 
 import * as THREE from 'three';
 import { createPost } from './post';
-import { createArtefact, ROCK_SIZE } from './artefact';
+import { createArtefact, SPECIMEN_SIZE } from './artefact';
 import { createCavern } from './cavern';
 import { createOverlay, type Pt } from './overlay';
 import { clamp01, lerp, smoothstep } from './shared';
@@ -201,6 +201,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 	// ---------------------------------------------------------------- boucle
 	const tmp = new THREE.Vector3();
 	const tmp2 = new THREE.Vector3();
+	const tmp3 = new THREE.Vector3();
 	const camDir = new THREE.Vector3();
 	const tint = ACID.clone();
 	const tintTarget = new THREE.Color();
@@ -256,7 +257,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 		smooth.y += (pointer.y - smooth.y) * k * 0.6;
 		smooth.lx += (pointer.px - smooth.lx) * (reduced ? 1 : Math.min(1, k * 2.2));
 		smooth.ly += (pointer.py - smooth.ly) * (reduced ? 1 : Math.min(1, k * 2.2));
-		// La roche se recompose une fois le loader parti
+		// La fleur se recompose une fois le loader parti
 		if (readyAt < 0 && revealArmed && !document.documentElement.classList.contains('is-loading')) readyAt = now;
 		if (readyAt >= 0 && !reduced) reveal = clamp01((now - readyAt) / 2400);
 
@@ -290,8 +291,9 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			camera.far = 30;
 			camera.aspect = width / height;
 			camera.updateProjectionMatrix();
-			camera.position.set(0, lerp(0.35, baseY + 0.12, e), lerp(zHero, 1.5, Math.pow(e, 1.15)));
-			camera.lookAt(0, baseY + 0.22 * (1 - e), 0);
+			// La plongée entre dans le cœur de la fleur
+			camera.position.set(0, lerp(0.35, baseY + ext.heart.y, e), lerp(zHero, 1.5, Math.pow(e, 1.15)));
+			camera.lookAt(0, baseY + lerp(0.1, ext.heart.y, e), 0);
 			camera.updateMatrixWorld();
 
 			spinAngle += dt * 0.06 * (1 - d) * motion;
@@ -319,7 +321,8 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 				spinDrag.vel *= Math.pow(0.05, dt);
 				if (Math.abs(spinDrag.vel) < 0.02) spinDrag.vel = 0;
 			} else if (!paused && !spinDrag.on) orbitAngle += dt * 0.07 * motion;
-			const centreDepth = viewDepth(ext.artefact.position);
+			const heartW = tmp3.copy(ext.heart).applyMatrix4(ext.artefact.matrixWorld);
+			const centreDepth = viewDepth(heartW);
 			const fadeOut = 1 - smoothstep(0.06, 0.32, d);
 			const reveal2 = smoothstep(0.35, 1, reveal);
 			orbitItems.forEach((el, i) => {
@@ -352,8 +355,8 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 				points.push({ x: p.x, y: p.y, v: facing * (1 - smoothstep(0.02, 0.2, d)) });
 			});
 			const fp = project(tmp.copy(ext.flowerHead).applyMatrix4(ext.spin.matrixWorld));
-			const centre = project(ext.artefact.position);
-			focusPx = { x: centre.x, y: centre.y, r: (ROCK_SIZE / 2 / (centreDepth * halfTan(camera.fov))) * (height / 2) };
+			const centre = project(heartW);
+			focusPx = { x: centre.x, y: centre.y, r: (SPECIMEN_SIZE / 2 / (centreDepth * halfTan(camera.fov))) * (height / 2) };
 			overlayAlpha = (1 - smoothstep(0.04, 0.25, d)) * smoothstep(0.5, 1, reveal) * (0.85 + energy * 0.15);
 			const labelBox = calloutLabel?.getBoundingClientRect();
 			if (calloutLabel && labelBox?.width) {
@@ -372,12 +375,13 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			P.uFade.value = 0;
 			P.uScanAll.value = 1;
 			P.uAscii.value = reduced ? (d > 0.5 ? 1 : 0) : smoothstep(0.6, 1, d);
-			P.uAura.value = (1 - smoothstep(0.5, 0.95, d)) * reveal;
+			// Le halo de caractères reste discret : il ne doit pas couvrir le cœur de la fleur
+			P.uAura.value = (1 - smoothstep(0.5, 0.95, d)) * reveal * 0.45;
 			P.uBloom.value = 1 + d * 0.6;
 			// Fin de plongée : les caractères s'éteignent du centre vers les bords,
 			// on tombe dans le trou ; la galerie s'allume ensuite depuis les bords
 			P.uWipe.value = reduced ? 0 : smoothstep(0.8, 1, d);
-			P.uFlash.value = smoothstep(0.6, 0.85, d) * (1 - smoothstep(0.85, 0.97, d)) * 0.35;
+			P.uFlash.value = smoothstep(0.6, 0.85, d) * (1 - smoothstep(0.85, 0.97, d)) * 0.12;
 			P.uMosaic.value = narrow ? 0.08 : 0.11;
 			P.uExposure.value = 1.25;
 			P.uCell.value.set(7 * dpr * (1 + smoothstep(0.7, 1, d) * 1.4), 12 * dpr * (1 + smoothstep(0.7, 1, d) * 1.4));

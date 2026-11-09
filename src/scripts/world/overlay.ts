@@ -1,5 +1,5 @@
 // Couche d'analyse, dessinée en 2D par-dessus le rendu : boîtes de suivi qui
-// accrochent les reliefs de la roche et la fleur, grille de mesure reliée par
+// accrochent la tige et la fleur, grille de mesure reliée par
 // des points et des valeurs brutes, courbes de légende vers les étiquettes.
 
 import { rng } from './shared';
@@ -26,9 +26,9 @@ export interface OverlayFrame {
 	frames: { x: number; y: number; w: number; h: number; a: number; label: string }[];
 	/** Courbes de légende : du point vers l'étiquette */
 	callouts: { from: Pt; to: { x: number; y: number }; a: number }[];
-	/** Hyphes de la roche vers les projets en orbite */
+	/** Hyphes de la fleur vers les projets en orbite */
 	roots: { x: number; y: number; a: number; lit: boolean }[];
-	/** Curseur sur la roche : un jardin en caractères pousse sur son passage */
+	/** Curseur sur la fleur : un jardin en caractères pousse sur son passage */
 	cursor: { x: number; y: number; on: boolean };
 	motion: number;
 }
@@ -55,7 +55,7 @@ export function createOverlay(canvas: HTMLCanvasElement) {
 	for (let gx = -2; gx < 2; gx++)
 		for (let gy = -2; gy < 2; gy++) if (Math.abs(gx + 0.5) + Math.abs(gy + 0.5) < 3 || rand() > 0.6) cells.push([gx, gy]);
 
-	// Le jardin : chaque passage du curseur sur la roche plante une graine
+	// Le jardin : chaque passage du curseur sur la fleur plante une graine
 	// qui germe, monte en tige, déplie ses feuilles, fleurit puis fane.
 	type Plant = { dx: number; dy: number; born: number; len: number; lean: number; kind: number; seed: number };
 	const plants: Plant[] = [];
@@ -90,7 +90,7 @@ export function createOverlay(canvas: HTMLCanvasElement) {
 				ctx.rect(Math.round(f.focus.x + gx * c) + 0.5, Math.round(f.focus.y + gy * c) + 0.5, Math.round(c), Math.round(c));
 			}
 			ctx.stroke();
-			// Polyligne de mesure : des points de la roche, reliés, avec leurs valeurs
+			// Polyligne de mesure : des points de la tige, reliés, avec leurs valeurs
 			const chain = f.points.slice(0, 7).filter((p) => p.v > 0.5);
 			if (chain.length > 2) {
 				ctx.strokeStyle = bone(0.5);
@@ -162,7 +162,7 @@ export function createOverlay(canvas: HTMLCanvasElement) {
 			ctx.textAlign = 'left';
 		}
 
-		// Hyphes : de la roche vers chaque projet, un fil souple et ramifié
+		// Hyphes : de la fleur vers chaque projet, un fil souple et ramifié
 		if (f.focus.r > 0) {
 			f.roots.forEach((r, i) => {
 				if (r.a <= 0.02) return;

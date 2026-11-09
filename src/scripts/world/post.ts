@@ -5,7 +5,7 @@
 //   · aura : la lumière de l'artefact dessinée en caractères, en rayons
 //   · mosaïque : des tuiles qui basculent en ASCII ou en scan LED
 //   · lentilles : fenêtres de verre et curseur qui révèlent le relief chiffré
-//   · ASCII intégral : quand on plonge dans la roche, tout devient caractère
+//   · ASCII intégral : quand on plonge dans la fleur, tout devient caractère
 
 import * as THREE from 'three';
 import { FULLSCREEN_VERT, GLYPH_SLOTS, fullscreenTriangle, glyphAtlas } from './shared';
@@ -184,7 +184,7 @@ const COMPOSITE_FRAG = /* glsl */ `
 		return lens;
 	}
 
-	// Aura : le halo et les rayons de la roche, en caractères
+	// Aura : le halo et les rayons de la fleur, en caractères
 	vec3 aura(vec2 px) {
 		vec2 cell = floor(px / uCell);
 		vec2 f = fract(px / uCell);
@@ -220,7 +220,7 @@ const COMPOSITE_FRAG = /* glsl */ `
 		float disc = (1.0 - smoothstep(uCursor.z - 1.5, uCursor.z, dc)) * uCursor.w;
 		float m = max(rm, disc);
 
-		// Mosaïque : la roche apparaît tuile par tuile, puis quelques tuiles
+		// Mosaïque : la fleur apparaît tuile par tuile, puis quelques tuiles
 		// restent vivantes et basculent en ASCII ou en scan
 		vec2 tp = (px - uFocus * uRes) / uTile;
 		vec2 tid = floor(tp);
@@ -263,7 +263,7 @@ const COMPOSITE_FRAG = /* glsl */ `
 		}
 
 		// Dehors, la lentille révèle le relief chiffré
-		// Par défaut, toute la roche est vue au scan ; le curseur, les fenêtres
+		// Par défaut, toute la tige est vue au scan ; le curseur, les fenêtres
 		// et les tuiles vivantes y ouvrent des trouées sur la vraie matière
 		float scanned = clamp(s.a, 0.0, 1.0) * uScanAll * (1.0 - disc) * (1.0 - rm) * (1.0 - live);
 		float lensOut = max(scanned, m * (1.0 - uScanAll)) * (1.0 - uInside) * (1.0 - uAscii);
@@ -282,7 +282,7 @@ const COMPOSITE_FRAG = /* glsl */ `
 			cover *= keep;
 		}
 
-		// Passage dans la roche : un front de caractères. Dehors il s'éteint du
+		// Passage dans la fleur : un front de caractères. Dehors il s'éteint du
 		// centre vers les bords ; dedans, la galerie se rallume des bords au centre.
 		// Au point de bascule l'écran est noir : le changement de scène ne se voit pas.
 		if (uWipe > 0.0) {

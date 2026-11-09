@@ -1,5 +1,5 @@
 ---
-// Le hero : la roche au centre (rendue par World), le titre de part et
+// Le hero : la fleur au centre (rendue par World), le titre d'un seul bloc
 // d'autre, les projets en orbite autour d'elle.
 import Window from './os/Window.astro';
 import { coverOf, projects } from '../data/projects';
@@ -8,20 +8,30 @@ import { site } from '../data/site';
 
 <section class="hero relative h-[100svh] min-h-[620px]" data-hero aria-labelledby="hero-title">
 	<!-- Secours sans WebGL : la fleur en ASCII -->
-	<div class="fallback absolute inset-x-0 top-[24%] bottom-[30%] hidden" aria-hidden="true">
+	<div class="fallback absolute inset-x-0 top-[12%] bottom-[46%] hidden" aria-hidden="true">
 		<canvas class="mx-auto block h-full w-full max-w-md" data-ascii-deferred data-ascii-kind="flower" data-ascii-seed="9" data-ascii-size="12" data-ascii-accent="ember"></canvas>
 	</div>
 
-	<!-- Titre : la roche se loge entre les deux lignes -->
-	<h1 id="hero-title" class="titre pointer-events-none absolute inset-0 z-[3] text-center text-[clamp(2.9rem,7.6vw,9.4rem)]" data-split>
-		<span class="absolute inset-x-4 top-[15svh] block">Digital experiences,</span>
-		<span class="absolute inset-x-4 top-[72svh] block md:top-[73svh]">grown differently.</span>
-	</h1>
+	<!-- Composition centrée : la fleur occupe le haut, le titre d'un seul bloc dessous -->
+	<div class="title-block pointer-events-none absolute inset-x-4 z-[3] flex flex-col items-center text-center">
+		<p class="meta mb-5 text-mineral" data-reveal style="--reveal-delay: 300ms">
+			<span data-scramble>[ Specimen 001 ] Hyphae floralis — grown in {site.city}</span>
+		</p>
+		<h1 id="hero-title" class="titre text-[clamp(2.7rem,6.2vw,7.4rem)] leading-[0.94]" data-split>
+			<span class="block">Digital experiences,</span>
+			<span class="block">grown differently.</span>
+		</h1>
+		<a href="#work" class="scroll-cue meta pointer-events-auto mt-6 hidden items-center gap-3 text-bone/70 transition hover:text-acid sm:flex" data-reveal style="--reveal-delay: 800ms">
+			<span class="cue-line block h-px w-8 bg-bone/30" aria-hidden="true"></span>
+			<span data-scramble>Scroll to enter the flower</span>
+			<span class="cue-line block h-px w-8 bg-bone/30" aria-hidden="true"></span>
+		</a>
+	</div>
 
-	<!-- Bas de l'écran : manifeste, invitation à plonger, lentille -->
-	<div class="absolute inset-x-4 bottom-5 z-[3] flex items-end justify-between gap-6 sm:inset-x-6">
-		<div class="max-w-[19rem] space-y-3" data-reveal style="--reveal-delay: 500ms">
-			<p class="hidden text-[14px] leading-relaxed text-bone/70 md:block">
+	<!-- Coins bas : manifeste et statut à gauche, lentille à droite -->
+	<div class="pointer-events-none absolute inset-x-4 bottom-5 z-[3] flex items-end justify-between gap-6 sm:inset-x-6">
+		<div class="pointer-events-auto max-w-[17rem] space-y-3" data-reveal style="--reveal-delay: 500ms">
+			<p class="hidden text-[14px] leading-relaxed text-bone/70 lg:block">
 				We design and build websites, interfaces and interactive worlds for brands that want to be
 				<mark class="hl">felt</mark>, not just seen.
 			</p>
@@ -32,21 +42,17 @@ import { site } from '../data/site';
 				</span>
 				<span data-scramble>Open for projects — {site.city}</span>
 			</p>
+			<p class="orbit-hint meta hidden text-mineral-dim">← drag to turn the orbit →</p>
 		</div>
 
-		<a href="#work" class="scroll-cue meta group absolute bottom-0 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-bone/70 transition hover:text-acid sm:flex" data-reveal style="--reveal-delay: 800ms">
-			<span data-scramble>Scroll to enter the specimen</span>
-			<span class="cue-line block h-8 w-px bg-bone/30" aria-hidden="true"></span>
-		</a>
-
-		<div class="lens-slot hidden md:block" data-reveal style="--reveal-delay: 900ms">
-			<Window title="artefact.matter" meta="lens 01" lens draggable class="h-[150px] w-[200px] lg:h-[176px] lg:w-[236px]">
+		<div class="lens-slot pointer-events-auto hidden lg:block" data-reveal style="--reveal-delay: 900ms">
+			<Window title="specimen.matter" meta="lens 01" lens draggable class="h-[150px] w-[200px] lg:h-[160px] lg:w-[216px]">
 				<p class="meta pointer-events-none absolute bottom-2 left-2.5 text-bone/45">drag to reveal</p>
 			</Window>
 		</div>
 	</div>
 
-	<!-- Les projets, en orbite autour de la roche (positionnés par World) -->
+	<!-- Les projets, en orbite autour de la fleur (positionnés par World) -->
 	<ul class="orbit" aria-label="Selected work">
 		{
 			projects.map((p, i) => (
@@ -83,11 +89,11 @@ import { site } from '../data/site';
 		display: none;
 	}
 
-	/* Sans le monde 3D : les projets en rangée sous la roche */
+	/* Sans le monde 3D : les projets en rangée sous la fleur */
 	.orbit {
 		position: absolute;
 		inset-inline: 1rem;
-		top: 58svh;
+		top: 52svh;
 		z-index: 4;
 		display: flex;
 		flex-wrap: wrap;
@@ -184,15 +190,26 @@ import { site } from '../data/site';
 		user-select: none !important;
 	}
 
+	.title-block {
+		bottom: 7svh;
+	}
+	@media (max-width: 639px) {
+		.title-block {
+			bottom: 15svh;
+		}
+	}
 	.cue-line {
-		transform-origin: top;
 		animation: cue 2.4s var(--ease-organic) infinite;
 	}
+	.cue-line:first-child {
+		transform-origin: right;
+	}
+	.cue-line:last-child {
+		transform-origin: left;
+	}
 	@keyframes cue {
-		0% { scale: 1 0; }
-		50% { scale: 1 1; transform-origin: top; }
-		51% { transform-origin: bottom; }
-		100% { scale: 1 0; transform-origin: bottom; }
+		0%, 100% { scale: 0 1; }
+		50% { scale: 1 1; }
 	}
 </style>
 

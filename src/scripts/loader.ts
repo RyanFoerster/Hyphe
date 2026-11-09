@@ -11,9 +11,9 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 type Step = { x: number; y: number; ch: string; t: number; node: boolean };
 
 const LOG: [number, string][] = [
-	[0, 'mount   /artefact/rock.glb'],
-	[0.18, 'decode  meshopt — mineral'],
-	[0.42, 'fetch   flower_gazania'],
+	[0, 'sow     hyphae_floralis'],
+	[0.18, 'grow    stem — spiral, fibres'],
+	[0.42, 'open    petals — veil, iris'],
 	[0.66, 'compile shaders — ascii, scan'],
 	[0.86, 'carve   cavern — 05 specimens'],
 	[1, 'ready   entering the specimen'],

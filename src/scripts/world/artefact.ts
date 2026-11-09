@@ -1,17 +1,20 @@
-// L'artefact, vu de dehors : une roche scannée qui lévite, une fleur qui en
-// sort, des veines de lumière, des éclats en orbite, de la poussière.
-// Quand on plonge, la roche se dissout en particules par l'avant.
+// Le spécimen, vu de dehors : une plante qui n'existe pas. Une tige qui
+// s'enroule sur elle-même, couverte de fibres et de fleurs sauvages ; au
+// sommet, une grande fleur translucide, tramée comme un relevé et irisée
+// comme un film. Tout est généré : pas de modèle à charger.
+// Quand on plonge, la plante se défait en pollen par l'avant.
 
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { NOISE, additive, rng, smoothstep as smoothstep01 } from './shared';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { NOISE, additive, lerp, noise3, rng } from './shared';
 
-/** Orientation de départ de la roche, en radians */
-const ROCK_TURN = { x: 0, y: 0.6 };
-/** Taille de la roche (plus grande dimension), en unités du monde */
-export const ROCK_SIZE = 2.3;
+/** Taille du spécimen (diamètre de la fleur et de son orbite), en unités du monde */
+export const SPECIMEN_SIZE = 2.6;
+/** Cœur de la fleur, dans le repère du spécimen */
+const HEAD = new THREE.Vector3(0, 0.36, 0);
+/** Échelle de la plante dans la scène */
+const SCALE = 1.3;
+const STEM_BASE = -3.1;
 
 export interface ArtefactState {
 	dt: number;
@@ -21,96 +24,261 @@ export interface ArtefactState {
 	py: number;
 	/** Plongée 0 → 1 */
 	dive: number;
-	/** Lumière des veines (survol d'un projet, approche) */
+	/** Lumière de la sève (survol d'un projet, approche) */
 	energy: number;
 	motion: number;
 }
 
-// Même champ de dissolution dans la roche (fragment) et ses particules (sommet)
+// Même champ de dissolution dans la plante (fragment) et ses particules (sommet)
 const DISSOLVE = /* glsl */ `
 	float dissolveField(vec3 objP, float worldZ) {
 		float n = n3(objP * 3.0) * 0.7 + n3(objP * 9.0) * 0.3;
 		return n * 0.72 + 0.28 * (0.5 - 0.5 * clamp(worldZ / 1.2, -1.0, 1.0));
 	}
 `;
+const DISSOLVE_CUT = /* glsl */ `
+	float dField = dissolveField(vObjP, vWz) - (uDissolve * 1.15 - 0.05);
+	if (dField < 0.0) discard;
+	float burn = (1.0 - smoothstep(0.0, 0.05, dField)) * step(0.001, uDissolve);
+`;
 
-/** Pierre ramenée vers le minéral, mousse sur le dessus, base polie, veines
- *  de lumière qui pulsent dans les creux, scintillements, dissolution. */
-function enchant(material: THREE.MeshStandardMaterial, base: number, height: number, u: Record<string, THREE.IUniform>) {
-	material.onBeforeCompile = (shader) => {
-		Object.assign(shader.uniforms, u, { uBase: { value: base }, uHeight: { value: height } });
-		shader.vertexShader = shader.vertexShader
-			.replace('#include <common>', '#include <common>\nvarying vec3 vObjN;\nvarying vec3 vObjP;\nvarying float vWz;')
-			.replace(
-				'#include <worldpos_vertex>',
-				'#include <worldpos_vertex>\nvObjN = normal;\nvObjP = position;\nvWz = (modelMatrix * vec4(position, 1.0)).z;',
-			);
-		shader.fragmentShader = shader.fragmentShader
-			.replace(
-				'#include <common>',
-				`#include <common>
-				varying vec3 vObjN;
-				varying vec3 vObjP;
-				varying float vWz;
-				uniform float uBase;
-				uniform float uHeight;
+const SURFACE_VERT = /* glsl */ `
+	uniform float uTime;
+	uniform float uMotion;
+	uniform float uFlutter;
+	varying vec2 vUv;
+	varying vec3 vN;
+	varying vec3 vObjP;
+	varying vec3 vWorld;
+	varying float vWz;
+	void main() {
+		vec3 p = position;
+		// Les pétales respirent un peu, plus au bout qu'à la base
+		p += normal * sin(uTime * 1.1 + position.x * 3.0 + position.z * 2.0) * 0.012 * uv.x * uFlutter * uMotion;
+		vec4 local = vec4(p, 1.0);
+		vec3 nrm = normal;
+		#ifdef USE_INSTANCING
+			local = instanceMatrix * local;
+			nrm = mat3(instanceMatrix) * nrm;
+		#endif
+		vObjP = local.xyz;
+		vec4 w = modelMatrix * local;
+		vWorld = w.xyz;
+		vWz = w.z;
+		vN = normalize(mat3(modelMatrix) * nrm);
+		vUv = uv;
+		gl_Position = projectionMatrix * viewMatrix * w;
+	}
+`;
+
+/** La tige : des fibres serrées qui suivent sa longueur, la sève qui monte.
+ *  Opaque (alpha 1) : c'est la matière que le scan transforme en chiffres. */
+function stemMaterial(u: Record<string, THREE.IUniform>) {
+	return new THREE.ShaderMaterial({
+		uniforms: { ...u, uFlutter: { value: 0 } },
+		vertexShader: SURFACE_VERT,
+		fragmentShader: /* glsl */ `
+			uniform float uTime;
+			uniform float uEnergy;
+			uniform float uDissolve;
+			uniform vec3 uTint;
+			varying vec2 vUv;
+			varying vec3 vN;
+			varying vec3 vObjP;
+			varying vec3 vWorld;
+			varying float vWz;
+			${NOISE}
+			${DISSOLVE}
+			void main() {
+				${DISSOLVE_CUT}
+				vec3 n = normalize(vN);
+				vec3 v = normalize(cameraPosition - vWorld);
+				if (dot(n, v) < 0.0) n = -n;
+				float k = vUv.y * 70.0 + n3(vec3(vUv.x * 9.0, vUv.y * 14.0, 0.0)) * 3.0;
+				float strand = smoothstep(0.35, 1.0, 0.5 + 0.5 * sin(k * 6.2831)) * (0.55 + 0.45 * n3(vec3(vUv.x * 120.0, vUv.y * 40.0, 1.0)));
+				vec3 deep = vec3(0.01, 0.03, 0.028);
+				vec3 moss = mix(vec3(0.08, 0.15, 0.05), vec3(0.05, 0.12, 0.13), n3(vec3(vUv.x * 5.0, vUv.y * 2.0, 4.0)));
+				vec3 col = mix(deep, moss, strand);
+				vec3 L = normalize(vec3(-0.5, 0.8, 0.6));
+				float dif = max(dot(n, L), 0.0);
+				float fres = pow(1.0 - max(dot(n, v), 0.0), 3.0);
+				col *= 0.4 + dif * 1.4;
+				col += vec3(0.45, 0.85, 0.7) * fres * 0.3;
+				// La sève : des pulsations qui montent dans les fibres
+				float sap = smoothstep(0.9, 1.0, 0.5 + 0.5 * sin(vUv.x * 36.0 - uTime * 1.8 + vUv.y * 6.2831)) * strand;
+				col += mix(vec3(0.6, 1.0, 0.5), uTint, 0.6) * sap * (0.3 + uEnergy * 1.2);
+				col += uTint * burn * 2.0;
+				gl_FragColor = vec4(col, 1.0);
+			}
+		`,
+	});
+}
+
+/** Pétales et feuilles : verre tramé (la grille du relevé), nervures fines,
+ *  réseau de fibres, nappes irisées qui glissent. Lumière additive. */
+function veilMaterial(u: Record<string, THREE.IUniform>, opts: { base: THREE.Color; iris: number; flutter: number; grid: THREE.Vector2 }) {
+	return additive(
+		new THREE.ShaderMaterial({
+			uniforms: {
+				...u,
+				uBase: { value: opts.base },
+				uIris: { value: opts.iris },
+				uFlutter: { value: opts.flutter },
+				uGrid: { value: opts.grid },
+			},
+			side: THREE.DoubleSide,
+			vertexShader: SURFACE_VERT,
+			fragmentShader: /* glsl */ `
 				uniform float uTime;
 				uniform float uEnergy;
 				uniform float uDissolve;
 				uniform vec3 uTint;
+				uniform vec3 uBase;
+				uniform float uIris;
+				uniform vec2 uGrid;
+				varying vec2 vUv;
+				varying vec3 vN;
+				varying vec3 vObjP;
+				varying vec3 vWorld;
+				varying float vWz;
 				${NOISE}
-				${DISSOLVE}`,
-			)
-			.replace(
-				'#include <map_fragment>',
-				`#include <map_fragment>
-				float dField = dissolveField(vObjP, vWz) - (uDissolve * 1.15 - 0.05);
-				if (dField < 0.0) discard;
-				float burn = (1.0 - smoothstep(0.0, 0.05, dField)) * step(0.001, uDissolve);
-				float nMoss = n3(vObjP * 7.0) * 0.6 + n3(vObjP * 23.0) * 0.4;
-				float up = normalize(vObjN).y;
-				float cut = smoothstep(uBase + uHeight * 0.12, uBase + uHeight * 0.04, vObjP.y);
-				float moss = smoothstep(0.66, 0.95, up + (nMoss - 0.5) * 0.8) * (1.0 - cut);
-				float luma0 = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-				vec3 mineral = mix(vec3(luma0), diffuseColor.rgb, 0.22) * vec3(0.6, 0.64, 0.68);
-				vec3 mossCol = mix(vec3(0.014, 0.02, 0.01), vec3(0.05, 0.068, 0.024), n3(vObjP * 41.0));
-				float kv = (n3(vObjP * 1.7) * 0.75 + n3(vObjP * 6.0) * 0.25) * 16.0;
-				float cutVein = 1.0 - smoothstep(0.0, fwidth(kv) * 1.3, abs(fract(kv + 0.5) - 0.5));
-				vec3 polished = vec3(0.006, 0.009, 0.009) + cutVein * vec3(0.06, 0.085, 0.07);
-				diffuseColor.rgb = mix(mix(mineral, mossCol, moss), polished, cut);`,
-			)
-			.replace(
-				'#include <roughnessmap_fragment>',
-				'#include <roughnessmap_fragment>\nroughnessFactor = mix(mix(roughnessFactor, 1.0, moss), 0.16, cut);',
-			)
-			.replace(
-				'#include <normal_fragment_maps>',
-				'#include <normal_fragment_maps>\nnormal = normalize(mix(normal, nonPerturbedNormal, max(moss * 0.5, cut)));',
-			)
-			.replace(
-				'#include <emissivemap_fragment>',
-				`#include <emissivemap_fragment>
-				{
-					vec3 q = vObjP;
-					float r1 = 1.0 - abs(n3(q * 2.3 + vec3(0.0, uTime * 0.012, 0.0)) * 2.0 - 1.0);
-					float r2 = 1.0 - abs(n3(q * 5.3 + 7.1) * 2.0 - 1.0);
-					float vein = smoothstep(0.962, 0.994, r1) * smoothstep(0.35, 0.85, r2);
-					float cavity = 1.0 - smoothstep(0.04, 0.2, luma0);
-					float pulse = 0.5 + 0.5 * sin(q.y * 6.0 - uTime * 1.3 + n3(q * 2.0) * 6.28);
-					float glowV = vein * mix(0.3, 1.0, cavity) * (0.35 + 0.65 * pulse) * (1.0 - cut * 0.6);
-					vec3 sid = floor(q * 150.0);
-					float spark = step(0.994, h3(sid)) * pow(0.5 + 0.5 * sin(uTime * 1.7 + h3(sid + 3.0) * 40.0), 6.0);
-					float fres = pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), 3.0);
-					totalEmissiveRadiance += mix(vec3(0.75, 1.0, 0.9), uTint, 0.55 + pulse * 0.45) * glowV * (0.9 + uEnergy * 2.6)
-						+ uTint * (spark * 3.5 + burn * 6.0)
-						+ mix(vec3(0.5, 0.75, 0.8), uTint, 0.4) * fres * (0.1 + uEnergy * 0.3);
-				}`,
-			);
-	};
+				${DISSOLVE}
+				void main() {
+					${DISSOLVE_CUT}
+					vec3 n = normalize(vN);
+					vec3 v = normalize(cameraPosition - vWorld);
+					float facing = abs(dot(n, v));
+					float fres = pow(1.0 - facing, 2.2);
+					// La trame
+					vec2 g = vUv * uGrid;
+					vec2 gd = abs(fract(g - 0.5) - 0.5) / max(fwidth(g), vec2(1e-4));
+					float grid = 1.0 - clamp(min(gd.x, gd.y), 0.0, 1.0);
+					// Nervures depuis la base, réseau de fibres
+					float vk = vUv.y * 54.0 + n3(vObjP * 5.0) * 3.0;
+					float vd = abs(fract(vk) - 0.5) / max(fwidth(vk), 1e-4);
+					float vein = (1.0 - clamp(vd * 0.7, 0.0, 1.0)) * (1.0 - vUv.x * 0.55);
+					float net = smoothstep(0.88, 0.985, 1.0 - abs(n3(vObjP * 26.0) * 2.0 - 1.0));
+					// Le film irisé
+					float sheen = smoothstep(0.42, 0.78, fbm3(vObjP * 1.7 + vec3(0.0, uTime * 0.05, uTime * 0.02)));
+					vec3 film = 0.5 + 0.5 * cos(6.2831 * (vec3(0.0, 0.33, 0.67) + fres * 1.2 + fbm3(vObjP * 2.4) * 1.1 + uTime * 0.025));
+					float rim = smoothstep(0.82, 1.0, abs(vUv.y - 0.5) * 2.0) * smoothstep(0.1, 0.4, vUv.x) + smoothstep(0.94, 1.0, vUv.x);
+					vec3 col = uBase * (0.03 + fres * 0.2)
+						+ uBase * grid * 0.14
+						+ vec3(0.55, 0.95, 0.6) * vein * 0.12
+						+ vec3(0.6, 0.9, 0.75) * net * 0.07
+						+ film * sheen * (0.06 + fres * 0.3) * uIris * smoothstep(0.3, 0.75, vUv.x)
+						+ vec3(0.85, 0.92, 1.0) * rim * 0.42;
+					// Les deux faces s'additionnent et les pétales se recouvrent : on reste discret
+					// et vers le cœur ils se superposent tous : la base s'efface
+					col *= 0.42 * (0.03 + 0.97 * smoothstep(0.15, 0.72, vUv.x));
+					col += uTint * (burn * 0.5 + uEnergy * 0.02);
+					gl_FragColor = vec4(col, 0.0);
+				}
+			`,
+		}),
+	);
 }
 
-/** Particules de dissolution : un point par sommet, détaché quand la roche brûle */
-function rockDust(geo: THREE.BufferGeometry, count: number, u: Record<string, THREE.IUniform>) {
+/** Traits fins (fibres de la tige, tiges des fleurs, étamines), au vent */
+function strandMaterial(u: Record<string, THREE.IUniform>) {
+	return additive(
+		new THREE.ShaderMaterial({
+			uniforms: u,
+			vertexShader: /* glsl */ `
+				attribute vec3 color;
+				attribute vec2 sway;
+				uniform float uTime;
+				uniform float uMotion;
+				uniform float uDissolve;
+				varying vec3 vCol;
+				varying float vA;
+				${NOISE}
+				${DISSOLVE}
+				void main() {
+					vec3 p = position;
+					float s = sway.x;
+					p += vec3(sin(uTime * 1.3 + sway.y * 20.0), 0.0, cos(uTime * 1.1 + sway.y * 13.0)) * 0.014 * s * uMotion;
+					vec4 w = modelMatrix * vec4(p, 1.0);
+					float field = dissolveField(position, w.z) - (uDissolve * 1.15 - 0.05);
+					vA = smoothstep(0.0, 0.04, field);
+					vCol = color;
+					gl_Position = projectionMatrix * viewMatrix * w;
+				}
+			`,
+			fragmentShader: /* glsl */ `
+				varying vec3 vCol;
+				varying float vA;
+				void main() {
+					gl_FragColor = vec4(vCol * vA, 0.0);
+				}
+			`,
+		}),
+	);
+}
+
+/** Fleurs sauvages, épis, capitules, pollen : des points dessinés en forme */
+function bloomMaterial(u: Record<string, THREE.IUniform>) {
+	return additive(
+		new THREE.ShaderMaterial({
+			uniforms: u,
+			vertexShader: /* glsl */ `
+				attribute vec3 color;
+				attribute vec4 info; // taille, forme, balancement, graine
+				uniform float uTime;
+				uniform float uMotion;
+				uniform float uScale;
+				uniform float uFocusDist;
+				uniform float uDissolve;
+				varying vec3 vCol;
+				varying float vA;
+				varying float vKind;
+				varying float vSpin;
+				${NOISE}
+				${DISSOLVE}
+				void main() {
+					vec3 p = position;
+					p += vec3(sin(uTime * 1.3 + info.w * 20.0), 0.0, cos(uTime * 1.1 + info.w * 13.0)) * 0.014 * info.z * uMotion;
+					vec4 w = modelMatrix * vec4(p, 1.0);
+					vec4 mv = viewMatrix * w;
+					gl_Position = projectionMatrix * mv;
+					float coc = abs(-mv.z - uFocusDist);
+					gl_PointSize = (info.x + coc * 3.0) * uScale / max(-mv.z, 0.2);
+					float field = dissolveField(position, w.z) - (uDissolve * 1.15 - 0.05);
+					vA = smoothstep(0.0, 0.04, field) / (1.0 + coc * coc * 1.5);
+					vCol = color;
+					vKind = info.y;
+					vSpin = info.w * 6.2831;
+				}
+			`,
+			fragmentShader: /* glsl */ `
+				varying vec3 vCol;
+				varying float vA;
+				varying float vKind;
+				varying float vSpin;
+				void main() {
+					vec2 q = gl_PointCoord - 0.5;
+					float r = length(q) * 2.0;
+					float a = atan(q.y, q.x) + vSpin;
+					float shape;
+					vec3 c = vCol;
+					if (vKind < 0.5) {
+						shape = smoothstep(1.0, 0.55, r);
+					} else {
+						float pet = 0.5 + 0.5 * pow(abs(cos(a * 2.5)), 0.6);
+						shape = smoothstep(pet, pet - 0.22, r);
+						float heart = smoothstep(0.32, 0.12, r);
+						c = mix(c, vec3(1.0, 0.82, 0.35), heart);
+						shape = max(shape, heart);
+					}
+					gl_FragColor = vec4(c * shape * vA, 0.0);
+				}
+			`,
+		}),
+	);
+}
+
+/** Particules de dissolution : un point par sommet, détaché quand la plante se défait */
+function specimenDust(geo: THREE.BufferGeometry, count: number, u: Record<string, THREE.IUniform>) {
 	const src = geo.attributes.position as THREE.BufferAttribute;
 	const nor = geo.attributes.normal as THREE.BufferAttribute;
 	const pos = new Float32Array(count * 3);
@@ -161,8 +329,8 @@ function rockDust(geo: THREE.BufferGeometry, count: number, u: Record<string, TH
 				void main() {
 					float d = length(gl_PointCoord - 0.5);
 					float a = smoothstep(0.5, 0.15, d) * vAlpha;
-					vec3 c = mix(vec3(0.85, 0.88, 0.82), uTint, step(0.6, vSeed)) * 1.6;
-					gl_FragColor = vec4(c * a, 0.0);
+					vec3 c = vSeed < 0.25 ? vec3(0.62, 0.5, 0.95) : vSeed < 0.4 ? vec3(1.0, 0.55, 0.2) : mix(vec3(0.75, 0.95, 0.7), uTint, step(0.7, vSeed));
+					gl_FragColor = vec4(c * a * 1.6, 0.0);
 				}
 			`,
 		}),
@@ -170,6 +338,162 @@ function rockDust(geo: THREE.BufferGeometry, count: number, u: Record<string, TH
 	const points = new THREE.Points(g, mat);
 	points.frustumCulled = false;
 	return points;
+}
+
+/** La tige : une spirale qui s'élève et se resserre sous la fleur */
+function stemCurve() {
+	const pts: THREE.Vector3[] = [];
+	for (let i = 0; i <= 48; i++) {
+		const t = i / 48;
+		const env = Math.pow(Math.sin(Math.PI * t), 0.85) * (1 - t * 0.3);
+		const a = t * Math.PI * 2.6 + 0.5;
+		pts.push(new THREE.Vector3(Math.cos(a) * 0.6 * env, lerp(STEM_BASE, HEAD.y - 0.1, t), Math.sin(a) * 0.5 * env));
+	}
+	return new THREE.CatmullRomCurve3(pts);
+}
+const stemRadius = (t: number) => 0.035 + 0.13 * Math.pow(1 - t, 0.7) * (1 + 0.12 * Math.sin(t * 40));
+
+function taperedTube(curve: THREE.Curve<THREE.Vector3>, frames: ReturnType<THREE.Curve<THREE.Vector3>['computeFrenetFrames']>, segs: number, radial: number) {
+	const pos: number[] = [];
+	const nor: number[] = [];
+	const uv: number[] = [];
+	const idx: number[] = [];
+	const p = new THREE.Vector3();
+	const n = new THREE.Vector3();
+	for (let i = 0; i <= segs; i++) {
+		const t = i / segs;
+		curve.getPointAt(t, p);
+		const r = stemRadius(t);
+		for (let j = 0; j <= radial; j++) {
+			const a = (j / radial) * Math.PI * 2;
+			n.copy(frames.normals[i]).multiplyScalar(Math.cos(a)).addScaledVector(frames.binormals[i], Math.sin(a));
+			pos.push(p.x + n.x * r, p.y + n.y * r, p.z + n.z * r);
+			nor.push(n.x, n.y, n.z);
+			uv.push(t, j / radial);
+		}
+	}
+	for (let i = 0; i < segs; i++)
+		for (let j = 0; j < radial; j++) {
+			const a = i * (radial + 1) + j;
+			const b = a + radial + 1;
+			idx.push(a, b, a + 1, b, b + 1, a + 1);
+		}
+	const g = new THREE.BufferGeometry();
+	g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+	g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+	g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+	g.setIndex(idx);
+	return g;
+}
+
+interface PetalSpec {
+	len: number;
+	width: number;
+	/** Angle au-dessus de l'horizontale, à la base puis au bout (radians) */
+	base: number;
+	tip: number;
+	cup: number;
+	ruffle: number;
+	twist: number;
+	seed: number;
+}
+
+/** Un pétale (ou une feuille) : il part selon +x, se relève puis retombe,
+ *  se creuse en gouttière, ondule sur ses bords. uv = (longueur, largeur). */
+function petalGeometry(p: PetalSpec, nu = 44, nv = 18) {
+	const spine: [number, number, number][] = [];
+	let x = 0;
+	let y = 0;
+	for (let i = 0; i <= nu; i++) {
+		const u = i / nu;
+		const th = lerp(p.base, p.tip, Math.pow(u, 1.25));
+		if (i > 0) {
+			x += (Math.cos(th) * p.len) / nu;
+			y += (Math.sin(th) * p.len) / nu;
+		}
+		spine.push([x, y, th]);
+	}
+	const pos: number[] = [];
+	const uv: number[] = [];
+	const idx: number[] = [];
+	for (let i = 0; i <= nu; i++) {
+		const u = i / nu;
+		const [sx, sy, th] = spine[i];
+		let w = p.width * Math.pow(Math.sin(Math.PI * Math.pow(u, 0.72)), 0.75) + 0.05 * p.width * (1 - u);
+		w *= 1 + 0.07 * Math.sin(u * 23 + p.seed * 5);
+		const nx = -Math.sin(th);
+		const ny = Math.cos(th);
+		for (let j = 0; j <= nv; j++) {
+			const v = (j / nv) * 2 - 1;
+			const s = v * w * 0.5;
+			const tw = p.twist * u * v;
+			const lift = p.cup * v * v * w + s * Math.sin(tw);
+			const rf = p.ruffle * (noise3(u * 6 + p.seed * 3, v * 2.6, p.seed) * 2 - 1) * Math.pow(Math.abs(v), 1.4) * Math.min(1, u * 1.6);
+			pos.push(sx + nx * (lift + rf), sy + ny * (lift + rf), s * Math.cos(tw));
+			uv.push(u, j / nv);
+		}
+	}
+	for (let i = 0; i < nu; i++)
+		for (let j = 0; j < nv; j++) {
+			const a = i * (nv + 1) + j;
+			const b = a + nv + 1;
+			idx.push(a, b, a + 1, b, b + 1, a + 1);
+		}
+	const g = new THREE.BufferGeometry();
+	g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+	g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+	g.setIndex(idx);
+	g.computeVertexNormals();
+	return g;
+}
+
+/** Tampon de traits (paires de points) avec couleur et balancement */
+class Strands {
+	pos: number[] = [];
+	col: number[] = [];
+	sway: number[] = [];
+	/** Ajoute une polyligne */
+	line(pts: THREE.Vector3[], colA: THREE.Color, colB: THREE.Color, seed: number, swayFrom = 0) {
+		for (let i = 0; i < pts.length - 1; i++) {
+			for (const k of [i, i + 1]) {
+				const t = k / (pts.length - 1);
+				this.pos.push(pts[k].x, pts[k].y, pts[k].z);
+				const c = colA.clone().lerp(colB, t);
+				this.col.push(c.r, c.g, c.b);
+				this.sway.push(Math.max(0, t - swayFrom) / Math.max(0.001, 1 - swayFrom), seed);
+			}
+		}
+	}
+	build(u: Record<string, THREE.IUniform>) {
+		const g = new THREE.BufferGeometry();
+		g.setAttribute('position', new THREE.Float32BufferAttribute(this.pos, 3));
+		g.setAttribute('color', new THREE.Float32BufferAttribute(this.col, 3));
+		g.setAttribute('sway', new THREE.Float32BufferAttribute(this.sway, 2));
+		const l = new THREE.LineSegments(g, strandMaterial(u));
+		l.frustumCulled = false;
+		return l;
+	}
+}
+
+/** Tampon de points fleuris */
+class Blooms {
+	pos: number[] = [];
+	col: number[] = [];
+	info: number[] = [];
+	add(p: THREE.Vector3, c: THREE.Color, size: number, kind: number, sway: number, seed: number) {
+		this.pos.push(p.x, p.y, p.z);
+		this.col.push(c.r, c.g, c.b);
+		this.info.push(size, kind, sway, seed);
+	}
+	build(u: Record<string, THREE.IUniform>) {
+		const g = new THREE.BufferGeometry();
+		g.setAttribute('position', new THREE.Float32BufferAttribute(this.pos, 3));
+		g.setAttribute('color', new THREE.Float32BufferAttribute(this.col, 3));
+		g.setAttribute('info', new THREE.Float32BufferAttribute(this.info, 4));
+		const pts = new THREE.Points(g, bloomMaterial(u));
+		pts.frustumCulled = false;
+		return pts;
+	}
 }
 
 /** Poussière de la fleur : du pollen qui se détache et dérive (braise) */
@@ -336,13 +660,18 @@ export async function createArtefact(opts: {
 	lowPower: boolean;
 	onProgress?(fraction: number): void;
 }) {
-	const { renderer, lowPower } = opts;
+	const { lowPower } = opts;
 	const scene = new THREE.Scene();
-
-	const pmrem = new THREE.PMREMGenerator(renderer);
-	scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-	scene.environmentIntensity = 0.3;
-	pmrem.dispose();
+	// Rendre la main entre deux étapes de croissance, pour que le loader respire
+	// (par message plutôt qu'à l'image : ça avance aussi dans un onglet caché)
+	const step = async (f: number) => {
+		opts.onProgress?.(f);
+		await new Promise((r) => {
+			const c = new MessageChannel();
+			c.port1.onmessage = () => r(null);
+			c.port2.postMessage(0);
+		});
+	};
 
 	const u = {
 		uTime: { value: 0 },
@@ -352,214 +681,249 @@ export async function createArtefact(opts: {
 		uScale: { value: 1 },
 		uFocusDist: { value: 7.4 },
 		uRing: { value: 1 },
+		uMotion: { value: 1 },
 	};
-
-	// Lumières : clé froide comme en studio macro, contre-jours, lueur sous la roche
-	const key = new THREE.DirectionalLight(0xf4f1ea, 2.0);
-	// La fleur a sa propre lumière de studio, comme en macro
-	const spot = new THREE.SpotLight(0xfff4e6, 9, 6, 0.32, 0.6, 1.5);
-	spot.position.set(-0.6, 3.6, 2.4);
-	key.position.set(-3, 4.5, 3);
-	key.castShadow = !lowPower;
-	key.shadow.mapSize.set(1024, 1024);
-	key.shadow.camera.left = key.shadow.camera.bottom = -2;
-	key.shadow.camera.right = key.shadow.camera.top = 2;
-	key.shadow.bias = -0.0004;
-	key.shadow.normalBias = 0.02;
-	const rim = new THREE.DirectionalLight(0xb8f0ff, 4.2);
-	rim.position.set(3.2, 1.8, -4);
-	const rim2 = new THREE.DirectionalLight(0xd7ffb0, 2.2);
-	rim2.position.set(-3.5, 0.5, -3);
-	const hemi = new THREE.HemisphereLight(0x2a3a3c, 0x040506, 0.8);
-	const cursorLight = new THREE.PointLight(0xeaffef, 5, 7, 2);
-	const under = new THREE.PointLight(0x9ef0e0, 3, 5, 2);
-	under.position.set(0, -1.9, 0.6);
-	scene.add(key, rim, rim2, hemi, cursorLight, under, spot, spot.target);
 
 	const artefact = new THREE.Group();
 	const spin = new THREE.Group();
+	spin.scale.setScalar(SCALE);
 	artefact.add(spin);
 	scene.add(artefact);
-
-	// Chargement des deux scans (meshopt)
-	const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-	const loaded = [0, 0];
-	const totals = [1.5e6, 0.2e6];
-	const track = (i: number) => (e: ProgressEvent) => {
-		loaded[i] = e.loaded;
-		if (e.lengthComputable) totals[i] = e.total;
-		opts.onProgress?.(Math.min(1, (loaded[0] + loaded[1]) / (totals[0] + totals[1])));
-	};
-	const [rockGltf, flowerGltf] = await Promise.all([
-		loader.loadAsync('/artefact/rock.glb', track(0)),
-		loader.loadAsync('/artefact/flower.glb', track(1)),
-	]);
-
-	// Roche : orientation naturelle du scan, la face coupée au sol reste dessous.
-	let rock!: THREE.Mesh;
-	rockGltf.scene.traverse((o) => {
-		if ((o as THREE.Mesh).isMesh && !rock) rock = o as THREE.Mesh;
-	});
-	const geo = rock.geometry;
-	// Les sommets arrivent quantifiés (entiers normalisés entre -1 et 1) : on les
-	// repasse en flottants, sinon toute transformation écrête la géométrie.
-	for (const name of Object.keys(geo.attributes)) {
-		const attr = geo.attributes[name] as THREE.BufferAttribute;
-		if (attr.array instanceof Float32Array) continue;
-		const out = new Float32Array(attr.count * attr.itemSize);
-		for (let i = 0; i < attr.count; i++)
-			for (let k = 0; k < attr.itemSize; k++) out[i * attr.itemSize + k] = attr.getComponent(i, k);
-		geo.setAttribute(name, new THREE.BufferAttribute(out, attr.itemSize));
-	}
-	rock.updateWorldMatrix(true, false);
-	geo.applyMatrix4(rock.matrixWorld);
-	geo.rotateX(ROCK_TURN.x);
-	geo.rotateY(ROCK_TURN.y);
-	geo.computeBoundingBox();
-	const size = geo.boundingBox!.getSize(new THREE.Vector3());
-	const centre = geo.boundingBox!.getCenter(new THREE.Vector3());
-	geo.translate(-centre.x, -centre.y, -centre.z);
-	const scale = ROCK_SIZE / Math.max(size.x, size.y, size.z);
-	geo.scale(scale, scale, scale);
-	geo.computeBoundingBox();
-	const bb = geo.boundingBox!;
-	const rockMat = rock.material as THREE.MeshStandardMaterial;
-	rockMat.side = THREE.FrontSide;
-	enchant(rockMat, bb.min.y, bb.max.y - bb.min.y, u);
-	const rockMesh = new THREE.Mesh(geo, rockMat);
-	rockMesh.castShadow = rockMesh.receiveShadow = true;
-	spin.add(rockMesh);
-	const triangles = Math.round((geo.index ? geo.index.count : geo.attributes.position.count) / 3);
-
-	// Fleur : posée au point le plus haut du plateau, près du centre
-	const ray = new THREE.Raycaster();
-	let top = new THREE.Vector3(0, bb.max.y, 0);
-	let best = -Infinity;
-	for (let i = 0; i < 25; i++) {
-		ray.set(new THREE.Vector3(((i % 5) - 2) * 0.09, 5, (Math.floor(i / 5) - 2) * 0.09), new THREE.Vector3(0, -1, 0));
-		const hit = ray.intersectObject(rockMesh)[0];
-		if (hit && hit.point.y > best) {
-			best = hit.point.y;
-			top = hit.point;
-		}
-	}
-	const flower = flowerGltf.scene;
-	flower.scale.setScalar(4.1);
-	flower.position.copy(top).add(new THREE.Vector3(0, -0.015, 0));
-	flower.traverse((o) => {
-		const mesh = o as THREE.Mesh;
-		if (!mesh.isMesh) return;
-		mesh.castShadow = true;
-		const m = mesh.material as THREE.MeshStandardMaterial;
-		m.envMapIntensity = 0.8;
-		// Le cœur de la fleur luit doucement, comme éclairé de l'intérieur
-		m.emissive = new THREE.Color(0xf07a2a);
-		m.emissiveIntensity = 0.05;
-	});
-	spin.add(flower);
-	spin.updateMatrixWorld(true);
-	const flowerBox = new THREE.Box3().setFromObject(flower);
-	const flowerHead = new THREE.Vector3(top.x, flowerBox.max.y - 0.02, top.z);
-	const flowerLight = new THREE.PointLight(0xff8a3a, 1.2, 1.4, 2);
-	flowerLight.position.copy(flowerHead).add(new THREE.Vector3(0, 0.05, 0.12));
-	spin.add(flowerLight);
-	spot.target.position.copy(flowerHead);
-
-	// Points d'ancrage pour l'analyse (boîtes de suivi) : sommets de la roche
-	// bien répartis, et des points de la fleur
 	const rand = rng(31);
-	const rp = geo.attributes.position as THREE.BufferAttribute;
-	const rn = geo.attributes.normal as THREE.BufferAttribute;
-	const anchors: { p: THREE.Vector3; n: THREE.Vector3; kind: 'rock' | 'flower' }[] = [];
-	for (let i = 0; i < 46; i++) {
-		const k = Math.floor(rand() * rp.count);
-		anchors.push({
-			p: new THREE.Vector3().fromBufferAttribute(rp, k),
-			n: new THREE.Vector3().fromBufferAttribute(rn, k),
-			kind: 'rock',
-		});
+	const C = (hex: number) => new THREE.Color(hex);
+
+	// ---------------------------------------------------------------- tige
+	await step(0.08);
+	const curve = stemCurve();
+	const SEGS = lowPower ? 160 : 260;
+	const frames = curve.computeFrenetFrames(SEGS, false);
+	const stemGeo = taperedTube(curve, frames, SEGS, lowPower ? 14 : 22);
+	const stem = new THREE.Mesh(stemGeo, stemMaterial(u));
+	spin.add(stem);
+	const at = (t: number) => {
+		const i = Math.round(t * SEGS);
+		return { p: curve.getPointAt(t), n: frames.normals[i], b: frames.binormals[i], tg: frames.tangents[i], r: stemRadius(t) };
+	};
+	const around = (f: ReturnType<typeof at>, a: number) => f.n.clone().multiplyScalar(Math.cos(a)).addScaledVector(f.b, Math.sin(a));
+
+	// Fibres : une fourrure d'herbes fines couchée le long de la tige
+	await step(0.22);
+	const strands = new Strands();
+	const furCount = lowPower ? 4200 : 9000;
+	const greens = [C(0x183a1c), C(0x2f5a24), C(0x1d4744), C(0x47702c)];
+	const tmp = new THREE.Vector3();
+	for (let i = 0; i < furCount; i++) {
+		const t = Math.pow(rand(), 0.85) * 0.97;
+		const f = at(t);
+		const out = around(f, rand() * Math.PI * 2);
+		const root = f.p.clone().addScaledVector(out, f.r * 0.92);
+		const len = (0.05 + rand() * 0.13) * (1.25 - t * 0.6);
+		const dir = f.tg.clone().multiplyScalar(0.85).addScaledVector(out, 0.35 + rand() * 0.35).add(tmp.set(rand() - 0.5, rand() - 0.5, rand() - 0.5).multiplyScalar(0.35)).normalize();
+		const mid = root.clone().addScaledVector(dir, len * 0.5).addScaledVector(out, len * 0.1);
+		const tip = root.clone().addScaledVector(dir, len).addScaledVector(out, len * 0.18);
+		const base = greens[Math.floor(rand() * greens.length)].clone().multiplyScalar(0.45);
+		strands.line([root, mid, tip], base, base.clone().multiplyScalar(2.2).lerp(C(0x9fd08a), 0.15), rand());
 	}
-	const flowerPts: THREE.Vector3[] = [];
-	flower.traverse((o) => {
-		const mesh = o as THREE.Mesh;
-		if (!mesh.isMesh) return;
-		const fp = mesh.geometry.attributes.position as THREE.BufferAttribute;
-		mesh.updateWorldMatrix(true, false);
-		const toSpin = new THREE.Matrix4().copy(spin.matrixWorld).invert().multiply(mesh.matrixWorld);
-		for (let i = 0; i < fp.count; i += Math.max(1, Math.floor(fp.count / 600))) {
-			flowerPts.push(new THREE.Vector3().fromBufferAttribute(fp, i).applyMatrix4(toSpin));
+
+	// Fleurs sauvages le long de la spirale : épis violets, petites fleurs, capitules
+	await step(0.36);
+	const blooms = new Blooms();
+	const lavender = [C(0x7a5ce0), C(0x9a7cf0), C(0x5c4ac0), C(0xb39af5)];
+	const smalls = [C(0xf07a2a), C(0xf2e6d0), C(0xe7a0c0), C(0xe9d27a)];
+	const wildCount = lowPower ? 150 : 300;
+	const up = new THREE.Vector3(0, 1, 0);
+	for (let i = 0, tries = 0; i < wildCount && tries < wildCount * 6; tries++) {
+		const t = 0.04 + rand() * 0.9;
+		const f = at(t);
+		const out = around(f, rand() * Math.PI * 2);
+		if (out.y < -0.25) continue;
+		i++;
+		const root = f.p.clone().addScaledVector(out, f.r);
+		const h = 0.08 + rand() * 0.26;
+		const dir = out.clone().multiplyScalar(0.55).addScaledVector(up, 0.85).add(tmp.set(rand() - 0.5, 0, rand() - 0.5).multiplyScalar(0.5)).normalize();
+		const tip = root.clone().addScaledVector(dir, h);
+		const mid = root.clone().addScaledVector(dir, h * 0.5).addScaledVector(out, h * 0.12);
+		const seed = rand();
+		strands.line([root, mid, tip], C(0x1e3a1a), C(0x5d7a3a), seed);
+		const kind = rand();
+		if (kind < 0.42) {
+			// Épi : des grains serrés qui montent
+			const c = lavender[Math.floor(rand() * lavender.length)];
+			const n = 5 + Math.floor(rand() * 7);
+			for (let k = 0; k < n; k++) {
+				const q = tip.clone().addScaledVector(dir, k * 0.016).add(tmp.set(rand() - 0.5, 0, rand() - 0.5).multiplyScalar(0.018));
+				blooms.add(q, c.clone().multiplyScalar(0.9 + rand() * 0.6), 13 + rand() * 9 - k * 0.6, 0, 1, seed);
+			}
+		} else if (kind < 0.78) {
+			blooms.add(tip, smalls[Math.floor(rand() * smalls.length)].clone().multiplyScalar(0.9 + rand() * 0.5), 30 + rand() * 30, 1, 1, seed);
+		} else {
+			blooms.add(tip, C(0x5a3a22).multiplyScalar(1.4), 18 + rand() * 12, 0, 1, seed);
+		}
+	}
+
+	// ---------------------------------------------------------------- fleur
+	await step(0.5);
+	const headTilt = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0.22, 0, -0.1));
+	const headAt = new THREE.Matrix4().makeTranslation(HEAD.x, HEAD.y, HEAD.z).multiply(headTilt);
+	const rings: { n: number; spec: Omit<PetalSpec, 'seed'>; off: number }[] = [
+		{ n: 6, off: 0, spec: { len: 1.22, width: 0.82, base: 0.5, tip: -0.6, cup: 0.2, ruffle: 0.11, twist: 0.4 } },
+		{ n: 5, off: 0.5, spec: { len: 0.9, width: 0.7, base: 0.95, tip: -0.15, cup: 0.24, ruffle: 0.08, twist: 0.3 } },
+		{ n: 4, off: 0.2, spec: { len: 0.48, width: 0.5, base: 1.3, tip: 0.5, cup: 0.2, ruffle: 0.05, twist: 0.2 } },
+	];
+	const petalGeos: THREE.BufferGeometry[] = [];
+	const tips: THREE.Vector3[] = [];
+	rings.forEach((ring, ri) => {
+		for (let k = 0; k < ring.n; k++) {
+			const phi = ((k + ring.off) / ring.n) * Math.PI * 2 + (rand() - 0.5) * 0.25;
+			const spec = { ...ring.spec, len: ring.spec.len * (0.9 + rand() * 0.2), seed: ri * 10 + k + rand() };
+			const g = petalGeometry(spec, lowPower ? 32 : 44, lowPower ? 14 : 18);
+			const m = new THREE.Matrix4()
+				.copy(headAt)
+				.multiply(new THREE.Matrix4().makeRotationY(-phi))
+				.multiply(new THREE.Matrix4().makeTranslation(0.06, 0, 0));
+			g.applyMatrix4(m);
+			petalGeos.push(g);
+			if (ri < 2) {
+				const pa = g.attributes.position as THREE.BufferAttribute;
+				const nv = (lowPower ? 14 : 18) + 1;
+				tips.push(new THREE.Vector3().fromBufferAttribute(pa, pa.count - Math.ceil(nv / 2)));
+			}
 		}
 	});
-	const upper = flowerPts.filter((p) => p.y > flowerHead.y - 0.18);
-	for (let i = 0; i < 14 && upper.length; i++) {
-		anchors.push({ p: upper[Math.floor(rand() * upper.length)].clone(), n: new THREE.Vector3(0, 1, 0), kind: 'flower' });
+	const petals = new THREE.Mesh(
+		mergeGeometries(petalGeos),
+		veilMaterial(u, { base: C(0x9ab4f0), iris: 1, flutter: 1, grid: new THREE.Vector2(26, 14) }),
+	);
+	petals.frustumCulled = false;
+	spin.add(petals);
+
+	// Feuilles : longues lames qui partent de la tige et retombent
+	const leafGeos: THREE.BufferGeometry[] = [];
+	[0.16, 0.3, 0.47].forEach((t, k) => {
+		const f = at(t);
+		const out = around(f, k * 2.2 + 0.6);
+		out.y = 0;
+		out.normalize();
+		const g = petalGeometry({ len: 1.25 - k * 0.2, width: 0.3, base: 0.75, tip: -0.55, cup: 0.1, ruffle: 0.035, twist: 0.8, seed: 40 + k }, 40, 8);
+		const yaw = Math.atan2(-out.z, out.x);
+		g.applyMatrix4(new THREE.Matrix4().makeTranslation(f.p.x, f.p.y, f.p.z).multiply(new THREE.Matrix4().makeRotationY(yaw)));
+		leafGeos.push(g);
+	});
+	const leaves = new THREE.Mesh(
+		mergeGeometries(leafGeos),
+		veilMaterial(u, { base: C(0x6fcf8a), iris: 0.45, flutter: 0.6, grid: new THREE.Vector2(30, 6) }),
+	);
+	leaves.frustumCulled = false;
+	spin.add(leaves);
+
+	// Cœur : étamines qui jaillissent, anthères braise et acide, pollen en dôme
+	await step(0.66);
+	const centre = new THREE.Vector3(0, 0.02, 0).applyMatrix4(headAt);
+	const axis = new THREE.Vector3(0, 1, 0).applyMatrix4(headTilt).normalize();
+	const anthers: THREE.Vector3[] = [];
+	for (let k = 0; k < (lowPower ? 34 : 56); k++) {
+		const phi = rand() * Math.PI * 2;
+		const r0 = 0.03 + rand() * 0.07;
+		const h = 0.25 + rand() * 0.32;
+		const reach = 0.12 + rand() * 0.28;
+		const side = new THREE.Vector3(Math.cos(phi), 0, Math.sin(phi)).applyMatrix4(headTilt);
+		const pts: THREE.Vector3[] = [];
+		for (let s = 0; s <= 6; s++) {
+			const q = s / 6;
+			pts.push(centre.clone().addScaledVector(side, r0 + reach * q * q).addScaledVector(axis, h * Math.sin(q * 1.35)));
+		}
+		strands.line(pts, C(0x1a2418).multiplyScalar(0.6), C(0xd8e6c8).multiplyScalar(0.45), rand(), 0.3);
+		const tip = pts[pts.length - 1];
+		anthers.push(tip);
+		blooms.add(tip, rand() > 0.35 ? C(0xff8a3a) : C(0xc8f53c), 12 + rand() * 9, 0, 1, rand());
+	}
+	for (let k = 0; k < (lowPower ? 380 : 800); k++) {
+		const a = rand() * Math.PI * 2;
+		const r = Math.sqrt(rand()) * 0.16;
+		const side = new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r).applyMatrix4(headTilt);
+		const q = centre.clone().add(side).addScaledVector(axis, 0.07 * (1 - (r / 0.16) ** 2) + rand() * 0.02);
+		blooms.add(q, C(0xd4e07a).lerp(C(0x8fbf4a), rand()).multiplyScalar(0.25 + rand() * 0.25), 4 + rand() * 4, 0, 0.2, rand());
 	}
 
-	// Poussières
-	spin.add(rockDust(geo, lowPower ? 5000 : 14000, u));
-	if (upper.length) spin.add(pollen(upper, lowPower ? 140 : 320, u));
-	const spore = spores(lowPower ? 120 : 260, u);
-	scene.add(spore);
+	spin.add(strands.build(u), blooms.build(u));
+	const flowerHead = centre.clone().addScaledVector(axis, 0.35);
 
-	// Orbite : anneau incliné, éclats de pierre qui tournent dessus
+	// ---------------------------------------------------------------- poussières
+	await step(0.8);
+	const dustSrc = mergeGeometries([stemGeo, petals.geometry, leaves.geometry].map((g) => {
+		const c = new THREE.BufferGeometry();
+		c.setAttribute('position', g.attributes.position);
+		c.setAttribute('normal', g.attributes.normal);
+		return c;
+	}));
+	spin.add(specimenDust(dustSrc, lowPower ? 5000 : 14000, u));
+	spin.add(pollen([...anthers, ...tips], lowPower ? 140 : 320, u));
+	scene.add(spores(lowPower ? 120 : 260, u));
+
+	// Points d'ancrage pour l'analyse (boîtes de suivi) : la tige et la fleur
+	const anchors: { p: THREE.Vector3; n: THREE.Vector3; kind: 'stem' | 'flower' }[] = [];
+	for (let i = 0; i < 30; i++) {
+		const f = at(0.42 + (i / 30) * 0.55);
+		const n = around(f, rand() * Math.PI * 2);
+		anchors.push({ p: f.p.clone().addScaledVector(n, f.r), n, kind: 'stem' });
+	}
+	for (let i = 0; i < 18; i++) {
+		const src = i % 2 ? tips : anthers;
+		anchors.push({ p: src[Math.floor(rand() * src.length)].clone(), n: new THREE.Vector3(0, 1, 0), kind: 'flower' });
+	}
+
+	// ---------------------------------------------------------------- orbite
+	await step(0.92);
 	const orbit = new THREE.Group();
 	orbit.rotation.x = 0.22;
+	orbit.position.y = HEAD.y * SCALE - 0.12;
 	artefact.add(orbit);
 	const ring = { rx: 2.55, rz: 1.7 };
-	const ringMesh = orbitRing(ring.rx, ring.rz, u);
-	orbit.add(ringMesh);
+	orbit.add(orbitRing(ring.rx, ring.rz, u));
 
-	const shardCount = lowPower ? 14 : 26;
-	const shardGeo = new THREE.IcosahedronGeometry(1, 0);
-	const sp = shardGeo.attributes.position as THREE.BufferAttribute;
-	for (let i = 0; i < sp.count; i++) {
-		const f = 0.7 + rand() * 0.6;
-		sp.setXYZ(i, sp.getX(i) * f, sp.getY(i) * f * 1.3, sp.getZ(i) * f);
-	}
-	shardGeo.computeVertexNormals();
-	const shards = new THREE.InstancedMesh(
-		shardGeo,
-		new THREE.MeshStandardMaterial({ color: 0x40463f, roughness: 0.5, metalness: 0.15, flatShading: true }),
-		shardCount,
+	// Sur l'anneau, des pétales détachés qui dérivent, et quelques éclats
+	const flakeCount = lowPower ? 14 : 26;
+	const flakes = new THREE.InstancedMesh(
+		petalGeometry({ len: 1, width: 0.55, base: 0.3, tip: -0.3, cup: 0.15, ruffle: 0.04, twist: 0.4, seed: 7 }, 12, 6),
+		veilMaterial(u, { base: C(0xb4c8f5), iris: 1, flutter: 0, grid: new THREE.Vector2(10, 5) }),
+		flakeCount,
 	);
+	flakes.frustumCulled = false;
 	const glints = new THREE.InstancedMesh(
 		new THREE.OctahedronGeometry(1, 0),
 		new THREE.MeshBasicMaterial({ color: new THREE.Color(0.78, 0.96, 0.24).multiplyScalar(2.2) }),
 		6,
 	);
-	orbit.add(shards, glints);
-	const shardData = Array.from({ length: shardCount + 6 }, (_, i) => ({
+	orbit.add(flakes, glints);
+	const flakeData = Array.from({ length: flakeCount + 6 }, (_, i) => ({
 		r: 1.5 + rand() * 1.5,
 		a: rand() * Math.PI * 2,
 		w: (0.05 + rand() * 0.12) * (rand() > 0.85 ? -1 : 1),
 		y: (rand() - 0.5) * 0.7,
-		s: i < shardCount ? 0.025 + rand() * 0.06 : 0.012 + rand() * 0.014,
+		s: i < flakeCount ? 0.07 + rand() * 0.1 : 0.012 + rand() * 0.014,
 		spin: new THREE.Vector3(rand(), rand(), rand()).multiplyScalar(1.4),
 	}));
 	const dummy = new THREE.Object3D();
+	await step(1);
+
+	const triangles = Math.round(
+		[stemGeo, petals.geometry, leaves.geometry].reduce((n, g) => n + (g.index ? g.index.count : g.attributes.position.count), 0) / 3,
+	);
 
 	const update = (s: ArtefactState) => {
 		u.uTime.value = s.time;
 		u.uEnergy.value = s.energy;
-		cursorLight.position.set(s.px * 3.2, s.py * 2 + 0.4, 2.6);
-		under.intensity = 2.5 + Math.sin(s.time * 0.9) * 0.8 + s.energy * 3;
-		// La fleur se replie quand la roche se dissout
-		flower.scale.setScalar(4.1 * (1 - smoothstep01(0.3, 0.7, s.dive)));
-		flower.visible = s.dive < 0.7;
-		flowerLight.intensity = 1 + Math.sin(s.time * 1.7) * 0.35 + s.energy * 0.8;
-		flower.rotation.z = (Math.sin(s.time * 1.1) * 0.035 + s.px * 0.04) * s.motion;
-		flower.rotation.x = Math.sin(s.time * 0.8 + 1.3) * 0.025 * s.motion;
-
-		shardData.forEach((d, i) => {
+		u.uMotion.value = s.motion;
+		flakeData.forEach((d, i) => {
 			const a = d.a + s.time * d.w;
 			dummy.position.set(Math.cos(a) * d.r * 1.15, d.y + Math.sin(s.time * 0.5 + i) * 0.06, Math.sin(a) * d.r * 0.8);
 			dummy.rotation.set(s.time * d.spin.x, s.time * d.spin.y, s.time * d.spin.z);
 			dummy.scale.setScalar(d.s);
 			dummy.updateMatrix();
-			if (i < shardCount) shards.setMatrixAt(i, dummy.matrix);
-			else glints.setMatrixAt(i - shardCount, dummy.matrix);
+			if (i < flakeCount) flakes.setMatrixAt(i, dummy.matrix);
+			else glints.setMatrixAt(i - flakeCount, dummy.matrix);
 		});
-		shards.instanceMatrix.needsUpdate = true;
+		flakes.instanceMatrix.needsUpdate = true;
 		glints.instanceMatrix.needsUpdate = true;
 	};
 
@@ -569,9 +933,9 @@ export async function createArtefact(opts: {
 		spin,
 		orbit,
 		ring,
-		flower,
-		rockMesh,
 		flowerHead,
+		/** Le cœur de la fleur, dans le repère de l'artefact : la plongée y entre */
+		heart: HEAD.clone().multiplyScalar(SCALE),
 		anchors,
 		triangles,
 		uniforms: u,

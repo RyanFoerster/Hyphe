@@ -1,9 +1,10 @@
-// L'intérieur de la roche : une galerie minérale qu'on traverse au défilement.
-// Parois en strates et veines de lumière, cristaux, poussière, et dans la
-// matière, les projets du studio : des spécimens qui se recomposent tuile par
-// tuile quand on s'en approche.
+// L'intérieur de la fleur : une galerie végétale qu'on traverse au défilement.
+// Parois en cellules et en fibres où la sève circule, étamines plantées dans
+// les parois, pollen en suspension, et dans la matière, les projets du studio :
+// des spécimens qui se recomposent tuile par tuile quand on s'en approche.
 
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { NOISE, additive, noise3, rng } from './shared';
 
 export interface SpecimenInput {
@@ -22,11 +23,13 @@ const WALL_VERT = /* glsl */ `
 	varying vec3 vW;
 	varying vec3 vN;
 	varying float vAlong;
+	varying float vAround;
 	void main() {
 		vec4 w = modelMatrix * vec4(position, 1.0);
 		vW = w.xyz;
 		vN = normalize(mat3(modelMatrix) * normal);
 		vAlong = uv.x;
+		vAround = uv.y;
 		gl_Position = projectionMatrix * viewMatrix * w;
 	}
 `;
@@ -38,36 +41,58 @@ const WALL_FRAG = /* glsl */ `
 	varying vec3 vW;
 	varying vec3 vN;
 	varying float vAlong;
+	varying float vAround;
 	${NOISE}
+	// Cellules végétales : distance au centre le plus proche et au suivant
+	vec2 cells(vec3 p) {
+		vec3 i = floor(p);
+		vec3 f = fract(p);
+		float d1 = 8.0;
+		float d2 = 8.0;
+		for (int x = -1; x <= 1; x++)
+		for (int y = -1; y <= 1; y++)
+		for (int z = -1; z <= 1; z++) {
+			vec3 g = vec3(float(x), float(y), float(z));
+			vec3 o = vec3(h3(i + g), h3(i + g + 17.3), h3(i + g + 41.7));
+			vec3 r = g + o - f;
+			float d = dot(r, r);
+			if (d < d1) { d2 = d1; d1 = d; } else if (d < d2) { d2 = d; }
+		}
+		return vec2(sqrt(d1), sqrt(d2));
+	}
 	void main() {
 		vec3 toCam = cameraPosition - vW;
 		float dist = length(toCam);
 		float fog = exp(-dist * 0.085);
-		float rockN = fbm3(vW * 1.2);
-		vec3 base = mix(vec3(0.008, 0.011, 0.012), vec3(0.05, 0.056, 0.055), rockN);
+		float n = fbm3(vW * 0.8);
+		vec3 base = mix(vec3(0.006, 0.014, 0.012), vec3(0.03, 0.06, 0.045), n);
 
-		// Strates : les lignes de niveau de la roche, vues de l'intérieur
-		float k = (vW.y * 1.5 + vW.x * 0.3 + fbm3(vW * 0.3) * 3.0) * 2.4;
-		float strata = 1.0 - smoothstep(0.0, fwidth(k) * 1.3, abs(fract(k + 0.5) - 0.5));
+		// Les cellules, étirées le long de la galerie comme dans une tige
+		vec2 c = cells(vW * vec3(1.3, 1.3, 0.5));
+		float wall = 1.0 - smoothstep(0.02, 0.1, c.y - c.x);
+		float body = smoothstep(0.55, 0.0, c.x);
 
-		// Veines : une énergie qui remonte la galerie
-		float r = 1.0 - abs(fbm3(vW * 0.5 + vec3(0.0, 0.0, uTime * 0.03)) * 2.0 - 1.0);
-		float vein = smoothstep(0.86, 0.975, r);
-		float wave = pow(0.5 + 0.5 * sin(vAlong * uLen * 0.7 + uTime * 2.0), 3.0);
+		// Les fibres, et la sève qui les remonte
+		float fk = vAround * 96.0 + n3(vW * 0.6) * 4.0;
+		float fib = 1.0 - smoothstep(0.0, fwidth(fk) * 1.4, abs(fract(fk) - 0.5));
+		float wave = pow(0.5 + 0.5 * sin(vAlong * uLen * 0.7 - uTime * 2.0 + vAround * 12.566), 6.0);
 
-		vec3 sid = floor(vW * 20.0);
-		float spark = step(0.988, h3(sid)) * pow(0.5 + 0.5 * sin(uTime * 2.4 + h3(sid) * 50.0), 4.0);
+		// Chloroplastes : des grains qui palpitent dans les cellules
+		vec3 sid = floor(vW * 14.0);
+		float chl = step(0.986, h3(sid)) * (0.55 + 0.45 * sin(uTime * 2.0 + h3(sid + 3.0) * 40.0)) * body;
 
 		float lamp = max(dot(-normalize(vN), normalize(toCam)), 0.0);
-		vec3 col = base * (0.2 + lamp * 0.9)
-			+ strata * vec3(0.06, 0.065, 0.06) * (0.3 + rockN)
-			+ vein * uTint * (0.35 + wave * 2.2)
-			+ spark * vec3(0.8, 1.0, 0.95) * 2.0;
+		vec3 col = base * (0.25 + lamp * 0.9) * (0.7 + body * 0.5)
+			+ wall * vec3(0.09, 0.16, 0.1) * (0.4 + n)
+			+ fib * vec3(0.03, 0.06, 0.045)
+			+ fib * wave * uTint * 1.1
+			+ wall * wave * uTint * 0.35
+			+ chl * vec3(0.55, 0.95, 0.5) * 1.6;
 		gl_FragColor = vec4(col * fog, 1.0);
 	}
 `;
 
-const CRYSTAL_VERT = /* glsl */ `
+const STAMEN_VERT = /* glsl */ `
 	varying vec3 vN;
 	varying vec3 vV;
 	varying float vSeed;
@@ -83,7 +108,8 @@ const CRYSTAL_VERT = /* glsl */ `
 	}
 `;
 
-const CRYSTAL_FRAG = /* glsl */ `
+// Filet sombre, anthère qui luit au bout
+const STAMEN_FRAG = /* glsl */ `
 	uniform vec3 uTint;
 	uniform float uTime;
 	varying vec3 vN;
@@ -95,8 +121,10 @@ const CRYSTAL_FRAG = /* glsl */ `
 		vec3 v = normalize(vV);
 		float fres = pow(1.0 - abs(dot(n, v)), 2.2);
 		float pulse = 0.55 + 0.45 * sin(uTime * 1.2 + vSeed * 30.0);
-		vec3 c = mix(uTint, vec3(0.62, 0.94, 0.88), vSeed);
-		vec3 col = c * (0.04 + fres * 1.6 * pulse) + c * smoothstep(0.2, 1.0, vH) * 1.4 * pulse;
+		float tip = smoothstep(0.86, 0.95, vH);
+		vec3 c = vSeed > 0.7 ? vec3(1.0, 0.5, 0.18) : mix(uTint, vec3(0.62, 0.94, 0.7), vSeed);
+		vec3 stalk = vec3(0.05, 0.1, 0.07) * (0.3 + fres * 1.5);
+		vec3 col = mix(stalk, c * (0.5 + fres * 1.2) * (0.6 + pulse * 1.2), tip);
 		gl_FragColor = vec4(col * exp(-length(vV) * 0.08), 1.0);
 	}
 `;
@@ -206,18 +234,21 @@ export function createCavern(items: SpecimenInput[], { lowPower }: { lowPower: b
 	);
 	scene.add(walls);
 
-	// Cristaux plantés dans les parois, pointés vers le centre
+	// Étamines plantées dans les parois, tendues vers le centre
 	const rand = rng(77);
-	const crystalCount = lowPower ? 70 : 150;
-	const crystalGeo = new THREE.OctahedronGeometry(1, 0);
-	const crystals = new THREE.InstancedMesh(
-		crystalGeo,
-		new THREE.ShaderMaterial({ uniforms: u, vertexShader: CRYSTAL_VERT, fragmentShader: CRYSTAL_FRAG }),
-		crystalCount,
+	const stamenCount = lowPower ? 90 : 190;
+	const stalkGeo = new THREE.CylinderGeometry(0.025, 0.05, 0.9, 6, 1, true).translate(0, 0.45, 0);
+	stalkGeo.deleteAttribute('uv');
+	const antherGeo = new THREE.SphereGeometry(0.09, 8, 6).scale(1, 1.6, 1).translate(0, 0.94, 0);
+	antherGeo.deleteAttribute('uv');
+	const stamens = new THREE.InstancedMesh(
+		mergeGeometries([stalkGeo, antherGeo]),
+		new THREE.ShaderMaterial({ uniforms: u, vertexShader: STAMEN_VERT, fragmentShader: STAMEN_FRAG }),
+		stamenCount,
 	);
 	const dummy = new THREE.Object3D();
 	const centre = new THREE.Vector3();
-	for (let i = 0; i < crystalCount; i++) {
+	for (let i = 0; i < stamenCount; i++) {
 		const k = Math.floor(rand() * tp.count);
 		const s = (tube.attributes.uv as THREE.BufferAttribute).getX(k) * length;
 		if (s < 3) {
@@ -227,16 +258,17 @@ export function createCavern(items: SpecimenInput[], { lowPower }: { lowPower: b
 		dummy.position.fromBufferAttribute(tp, k);
 		at(s, centre);
 		dummy.lookAt(centre);
-		dummy.rotateX(Math.PI / 2 + (rand() - 0.5) * 0.8);
-		dummy.rotateZ((rand() - 0.5) * 0.8);
-		const len = 0.25 + rand() * rand() * 1.1;
-		dummy.scale.set(len * 0.18, len, len * 0.18);
+		dummy.rotateX(Math.PI / 2 + (rand() - 0.5) * 0.9);
+		dummy.rotateZ((rand() - 0.5) * 0.9);
+		const len = 0.35 + rand() * rand() * 1.5;
+		const w = 0.7 + rand() * 0.6;
+		dummy.scale.set(w, len, w);
 		dummy.updateMatrix();
-		crystals.setMatrixAt(i, dummy.matrix);
+		stamens.setMatrixAt(i, dummy.matrix);
 	}
-	scene.add(crystals);
+	scene.add(stamens);
 
-	// Poussière en suspension dans la galerie
+	// Pollen en suspension dans la galerie
 	const dustCount = lowPower ? 700 : 1600;
 	const dpos = new Float32Array(dustCount * 3);
 	const dseed = new Float32Array(dustCount);
@@ -276,7 +308,7 @@ export function createCavern(items: SpecimenInput[], { lowPower }: { lowPower: b
 					varying float vS;
 					void main() {
 						float d = length(gl_PointCoord - 0.5);
-						vec3 c = vS > 0.85 ? uTint : vec3(0.7, 0.78, 0.76);
+						vec3 c = vS > 0.85 ? uTint : vS > 0.7 ? vec3(1.0, 0.6, 0.25) : vec3(0.7, 0.8, 0.68);
 						gl_FragColor = vec4(c * smoothstep(0.5, 0.3, d) * vA * 0.7, 0.0);
 					}
 				`,
