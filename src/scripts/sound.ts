@@ -3,7 +3,7 @@
 //
 //   nappe      quatre accords qui se relaient lentement, filtrés : la plongée
 //              dans la fleur ouvre le filtre et fait monter une basse
-//   air        un souffle filtré qui suit la vitesse de défilement
+//   air        un souffle filtré, plus présent dans la plongée
 //   pollen     de rares notes cristallines, au hasard, dans la réverbération
 //   gestes     survol, clic, menu, sortie et arrivée de page (avec le
 //              crépitement des tuiles), entrée dans la fleur, un spécimen
@@ -46,7 +46,8 @@ let chordIndex = 0;
 let dive = 0;
 let inside = false;
 let lastSpecimen = -1;
-let velocity = 0;
+let specimenTimer = 0;
+let lastScroll = -1e9;
 let mounted = false;
 
 try {
@@ -428,6 +429,8 @@ export const sound = {
 		const open = isInside ? 0.55 : d;
 		c.padFilter.frequency.setTargetAtTime(650 + open * 2600, t, 0.4);
 		c.sub.gain.setTargetAtTime(isInside ? 0.05 : d * 0.16, t, 0.5);
+		c.air.gain.setTargetAtTime(0.03 + (isInside ? 0.01 : d * 0.02), t, 0.6);
+		c.airFilter.frequency.setTargetAtTime(600 + (isInside ? 300 : d * 600), t, 0.6);
 		if (isInside && !was) {
 			thump();
 			whoosh(5000, 200, 1.6, 0.2);
@@ -436,13 +439,18 @@ export const sound = {
 			whoosh(200, 3000, 1.2, 0.12);
 		}
 	},
-	/** Un spécimen de la galerie : sa note à lui */
+	/** Un spécimen de la galerie : sa note à lui, seulement quand on s'y arrête
+	 *  (défiler vite à travers la galerie ne fait pas sonner chaque projet) */
 	specimen(i: number) {
 		if (i === lastSpecimen) return;
 		lastSpecimen = i;
-		const n = SCALE[(i * 2) % SCALE.length] - 12;
-		bell(NOTE(n), 0.05, 2.6, 0.75);
-		bell(NOTE(n + 7), 0.025, 2.2, 0.75, 0.12);
+		clearTimeout(specimenTimer);
+		specimenTimer = window.setTimeout(() => {
+			if (performance.now() - lastScroll < 250) return;
+			const n = SCALE[(i * 2) % SCALE.length] - 12;
+			bell(NOTE(n), 0.05, 2.6, 0.75);
+			bell(NOTE(n + 7), 0.025, 2.2, 0.75, 0.12);
+		}, 450);
 	},
 	/** Les étapes du loader : la fleur monte d'une note à chaque étape */
 	stage(i: number) {
@@ -500,6 +508,8 @@ export function mountSound() {
 	// Survol : une note par élément, jamais deux fois de suite le même
 	let lastEl: Element | null = null;
 	let lastAt = 0;
+	let lastMove = -1e9;
+	addEventListener('pointermove', () => (lastMove = performance.now()), { passive: true });
 	document.addEventListener(
 		'pointerover',
 		(e) => {
@@ -508,7 +518,10 @@ export function mountSound() {
 			if (!el || el === lastEl) return;
 			lastEl = el;
 			const now = performance.now();
-			if (now - lastAt < 70) return;
+			// Pendant un défilement, les éléments passent sous la souris sans
+			// qu'elle bouge : on se tait
+			if (now - lastScroll < 220 || now - lastMove > 120) return;
+			if (now - lastAt < 90) return;
 			lastAt = now;
 			const idx = el.hasAttribute('data-petal-label') ? [...el.parentElement!.children].indexOf(el) : undefined;
 			sound.hover(idx);
@@ -527,30 +540,9 @@ export function mountSound() {
 		if ((e.target as HTMLElement).closest('button, a[href]') && !(e.target as HTMLElement).closest('[data-sound-toggle]')) sound.click();
 	});
 
-	// L'air suit la vitesse de défilement
-	let lastY = scrollY;
-	let lastT = performance.now();
-	addEventListener(
-		'scroll',
-		() => {
-			const now = performance.now();
-			const v = Math.abs(scrollY - lastY) / Math.max(8, now - lastT);
-			lastY = scrollY;
-			lastT = now;
-			velocity = Math.min(1, velocity * 0.6 + v * 0.25);
-		},
-		{ passive: true },
-	);
-	const tick = () => {
-		velocity *= 0.94;
-		if (c && c.ac.state === 'running') {
-			const t = c.ac.currentTime;
-			c.air.gain.setTargetAtTime(0.03 + velocity * 0.12 + dive * 0.02, t, 0.15);
-			c.airFilter.frequency.setTargetAtTime(600 + velocity * 2200 + dive * 600, t, 0.2);
-		}
-		requestAnimationFrame(tick);
-	};
-	requestAnimationFrame(tick);
+	// Le défilement ne fait aucun son : on le note seulement, pour faire taire
+	// les survols et les spécimens tant qu'il dure
+	addEventListener('scroll', () => (lastScroll = performance.now()), { passive: true });
 
 	// Onglet caché : silence ; retour : la nappe revient
 	document.addEventListener('visibilitychange', () => {
