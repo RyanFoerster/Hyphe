@@ -82,6 +82,7 @@ function stemMaterial(u: Record<string, THREE.IUniform>) {
 			uniform float uEnergy;
 			uniform float uDissolve;
 			uniform float uGround;
+			uniform vec4 uPick;
 			uniform vec3 uTint;
 			varying vec2 vUv;
 			varying vec3 vN;
@@ -111,6 +112,9 @@ function stemMaterial(u: Record<string, THREE.IUniform>) {
 				// La sève : des pulsations qui montent dans les fibres
 				float sap = smoothstep(0.9, 1.0, 0.5 + 0.5 * sin(vUv.x * 36.0 - uTime * 1.8 + vUv.y * 6.2831)) * strand;
 				col += mix(vec3(0.6, 1.0, 0.5), uTint, 0.6) * sap * (0.3 + uEnergy * 1.2);
+				// Sous la loupe, les fibres s'allument
+				float pk = (1.0 - smoothstep(0.0, 0.3, distance(vObjP, uPick.xyz))) * uPick.w;
+				col += uTint * strand * pk * 0.35;
 				col += uTint * burn * 2.0;
 				gl_FragColor = vec4(col, 1.0);
 			}
@@ -137,6 +141,7 @@ function veilMaterial(u: Record<string, THREE.IUniform>, opts: { base: THREE.Col
 				uniform float uEnergy;
 				uniform float uDissolve;
 				uniform float uGround;
+				uniform vec4 uPick;
 				uniform vec3 uTint;
 				uniform vec3 uBase;
 				uniform float uIris;
@@ -177,6 +182,9 @@ function veilMaterial(u: Record<string, THREE.IUniform>, opts: { base: THREE.Col
 					// et vers le cœur ils se superposent tous : la base s'efface
 					col *= 0.42 * (0.03 + 0.97 * smoothstep(0.15, 0.72, vUv.x));
 					col += uTint * (burn * 0.5 + uEnergy * 0.02);
+					// Sous la loupe, la trame du relevé et les nervures passent à l'acide
+					float pk = (1.0 - smoothstep(0.0, 0.32, distance(vObjP, uPick.xyz))) * uPick.w;
+					col += uTint * (grid * 0.22 + vein * 0.12) * pk;
 					col *= smoothstep(uGround, uGround + 0.55, vWorld.y);
 					gl_FragColor = vec4(col, 0.0);
 				}
@@ -692,6 +700,8 @@ export async function createArtefact(opts: {
 		uMotion: { value: 1 },
 		/** Hauteur (monde) sous laquelle la plante s'efface : le haut du titre */
 		uGround: { value: -100 },
+		/** Loupe du curseur : point visé (repère de la plante) et intensité */
+		uPick: { value: new THREE.Vector4(0, -100, 0, 0) },
 	};
 
 	const artefact = new THREE.Group();
@@ -946,6 +956,10 @@ export async function createArtefact(opts: {
 		flowerHead,
 		/** Le cœur de la fleur, dans le repère de l'artefact : la plongée y entre */
 		heart: HEAD.clone().multiplyScalar(SCALE),
+		/** Ce que la loupe du curseur peut viser */
+		parts: { stem, petals, leaves },
+		/** Le cœur, dans le repère de la plante (étamines, pollen) */
+		centre,
 		anchors,
 		triangles,
 		uniforms: u,

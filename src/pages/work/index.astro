@@ -92,7 +92,6 @@ const ratios = ['4/5', '16/9', '4/5', '16/9', '4/5', '16/9'] as const;
 			<div class="relative aspect-video overflow-hidden border border-acid/60">
 				<img alt="" class="absolute inset-0 size-full object-cover" data-preview-img />
 			</div>
-			<p class="meta mt-2 tabular-nums text-acid" data-preview-value>0.00000000</p>
 		</div>
 	</section>
 
@@ -198,7 +197,6 @@ const ratios = ['4/5', '16/9', '4/5', '16/9', '4/5', '16/9'] as const;
 	// Index : l'image du spécimen suit le curseur
 	const box = document.querySelector<HTMLElement>('[data-preview-box]')!;
 	const img = document.querySelector<HTMLImageElement>('[data-preview-img]')!;
-	const value = document.querySelector<HTMLElement>('[data-preview-value]')!;
 	const pos = { x: 0, y: 0, tx: 0, ty: 0 };
 	let raf = 0;
 	const follow = () => {
@@ -207,10 +205,9 @@ const ratios = ['4/5', '16/9', '4/5', '16/9', '4/5', '16/9'] as const;
 		box.style.transform = `translate(${pos.x + 24}px, ${pos.y - 90}px)`;
 		raf = requestAnimationFrame(follow);
 	};
-	document.querySelectorAll<HTMLElement>('[data-row]').forEach((row, i) => {
+	document.querySelectorAll<HTMLElement>('[data-row]').forEach((row) => {
 		row.addEventListener('pointerenter', (e) => {
 			img.src = row.dataset.preview!;
-			value.textContent = (0.42 + i * 0.11 + 0.00000004).toFixed(8);
 			pos.x = pos.tx = e.clientX;
 			pos.y = pos.ty = e.clientY;
 			box.setAttribute('data-on', '');

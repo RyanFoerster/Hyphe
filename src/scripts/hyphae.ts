@@ -101,11 +101,6 @@ export function mountHyphae(canvas: HTMLCanvasElement, selector: string) {
 					ctx.arc(p.x, p.y, 1.8, 0, Math.PI * 2);
 					ctx.fill();
 				}
-				if (k === 1) {
-					const m = pt(0.5);
-					ctx.fillStyle = color;
-					ctx.fillText((0.6 + ((i * 0.173) % 0.4) + 0.00000004).toFixed(8), m.x + 6, m.y);
-				}
 			}
 		});
 	};

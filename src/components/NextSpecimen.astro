@@ -22,10 +22,10 @@ const total = String(projects.length).padStart(2, '0');
 		<div class="ui pointer-events-none absolute inset-x-4 top-24 sm:inset-x-6" aria-hidden="true">
 			<p class="meta flex justify-between text-mineral">
 				<span>Keep scrolling — specimen {no} / {total}</span>
-				<span class="tabular-nums text-acid" data-next-value>0.00000000</span>
+				<span class="text-bone/70">{next.latin}</span>
 			</p>
 			<p class="meta mt-3 flex items-center gap-4 text-bone/70">
-				<span class="tabular-nums" data-next-bar>[::::::::::::::::::::::::]</span>
+				<span class="relative block h-px w-40 bg-bone/20"><span class="absolute inset-y-0 left-0 w-0 bg-acid" data-next-bar></span></span>
 				<span class="tabular-nums text-acid" data-next-pct>000%</span>
 			</p>
 			<svg class="mt-3 block h-5 w-full overflow-visible" viewBox="0 0 1000 24" preserveAspectRatio="none">
@@ -80,7 +80,6 @@ const total = String(projects.length).padStart(2, '0');
 		const href = zone.dataset.href!;
 		const bar = zone.querySelector<HTMLElement>('[data-next-bar]')!;
 		const pct = zone.querySelector<HTMLElement>('[data-next-pct]')!;
-		const value = zone.querySelector<HTMLElement>('[data-next-value]')!;
 
 		// La page suivante est préchargée dès que la zone approche
 		new IntersectionObserver(
@@ -120,10 +119,8 @@ const total = String(projects.length).padStart(2, '0');
 			shown += (p - shown) * 0.2;
 			if (Math.abs(p - shown) < 0.001) shown = p;
 			zone.style.setProperty('--p', shown.toFixed(4));
-			const filled = Math.round(shown * 24);
-			bar.textContent = `[${'#'.repeat(filled)}${':'.repeat(24 - filled)}]`;
+			bar.style.width = `${(shown * 100).toFixed(1)}%`;
 			pct.textContent = `${String(Math.round(shown * 100)).padStart(3, '0')}%`;
-			value.textContent = (shown + (shown > 0 && shown < 1 ? 0.00000001 : 0)).toFixed(8);
 			// On attend que la scène soit posée (shown = 1) pour que le passage soit invisible
 			if (armed && !gone && p >= 0.995 && shown >= 0.999) {
 				gone = true;

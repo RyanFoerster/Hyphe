@@ -201,6 +201,26 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 	};
 	addEventListener('click', onClick);
 
+	// Loupe de botaniste : le curseur vise une partie de la plante et la nomme
+	const LOUPE = 64;
+	const ray = new THREE.Raycaster();
+	const ndc = new THREE.Vector2();
+	const pickLocal = new THREE.Vector3();
+	const pickTargets = [ext.parts.stem, ext.parts.petals, ext.parts.leaves];
+	let pick: { label: string; sub: string } | null = null;
+	let pickFrame = 0;
+	const anatomy = (hit: THREE.Intersection) => {
+		pickLocal.copy(hit.point);
+		ext.spin.worldToLocal(pickLocal);
+		const u = hit.uv?.x ?? 0;
+		if (pickLocal.distanceTo(ext.centre) < 0.32) return { label: 'Stamen', sub: 'anthers, ripe pollen' };
+		if (hit.object === ext.parts.stem) return { label: 'Stem', sub: 'fibres, sap rising' };
+		if (hit.object === ext.parts.leaves) return { label: 'Leaf', sub: 'a veined blade' };
+		if (u < 0.3) return { label: 'Petal — claw', sub: 'where the flower opens' };
+		if (u < 0.75) return { label: 'Petal — blade', sub: 'a translucent veil' };
+		return { label: 'Petal — margin', sub: 'the ruffled edge' };
+	};
+
 	// ---------------------------------------------------------------- boucle
 	const tmp = new THREE.Vector3();
 	const tmp2 = new THREE.Vector3();
@@ -273,7 +293,8 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 		const inside = sy >= diveEnd;
 		let d = clamp01(sy / diveEnd);
 		if (reduced) d = d < 0.5 ? 0 : 1;
-		const lensOn = finePointer && pointer.free ? 1 : 0;
+		// Dehors, la loupe n'apparaît que sur la plante ; dedans, partout
+		const lensOn = finePointer && pointer.free && (sy >= diveEnd || pick) ? 1 : 0;
 		smooth.lens += (lensOn - smooth.lens) * k * 1.4;
 
 		let scene: THREE.Scene;
@@ -384,15 +405,15 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			// Post
 			P.uInside.value = 0;
 			P.uFade.value = 0;
-			P.uScanAll.value = 1;
-			P.uAscii.value = reduced ? (d > 0.5 ? 1 : 0) : smoothstep(0.6, 1, d);
-			// Le halo de caractères reste discret : il ne doit pas couvrir le cœur de la fleur
-			P.uAura.value = (1 - smoothstep(0.5, 0.95, d)) * reveal * 0.45;
+			// La fleur se montre telle quelle : ni scan, ni caractères
+			P.uScanAll.value = 0;
+			P.uAscii.value = 0;
+			P.uAura.value = 0;
 			P.uBloom.value = 1 + d * 0.6;
 			// Fin de plongée : les caractères s'éteignent du centre vers les bords,
 			// on tombe dans le trou ; la galerie s'allume ensuite depuis les bords
 			P.uWipe.value = reduced ? 0 : smoothstep(0.8, 1, d);
-			P.uFlash.value = smoothstep(0.6, 0.85, d) * (1 - smoothstep(0.85, 0.97, d)) * 0.12;
+			P.uFlash.value = 0;
 			P.uMosaic.value = narrow ? 0.08 : 0.11;
 			P.uExposure.value = 1.25;
 			P.uCell.value.set(7 * dpr * (1 + smoothstep(0.7, 1, d) * 1.4), 12 * dpr * (1 + smoothstep(0.7, 1, d) * 1.4));
@@ -488,7 +509,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 						w: x1 - x0,
 						h: y1 - y0,
 						a: focus * smoothstep(0.6, 1, rev),
-						label: `specimen.${String(i + 1).padStart(2, '0')} — ${sp.slug} — ${rev.toFixed(8)}`,
+						label: `specimen.${String(i + 1).padStart(2, '0')} — ${sp.slug}`,
 					});
 				}
 				chapters[i]?.style.setProperty('--focus', focus.toFixed(3));
@@ -497,7 +518,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 
 			P.uInside.value = 1;
 			P.uScanAll.value = 0;
-			P.uAscii.value = 1;
+			P.uAscii.value = 0;
 			P.uAura.value = 0;
 			P.uBloom.value = 0.85;
 			P.uWipe.value = reduced ? 0 : 1 - smoothstep(-0.4, 3.2, s);
@@ -534,7 +555,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			}
 		}
 		P.uLensCount.value = n;
-		const radius = (inside ? 150 : 130) * dpr * smooth.lens;
+		const radius = (inside ? 150 : LOUPE) * dpr * smooth.lens;
 		P.uCursor.value.set(smooth.lx * dpr, (height - smooth.ly) * dpr, radius, smooth.lens);
 		P.uTime.value = time;
 		P.uNear.value = camera.near;
@@ -542,8 +563,21 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 		P.uReveal.value = reveal;
 		P.uTint.value.copy(tint);
 
+		// Loupe : ce que le curseur vise sur la plante, nommé et éclairé
+		const aiming = !inside && d < 0.05 && pointer.free && finePointer && reveal > 0.9;
+		if (!aiming) pick = null;
+		else if (++pickFrame % 2 === 0) {
+			ndc.set((pointer.px / width) * 2 - 1, -(pointer.py / height) * 2 + 1);
+			ray.setFromCamera(ndc, camera);
+			const ground = ext.uniforms.uGround.value + 0.3;
+			const hit = ray.intersectObjects(pickTargets, false).find((h) => h.point.y > ground);
+			pick = hit ? anatomy(hit) : null;
+		}
+		const pu = ext.uniforms.uPick.value;
+		if (pick) pu.set(pickLocal.x, pickLocal.y, pickLocal.z, pu.w);
+		pu.w += ((pick ? 1 : 0) - pu.w) * Math.min(1, k * 2.5);
+
 		post.render(scene, camera);
-		const cursorOn = !inside && d < 0.05 && pointer.free && finePointer && Math.hypot(pointer.px - focusPx.x, pointer.py - focusPx.y) < focusPx.r * 0.95;
 		layer.draw({
 			time,
 			dpr,
@@ -554,11 +588,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			frames,
 			callouts,
 			roots,
-			cursor: {
-				x: pointer.px,
-				y: pointer.py,
-				on: cursorOn,
-			},
+			pick: pick && { x: smooth.lx, y: smooth.ly, r: LOUPE * smooth.lens, ...pick },
 			motion,
 		});
 	};

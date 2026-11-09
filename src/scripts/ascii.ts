@@ -1,7 +1,7 @@
-// ASCII vivant : des organismes (pousses, fleurs, racines, mycélium) tracés en
-// caractères mono. Ils poussent à l'apparition, ondulent, mutent par endroits
-// et réagissent au curseur. Les fleurs sont remplies de chiffres par bandes,
-// comme des lignes de niveau : la même langue que la lentille de l'artefact.
+// Organismes vivants : pousses, fleurs, racines, mycélium, tracés au trait fin
+// comme une planche d'herbier. Ils poussent à l'apparition, ondulent au vent et
+// s'écartent sous le curseur. Les fleurs sont des voiles translucides nervurés.
+// (Le nom « ascii » reste celui des attributs data-ascii, historiques.)
 //
 // <canvas data-ascii data-ascii-kind="flower|sprout|roots|mycelium"
 //         data-ascii-seed="3" data-ascii-size="11" data-ascii-accent="ember|acid">
@@ -13,6 +13,7 @@ type Stroke = { pts: P[]; tone: 0 | 1 };
 type Head = { x: number; y: number; r: number; petals: number; g: number; spin: number };
 
 const BONE = '230 228 220';
+const MOSS = '150 196 120';
 const COLORS = {
 	acid: '200 245 60',
 	ember: '240 122 42',
@@ -28,12 +29,6 @@ function rng(seed: number) {
 		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 	};
 }
-
-const hash = (a: number, b: number, c = 0) => {
-	let h = Math.imul(a, 374761393) + Math.imul(b, 668265263) + Math.imul(c, 2147483647);
-	h = Math.imul(h ^ (h >>> 13), 1274126177);
-	return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
-};
 
 /** Tige courbe de (x0,y0) vers le haut, avec une flexion douce */
 function stem(rand: () => number, x0: number, y0: number, len: number, lean: number, g0: number, g1: number, steps = 26): P[] {
@@ -138,35 +133,18 @@ function grow(kind: Kind, seed: number, A: number) {
 	return { strokes, heads };
 }
 
-function dirChar(dx: number, dy: number) {
-	const a = Math.atan2(-dy, dx);
-	const d = ((a * 180) / Math.PI + 180) % 180;
-	if (d < 22.5 || d >= 157.5) return '-';
-	if (d < 67.5) return '/';
-	if (d < 112.5) return '|';
-	return '\\';
-}
-
-const MUTATE: Record<string, string> = { '|': ':', '/': '.', '\\': '.', '-': '~' };
-
 class Organism {
 	private ctx: CanvasRenderingContext2D;
-	private cols = 0;
-	private rows = 0;
-	private cw = 0;
-	private ch = 0;
+	private W = 0;
+	private H = 0;
 	private A = 1;
 	private shape: ReturnType<typeof grow> = { strokes: [], heads: [] };
-	private grid: string[] = [];
-	private tone: Uint8Array = new Uint8Array(0);
 	private progress = 0;
 	private visible = false;
 	private pointer = { x: -1e3, y: -1e3, active: false };
-	private last = 0;
 	private raf = 0;
 	private kind: Kind;
 	private seed: number;
-	private size: number;
 	private accent: string;
 
 	constructor(
@@ -176,7 +154,6 @@ class Organism {
 		this.ctx = canvas.getContext('2d')!;
 		this.kind = (canvas.dataset.asciiKind as Kind) ?? 'sprout';
 		this.seed = Number(canvas.dataset.asciiSeed ?? 1);
-		this.size = Number(canvas.dataset.asciiSize ?? 11);
 		this.accent = COLORS[(canvas.dataset.asciiAccent as keyof typeof COLORS) ?? 'acid'] ?? COLORS.acid;
 		// Arrivée en continu : l'organisme du hero est déjà poussé, comme sur la page d'avant
 		if (still || (canvas.hasAttribute('data-hero-ascii') && document.documentElement.classList.contains('continued'))) this.progress = 1;
@@ -204,14 +181,10 @@ class Organism {
 		this.canvas.width = Math.round(r.width * dpr);
 		this.canvas.height = Math.round(r.height * dpr);
 		this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-		this.cw = this.size * 0.62;
-		this.ch = this.size * 1.18;
-		this.cols = Math.max(1, Math.floor(r.width / this.cw));
-		this.rows = Math.max(1, Math.floor(r.height / this.ch));
-		this.A = (this.cols * this.cw) / (this.rows * this.ch);
+		this.W = r.width;
+		this.H = r.height;
+		this.A = r.width / r.height;
 		this.shape = grow(this.kind, this.seed, this.A);
-		this.grid = new Array(this.cols * this.rows).fill('');
-		this.tone = new Uint8Array(this.cols * this.rows);
 		this.draw(performance.now());
 	}
 
@@ -226,34 +199,24 @@ class Organism {
 				return;
 			}
 			this.raf = requestAnimationFrame(loop);
-			if (now - this.last < 33) return; // ~30 i/s suffisent pour de l'ASCII
-			this.last = now;
-			this.progress = Math.min(1, this.progress + 0.012);
+			this.progress = Math.min(1, this.progress + 0.006);
 			this.draw(now);
 		};
 		this.raf = requestAnimationFrame(loop);
 	}
 
-	private put(cx: number, cy: number, ch: string, tone: number) {
-		if (cx < 0 || cy < 0 || cx >= this.cols || cy >= this.rows) return;
-		const i = cy * this.cols + cx;
-		if (tone >= this.tone[i] || !this.grid[i]) {
-			this.grid[i] = ch;
-			this.tone[i] = tone;
-		}
-	}
-
 	private draw(now: number) {
-		const { ctx, cols, rows, cw, ch, A } = this;
-		if (!cols) return;
+		const { ctx, W, H, A } = this;
+		if (!W) return;
 		const t = now / 1000;
-		this.grid.fill('');
-		this.tone.fill(0);
+		ctx.clearRect(0, 0, W, H);
+		ctx.lineCap = 'round';
+		ctx.lineJoin = 'round';
 
-		const px = this.pointer.active ? (this.pointer.x / (cols * cw)) * A : -9;
-		const py = this.pointer.active ? this.pointer.y / (rows * ch) : -9;
-		const toCell = (x: number, y: number) => [Math.floor((x / A) * cols), Math.floor(y * rows)];
-		const sway = (p: P) => {
+		const px = this.pointer.active ? (this.pointer.x / W) * A : -9;
+		const py = this.pointer.active ? this.pointer.y / H : -9;
+		// Le vent, et le curseur qui écarte doucement les tiges
+		const at = (p: P) => {
 			let x = p.x + Math.sin(t * 0.8 + p.g * 3 + this.seed) * 0.018 * p.g * p.g;
 			let y = p.y;
 			const dx = x - px;
@@ -264,91 +227,85 @@ class Organism {
 				x += dx * push * 8;
 				y += dy * push * 4;
 			}
-			return { x, y };
+			return { x: (x / A) * W, y: y * H };
 		};
 
-		// Tiges, racines, filaments
+		// Tiges, racines, filaments : un trait fin doublé d'un halo léger
 		for (const s of this.shape.strokes) {
-			for (let i = 1; i < s.pts.length; i++) {
-				const a = s.pts[i - 1];
-				const b = s.pts[i];
-				if (b.g > this.progress) break;
-				const pa = sway(a);
-				const pb = sway(b);
-				const [ax, ay] = toCell(pa.x, pa.y);
-				const [bx, by] = toCell(pb.x, pb.y);
-				const steps = Math.max(Math.abs(bx - ax), Math.abs(by - ay), 1) * 2;
-				const c = dirChar((bx - ax) * cw, (by - ay) * ch);
-				for (let k = 0; k <= steps; k++) {
-					const cx = Math.round(ax + ((bx - ax) * k) / steps);
-					const cy = Math.round(ay + ((by - ay) * k) / steps);
-					const mutate = hash(cx, cy, Math.floor(t * 1.5)) < 0.04;
-					this.put(cx, cy, mutate ? (MUTATE[c] ?? c) : c, s.tone ? 1 : 2);
-				}
+			const pts: { x: number; y: number }[] = [];
+			for (const p of s.pts) {
+				if (p.g > this.progress) break;
+				pts.push(at(p));
 			}
+			if (pts.length < 2) continue;
+			const line = () => {
+				ctx.beginPath();
+				ctx.moveTo(pts[0].x, pts[0].y);
+				for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+				ctx.stroke();
+			};
+			ctx.strokeStyle = `rgb(${s.tone ? BONE : MOSS} / 0.08)`;
+			ctx.lineWidth = s.tone ? 2.5 : 3.5;
+			line();
+			ctx.strokeStyle = `rgb(${s.tone ? BONE : MOSS} / ${s.tone ? 0.32 : 0.55})`;
+			ctx.lineWidth = s.tone ? 0.6 : 0.9;
+			line();
 		}
 
-		// Têtes : fleurs en bandes de chiffres, spores en anneaux
+		// Têtes : fleurs en voile translucide, nervurées, cœur de pollen
 		for (const h of this.shape.heads) {
 			if (h.g > this.progress) continue;
 			const bloom = Math.min(1, (this.progress - h.g) / 0.3);
-			const c = sway({ x: h.x, y: h.y, g: 1 });
-			const R = h.r * bloom;
-			const [ccx, ccy] = toCell(c.x, c.y);
-			const spanX = Math.ceil(((R * 1.1) / A) * cols) + 1;
-			const spanY = Math.ceil(R * 1.1 * rows) + 1;
-			for (let cy = ccy - spanY; cy <= ccy + spanY; cy++) {
-				for (let cx = ccx - spanX; cx <= ccx + spanX; cx++) {
-					const x = ((cx + 0.5) / cols) * A - c.x;
-					const y = (cy + 0.5) / rows - c.y;
-					const d = Math.hypot(x, y);
-					const th = Math.atan2(y, x) + h.spin + t * 0.05;
-					const edge = h.petals
-						? R * (0.32 + 0.68 * Math.pow(Math.abs(Math.cos((h.petals * th) / 2)), 0.7))
-						: R;
-					const cellR = 1 / rows;
-					if (Math.abs(d - edge) < cellR * 0.75) {
-						this.put(cx, cy, h.petals ? dirChar(-y, x) : 'o', 3);
-					} else if (d < edge) {
-						if (d < R * 0.16) {
-							this.put(cx, cy, d < R * 0.08 ? '@' : '*', 4);
-							continue;
-						}
-						const band = Math.floor((d / edge) * 4);
-						if (hash(cx, cy, band) < 0.5) {
-							const digit = (band * 3 + Math.floor(t * 1.4 - band * 0.6) + 100) % 10;
-							this.put(cx, cy, String(digit), 4);
-						}
-					}
-				}
+			const c = at({ x: h.x, y: h.y, g: 1 });
+			const R = h.r * bloom * H;
+			if (R < 0.5) continue;
+			const spin = h.spin + t * 0.05;
+			if (!h.petals) {
+				ctx.strokeStyle = `rgb(${this.accent} / 0.6)`;
+				ctx.lineWidth = 0.8;
+				ctx.beginPath();
+				ctx.arc(c.x, c.y, R, 0, Math.PI * 2);
+				ctx.stroke();
+				continue;
 			}
-		}
-
-		// Rendu
-		const W = cols * cw;
-		const H = rows * ch;
-		ctx.clearRect(0, 0, W + cw, H + ch);
-		ctx.font = `${this.size}px "Fragment Mono", ui-monospace, monospace`;
-		ctx.textBaseline = 'top';
-		const pr = 90;
-		for (let i = 0; i < this.grid.length; i++) {
-			let glyph = this.grid[i];
-			if (!glyph) continue;
-			const cx = i % cols;
-			const cy = (i / cols) | 0;
-			const x = cx * cw;
-			const y = cy * ch;
-			const tone = this.tone[i];
-			let color = tone >= 3 ? `rgb(${this.accent} / ${tone === 4 ? 0.85 : 0.7})` : `rgb(${BONE} / ${tone === 2 ? 0.55 : 0.3})`;
-			if (this.pointer.active) {
-				const d = Math.hypot(x - this.pointer.x, y - this.pointer.y);
-				if (d < pr) {
-					if (hash(cx, cy, Math.floor(t * 8)) < 0.35) glyph = hash(cx, cy) < 0.5 ? '0' : '1';
-					color = `rgb(${COLORS.acid} / ${0.95 - (d / pr) * 0.5})`;
-				}
+			const edge = (th: number) => R * (0.32 + 0.68 * Math.pow(Math.abs(Math.cos((h.petals * (th - spin)) / 2)), 0.7));
+			ctx.beginPath();
+			for (let k = 0; k <= 96; k++) {
+				const th = (k / 96) * Math.PI * 2;
+				const r = edge(th);
+				const x = c.x + Math.cos(th) * r;
+				const y = c.y + Math.sin(th) * r;
+				if (k) ctx.lineTo(x, y);
+				else ctx.moveTo(x, y);
 			}
-			ctx.fillStyle = color;
-			ctx.fillText(glyph, x, y);
+			const fill = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, R);
+			fill.addColorStop(0, `rgb(${this.accent} / 0.22)`);
+			fill.addColorStop(1, `rgb(${BONE} / 0.04)`);
+			ctx.fillStyle = fill;
+			ctx.fill();
+			ctx.strokeStyle = `rgb(${BONE} / 0.55)`;
+			ctx.lineWidth = 0.7;
+			ctx.stroke();
+			// Nervures : du cœur vers le bout de chaque pétale
+			ctx.strokeStyle = `rgb(${BONE} / 0.18)`;
+			ctx.lineWidth = 0.5;
+			ctx.beginPath();
+			for (let k = 0; k < h.petals * 3; k++) {
+				const th = spin + (k / (h.petals * 3)) * Math.PI * 2;
+				const r = edge(th) * 0.92;
+				ctx.moveTo(c.x + Math.cos(th) * R * 0.12, c.y + Math.sin(th) * R * 0.12);
+				ctx.lineTo(c.x + Math.cos(th) * r, c.y + Math.sin(th) * r);
+			}
+			ctx.stroke();
+			// Cœur : quelques grains de pollen
+			ctx.fillStyle = `rgb(${this.accent} / 0.85)`;
+			for (let k = 0; k < 9; k++) {
+				const a2 = k * 2.4 + h.spin;
+				const r2 = R * 0.12 * Math.sqrt(k / 9);
+				ctx.beginPath();
+				ctx.arc(c.x + Math.cos(a2) * r2, c.y + Math.sin(a2) * r2, 1.1, 0, Math.PI * 2);
+				ctx.fill();
+			}
 		}
 	}
 }
@@ -356,7 +313,6 @@ class Organism {
 export async function mountAscii(root: ParentNode = document) {
 	const canvases = root.querySelectorAll<HTMLCanvasElement>('canvas[data-ascii]:not([data-ascii-ready])');
 	if (!canvases.length) return;
-	await document.fonts.load('11px "Fragment Mono"').catch(() => {});
 	const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 	for (const c of canvases) {
 		c.dataset.asciiReady = '';

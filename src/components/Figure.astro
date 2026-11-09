@@ -30,7 +30,6 @@ const tiles = Array.from({ length: COLS * ROWS }, (_, i) => {
 	const y = Math.floor(i / COLS);
 	return Math.round((x / COLS) * 380 + rand() * 520 + (y / ROWS) * 120);
 });
-const value = (rand() * 0.6 + 0.4 + 0.00000004).toFixed(8);
 ---
 
 <figure class:list={['fig group', className]} data-tiles>
@@ -76,7 +75,6 @@ const value = (rand() * 0.6 + 0.4 + 0.00000004).toFixed(8);
 	</div>
 	<figcaption class="meta mt-3 flex items-baseline justify-between gap-4 text-mineral">
 		<span><span class="text-bone/85">fig. {fig}</span> — {caption}</span>
-		<span class="hidden tabular-nums text-mineral-dim transition-colors group-hover:text-acid sm:inline">{value}</span>
 	</figcaption>
 </figure>
 

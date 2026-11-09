@@ -8,15 +8,15 @@ import { scramble } from './text';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-type Step = { x: number; y: number; ch: string; t: number; node: boolean };
+type Step = { x: number; y: number; px: number; py: number; t: number; node: boolean };
 
 const LOG: [number, string][] = [
 	[0, 'sow     hyphae_floralis'],
 	[0.18, 'grow    stem — spiral, fibres'],
 	[0.42, 'open    petals — veil, iris'],
-	[0.66, 'compile shaders — ascii, scan'],
-	[0.86, 'carve   cavern — 05 specimens'],
-	[1, 'ready   entering the specimen'],
+	[0.66, 'warm    light — pollen, sap'],
+	[0.86, 'hollow  stem — 04 specimens'],
+	[1, 'ready   entering the flower'],
 ];
 
 function rng(seed: number) {
@@ -33,19 +33,19 @@ function rng(seed: number) {
 function grow(cols: number, rows: number, seed: number) {
 	const rand = rng(seed);
 	const dirs = [
-		[1, 0, '-'],
-		[1, -1, '/'],
-		[0, -1, '|'],
-		[-1, -1, '\\'],
-		[-1, 0, '-'],
-		[-1, 1, '/'],
-		[0, 1, '|'],
-		[1, 1, '\\'],
+		[1, 0],
+		[1, -1],
+		[0, -1],
+		[-1, -1],
+		[-1, 0],
+		[-1, 1],
+		[0, 1],
+		[1, 1],
 	] as const;
 	const cx = Math.floor(cols / 2);
 	const cy = Math.floor(rows / 2);
 	const taken = new Set<number>([cy * cols + cx]);
-	const steps: Step[] = [{ x: cx, y: cy, ch: '@', t: 0, node: true }];
+	const steps: Step[] = [{ x: cx, y: cy, px: cx, py: cy, t: 0, node: true }];
 	let tips = Array.from({ length: 9 }, (_, i) => ({ x: cx, y: cy, d: i % 8, t: 0 }));
 	const rx = cols * 0.48;
 	const ry = rows * 0.46;
@@ -67,12 +67,12 @@ function grow(cols: number, rows: number, seed: number) {
 				}
 			}
 			if (!ok) continue;
-			const [dx, dy, ch] = dirs[d];
+			const [dx, dy] = dirs[d];
 			const x = tip.x + dx;
 			const y = tip.y + dy;
 			taken.add(y * cols + x);
 			const branch = rand() < 0.11;
-			steps.push({ x, y, ch: branch ? '+' : ch, t: tip.t + 1, node: branch });
+			steps.push({ x, y, px: tip.x, py: tip.y, t: tip.t + 1, node: branch });
 			if (rand() > 0.004) next.push({ x, y, d, t: tip.t + 1 });
 			if (branch) next.push({ x, y, d: (d + (rand() < 0.5 ? 2 : 6)) % 8, t: tip.t + 1 });
 		}
@@ -86,7 +86,6 @@ export function createLoader(root: HTMLElement) {
 	const canvas = root.querySelector<HTMLCanvasElement>('[data-loader-canvas]')!;
 	const bar = root.querySelector<HTMLElement>('[data-loader-bar]')!;
 	const pct = root.querySelector<HTMLElement>('[data-loader-pct]')!;
-	const value = root.querySelector<HTMLElement>('[data-loader-value]')!;
 	const log = root.querySelector<HTMLElement>('[data-loader-log]')!;
 	const ctx = canvas.getContext('2d')!;
 	const html = document.documentElement;
@@ -140,24 +139,35 @@ export function createLoader(root: HTMLElement) {
 
 		const r = canvas.getBoundingClientRect();
 		ctx.clearRect(0, 0, r.width, r.height);
-		ctx.font = `12px "Fragment Mono", ui-monospace, monospace`;
-		ctx.textBaseline = 'top';
+		// Le réseau au trait fin : chaque pas relie la cellule à la précédente
 		const front = shown * net.maxT;
+		ctx.lineCap = 'round';
+		ctx.lineWidth = 0.9;
+		// Chaque nœud est décalé un peu au hasard : un réseau vivant, pas une grille
+		const jit = (x: number, y: number, k: number) => {
+			const v = Math.sin(x * 12.9898 + y * 78.233 + k * 37.719) * 43758.5453;
+			return (v - Math.floor(v) - 0.5) * 0.8;
+		};
+		const X = (x: number, y: number) => (x + 0.5 + jit(x, y, 1)) * cw;
+		const Y = (x: number, y: number) => (y + 0.5 + jit(x, y, 2)) * ch;
 		for (const s of net.steps) {
-			if (s.t > front) continue;
+			if (s.t > front || !s.t) continue;
 			const age = front - s.t;
-			let glyph = s.ch;
-			if (s.node && !reduced) glyph = String(Math.floor((elapsed * 4 + s.x * 7 + s.y * 3) % 10));
-			ctx.fillStyle =
-				age < 2.5 ? 'rgb(200 245 60)' : s.node ? 'rgb(230 228 220 / 0.85)' : `rgb(230 228 220 / ${Math.max(0.16, 0.6 - age * 0.012)})`;
-			ctx.fillText(glyph, s.x * cw, s.y * ch);
+			ctx.strokeStyle = age < 2.5 ? 'rgb(200 245 60)' : `rgb(230 228 220 / ${Math.max(0.14, 0.55 - age * 0.012)})`;
+			ctx.beginPath();
+			ctx.moveTo(X(s.px, s.py), Y(s.px, s.py));
+			ctx.lineTo(X(s.x, s.y), Y(s.x, s.y));
+			ctx.stroke();
+			if (s.node) {
+				ctx.fillStyle = age < 2.5 ? 'rgb(200 245 60)' : 'rgb(230 228 220 / 0.7)';
+				ctx.beginPath();
+				ctx.arc(X(s.x, s.y), Y(s.x, s.y), 1.6 + Math.sin(elapsed * 3 + s.x) * 0.4, 0, Math.PI * 2);
+				ctx.fill();
+			}
 		}
 
-		const p = Math.round(shown * 100);
-		const filled = Math.round(shown * 24);
-		bar.textContent = `[${'#'.repeat(filled)}${':'.repeat(24 - filled)}]`;
-		pct.textContent = `${String(p).padStart(3, '0')}%`;
-		value.textContent = (shown + (shown > 0 && shown < 1 ? 0.00000001 : 0)).toFixed(8);
+		bar.style.width = `${(shown * 100).toFixed(1)}%`;
+		pct.textContent = `${String(Math.round(shown * 100)).padStart(3, '0')}%`;
 		writeLog();
 		raf = requestAnimationFrame(draw);
 	};

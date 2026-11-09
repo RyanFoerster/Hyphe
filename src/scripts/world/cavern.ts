@@ -169,7 +169,8 @@ const SPECIMEN_FRAG = /* glsl */ `
 		vec2 tf = fract(uv * vec2(8.0, 5.0));
 		float edge = step(min(min(tf.x, 1.0 - tf.x) * 8.0, min(tf.y, 1.0 - tf.y) * 5.0), 0.02);
 		float settling = on * (1.0 - step(th * 0.85 + 0.12, uReveal * 1.1 - 0.12));
-		vec3 col = tex * (on > 0.5 ? 1.35 + uHover * 0.35 : 1.1);
+		// Sous le seuil du bloom : une image claire (un site blanc) ne doit pas irradier
+		vec3 col = tex * (on > 0.5 ? 0.86 + uHover * 0.1 : 0.8);
 		col += uAccent * edge * settling * 1.5;
 		gl_FragColor = vec4(col, on > 0.5 ? 2.0 : 1.0);
 	}

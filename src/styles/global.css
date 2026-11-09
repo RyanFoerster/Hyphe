@@ -384,3 +384,15 @@ html[data-specimen-hover] body {
     inset: -0.12em -0.16em -0.1em -0.1em !important;
   }
 }
+
+/* Lettres qui se déplient (data-scramble) */
+.uf {
+  white-space: pre;
+  animation: unfurl 0.55s var(--ease-organic) both;
+}
+@keyframes unfurl {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+  }
+}

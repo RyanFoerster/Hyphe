@@ -1,6 +1,6 @@
-// Système de texte : les mots entrent comme des données qui se résolvent.
+// Système de texte : les mots poussent plutôt qu'ils n'apparaissent.
 //
-//   [data-scramble]   texte mono qui se décode depuis des caractères au hasard
+//   [data-scramble]   texte mono dont les lettres se déplient une à une
 //                     (à l'apparition, et au survol si c'est un lien)
 //   [data-split]      titre découpé, deux manières de le faire entrer :
 //                     · bloom (par défaut) : chaque lettre est une graine qui
@@ -12,7 +12,6 @@
 //
 // Tout part de la classe .is-in posée par l'observateur d'apparition.
 
-const POOL = '01#%*+=-:.x/\\<>^@';
 const SEEDS = '.:+*';
 
 // Choix de l'entrée des titres : ?text=scan ou ?text=bloom, mémorisé le temps de la visite
@@ -27,21 +26,27 @@ function textMode() {
 }
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+const settle = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
 export function scramble(el: HTMLElement, duration = 700) {
 	const final = el.dataset.scrambleText ?? (el.dataset.scrambleText = el.textContent ?? '');
-	if (reduced) return;
-	const start = performance.now();
+	if (reduced) {
+		el.textContent = final;
+		return;
+	}
+	// Les lettres se déplient une à une, floues puis nettes, comme une pousse
 	const chars = [...final];
-	const order = chars.map((_, i) => i / chars.length * 0.6 + Math.random() * 0.4);
-	const tick = (now: number) => {
-		const t = Math.min(1, (now - start) / duration);
-		el.textContent = chars
-			.map((c, i) => (c === ' ' || t >= order[i] ? c : POOL[Math.floor(Math.random() * POOL.length)]))
-			.join('');
-		if (t < 1) requestAnimationFrame(tick);
-		else el.textContent = final;
-	};
-	requestAnimationFrame(tick);
+	const step = Math.min(28, (duration * 0.6) / Math.max(1, chars.length));
+	el.replaceChildren(
+		...chars.map((c, i) => {
+			const span = document.createElement('span');
+			span.className = 'uf';
+			span.textContent = c;
+			span.style.animationDelay = `${Math.round(i * step)}ms`;
+			return span;
+		}),
+	);
+	clearTimeout(settle.get(el));
+	settle.set(el, setTimeout(() => (el.textContent = final), chars.length * step + 600));
 }
 
 function split(el: HTMLElement, mode: 'bloom' | 'scan') {

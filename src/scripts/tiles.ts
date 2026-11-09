@@ -1,10 +1,9 @@
-// Transition entre pages : une mosaïque. Au clic, des tuiles recouvrent l'écran
-// en partant du point cliqué ; la page suivante se recompose tuile par tuile
-// depuis ce même point. Chaque tuile passe par un cadre, un caractère, une valeur.
+// Transition entre pages : des cellules. Au clic, des disques s'ouvrent et
+// recouvrent l'écran en partant du point cliqué ; la page suivante se dévoile
+// cellule par cellule depuis ce même point, chacune bordée un instant d'acide.
 
 const KEY = 'hyphe:tiles';
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const GLYPHS = '01#%*+=-:.x';
 
 interface Origin {
 	x: number;
@@ -33,7 +32,7 @@ export async function mosaic(origin: { x: number; y: number }, cover: boolean, d
 	const cols = Math.ceil(innerWidth / size);
 	const rows = Math.ceil(innerHeight / size);
 	const maxD = Math.hypot(innerWidth, innerHeight);
-	const tiles: { x: number; y: number; delay: number; g: string; v: string }[] = [];
+	const tiles: { x: number; y: number; delay: number }[] = [];
 	for (let j = 0; j < rows; j++)
 		for (let i = 0; i < cols; i++) {
 			const x = i * size;
@@ -43,12 +42,8 @@ export async function mosaic(origin: { x: number; y: number }, cover: boolean, d
 				x,
 				y,
 				delay: d * 0.62 + Math.random() * 0.22,
-				g: GLYPHS[Math.floor(Math.random() * GLYPHS.length)],
-				v: Math.random() > 0.5 ? (0.5 + Math.random() * 0.7).toFixed(1) : (Math.random() + 0.00000004).toFixed(8),
 			});
 		}
-	ctx.font = '9px "Fragment Mono", ui-monospace, monospace';
-	ctx.textBaseline = 'top';
 	// Le voile doit être plein dès la première image, avant de lever html.tiles-cover
 	if (!cover) {
 		ctx.fillStyle = '#090c0a';
@@ -65,19 +60,23 @@ export async function mosaic(origin: { x: number; y: number }, cover: boolean, d
 				const p = Math.min(1, Math.max(0, (t - tile.delay) / 0.16));
 				const s = cover ? p : 1 - p;
 				if (s <= 0 && p >= 1) continue;
+				// Chaque cellule est un disque qui s'ouvre ou se referme ; plein, il
+				// déborde assez pour que les disques voisins couvrent tout l'écran
+				const cx = tile.x + size / 2;
+				const cy = tile.y + size / 2;
+				const r = size * 0.74 * (1 - (1 - s) ** 2);
 				if (s > 0) {
 					ctx.fillStyle = '#090c0a';
-					ctx.fillRect(tile.x, tile.y, size + 0.5, size + 0.5);
+					ctx.beginPath();
+					ctx.arc(cx, cy, r, 0, Math.PI * 2);
+					ctx.fill();
 				}
-				// Phase de bascule : cadre, caractère et valeur
-				const edge = p > 0 && p < 1 ? 1 : 0;
-				if (edge) {
-					ctx.strokeStyle = 'rgba(222,232,228,0.5)';
-					ctx.strokeRect(tile.x + 0.5, tile.y + 0.5, size - 1, size - 1);
-					ctx.fillStyle = 'rgba(200,245,60,0.95)';
-					ctx.fillText(tile.g, tile.x + size / 2 - 3, tile.y + size / 2 - 5);
-					ctx.fillStyle = 'rgba(222,232,228,0.6)';
-					ctx.fillText(tile.v, tile.x + 5, tile.y + 5);
+				// Pendant la bascule, un fin liseré acide sur le bord de la cellule
+				if (p > 0 && p < 1) {
+					ctx.strokeStyle = `rgba(200,245,60,${(0.55 * Math.sin(p * Math.PI)).toFixed(3)})`;
+					ctx.beginPath();
+					ctx.arc(cx, cy, Math.max(1, r), 0, Math.PI * 2);
+					ctx.stroke();
 				}
 			}
 			if (t < 1 + 0.2) requestAnimationFrame(tick);

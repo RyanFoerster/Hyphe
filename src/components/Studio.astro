@@ -1,6 +1,8 @@
 ---
 // Après la galerie : le studio remonte par-dessus la fleur éteinte.
-// Un manifeste, ce que l'on fait pousser, et la façon de le faire.
+// Un manifeste ; ce que l'on fait pousser, en orbite autour d'une fleur
+// translucide (un pétale par savoir-faire) ; la méthode, en trois cercles
+// qui se dessinent : graine, pousse, fleur.
 import { site } from '../data/site';
 
 const steps = [
@@ -8,9 +10,13 @@ const steps = [
 	{ name: 'Grow', text: 'Design and code move together, in small living prototypes.' },
 	{ name: 'Bloom', text: 'Launch, then tend: measure, prune and keep it alive.' },
 ];
+const n = site.services.length;
+// Un pétale, pointe vers le haut, de la base (près du cœur) jusqu'au bord
+const PETAL = 'M0,-13 C 24,-30 27,-64 0,-86 C -27,-64 -24,-30 0,-13 Z';
+const BUD = 'M0,-6 C 10,-14 11,-28 0,-38 C -11,-28 -10,-14 0,-6 Z';
 ---
 
-<section class="studio relative z-10 bg-void" aria-labelledby="studio-title">
+<section class="studio relative z-10 overflow-hidden bg-void" aria-labelledby="studio-title">
 	<!-- Le fil sort de la galerie et devient la lisière de la section -->
 	<canvas
 		class="pointer-events-none block h-28 w-full opacity-70"
@@ -21,7 +27,22 @@ const steps = [
 		aria-hidden="true"
 	></canvas>
 
-	<div class="grid gap-8 px-4 pb-24 pt-16 sm:px-6 md:grid-cols-12 md:pb-36 md:pt-24">
+	<svg width="0" height="0" class="absolute" aria-hidden="true">
+		<defs>
+			<!-- Le voile irisé des pétales, comme la fleur du hero -->
+			<linearGradient id="veil" x1="0" y1="1" x2="0" y2="0">
+				<stop offset="0" stop-color="#9ef0e0" stop-opacity="0.02" />
+				<stop offset="0.55" stop-color="#9a7cf0" stop-opacity="0.12" />
+				<stop offset="1" stop-color="#e7a0c0" stop-opacity="0.2" />
+			</linearGradient>
+			<radialGradient id="glow">
+				<stop offset="0" stop-color="#c8f53c" stop-opacity="0.35" />
+				<stop offset="1" stop-color="#c8f53c" stop-opacity="0" />
+			</radialGradient>
+		</defs>
+	</svg>
+
+	<div class="grid gap-8 px-4 pb-20 pt-16 sm:px-6 md:grid-cols-12 md:pb-28 md:pt-24">
 		<p class="meta text-mineral md:col-span-3" data-reveal><span data-scramble>[ 02 ] The studio</span></p>
 		<div class="md:col-span-9">
 			<h2 id="studio-title" class="sr-only">The studio</h2>
@@ -35,38 +56,284 @@ const steps = [
 		</div>
 	</div>
 
-	<div class="grid gap-x-6 gap-y-16 px-4 pb-32 sm:px-6 md:grid-cols-12 md:pb-44">
-		<div class="md:col-span-5 md:col-start-4" data-reveal>
-			<p class="meta mb-5 text-mineral"><span data-scramble>What we grow</span></p>
-			<ul class="border-t border-dashed border-bone/15">
-				{
-					site.services.map((s, i) => (
-						<li class="service flex items-baseline gap-4 border-b border-dashed border-bone/15 py-3">
-							<span class="meta tabular-nums text-acid/80">{String(i + 1).padStart(2, '0')}</span>
-							<span class="text-lg text-bone/90">{s}</span>
+	<!-- Ce que l'on fait pousser : un pétale par savoir-faire, en orbite -->
+	<div class="px-4 pb-28 sm:px-6 md:pb-40" data-reveal>
+		<p class="meta mb-10 text-center text-mineral"><span data-scramble>What we grow</span></p>
+		<div class="corolla relative mx-auto aspect-square" data-corolla style={`--n: ${n}`}>
+			<div class="turn absolute inset-0">
+				<svg viewBox="-100 -100 200 200" class="absolute inset-0 size-full overflow-visible" aria-hidden="true">
+					<circle r="98" class="ring" />
+					<circle r="72" class="grid-ring" />
+					<circle r="46" class="grid-ring" />
+					{Array.from({ length: 72 }, (_, k) => <line class="tick" y1="-98" y2={k % 6 ? '-95.5' : '-93'} transform={`rotate(${k * 5})`} />)}
+					<circle r="30" fill="url(#glow)" />
+					<g class="petals">
+						{site.services.map((_, i) => (
+							<g class="petal" data-i={i} transform={`rotate(${(i * 360) / n})`}>
+								<path d={PETAL} />
+								<path class="vein" d="M0,-14 L0,-82 M0,-30 L9,-50 M0,-30 L-9,-50 M0,-48 L7,-66 M0,-48 L-7,-66" />
+							</g>
+						))}
+					</g>
+					{Array.from({ length: 14 }, (_, k) => (
+						<circle class="pollen" r={k % 3 ? 1 : 1.6} cx={(Math.cos(k * 2.4) * 7 * Math.sqrt(k / 14)).toFixed(2)} cy={(Math.sin(k * 2.4) * 7 * Math.sqrt(k / 14)).toFixed(2)} />
+					))}
+				</svg>
+				<ul>
+					{site.services.map((s, i) => (
+						<li class="node" style={`--a: ${(i * 360) / n}deg`}>
+							<span class="label" data-i={i}>
+								<span class="meta block text-acid/80">{String(i + 1).padStart(2, '0')}</span>
+								<span class="name">{s}</span>
+							</span>
 						</li>
-					))
-				}
-			</ul>
+					))}
+				</ul>
+			</div>
 		</div>
-		<div class="md:col-span-4" data-reveal style="--reveal-delay: 120ms">
-			<p class="meta mb-5 text-mineral"><span data-scramble>How it grows</span></p>
-			<ol class="space-y-6">
-				{
-					steps.map((s, i) => (
-						<li class="grid grid-cols-[2.5rem_1fr] gap-4 border-t border-dashed border-bone/15 pt-5">
-							<span class="meta text-mineral-dim">{['.', ':', '*'][i]}</span>
-							<div>
-								<p class="titre text-[2rem]">{s.name}</p>
-								<p class="mt-1 text-[15px] leading-relaxed text-bone/70">{s.text}</p>
-							</div>
-						</li>
-					))
-				}
-			</ol>
-			<button type="button" data-open-about class="meta mt-8 inline-flex items-center gap-3 border border-bone/20 px-4 py-2.5 text-bone transition hover:border-acid hover:text-acid">
-				<span>Open about.sys</span><span aria-hidden="true">→</span>
+	</div>
+
+	<!-- La méthode : trois cercles qui se dessinent à l'apparition -->
+	<div class="px-4 pb-32 sm:px-6 md:pb-44">
+		<p class="meta mb-12 text-center text-mineral" data-reveal><span data-scramble>How it grows</span></p>
+		<ol class="stages relative mx-auto grid max-w-5xl gap-14 md:grid-cols-3 md:gap-8">
+			<span class="link hidden md:block" aria-hidden="true"></span>
+			{
+				steps.map((s, i) => (
+					<li class="stage flex flex-col items-center text-center" data-reveal style={`--reveal-delay: ${i * 180}ms; --d: ${i * 0.35}s`}>
+						<svg viewBox="-50 -50 100 100" class="size-40 overflow-visible md:size-44" aria-hidden="true">
+							<circle r="46" class="ring draw" pathLength="1" />
+							<circle r="46" class="ring-turn" />
+							{i === 0 && (
+								<g>
+									<circle r="16" fill="url(#glow)" />
+									{Array.from({ length: 9 }, (_, k) => (
+										<circle class="pollen pop" style={`--k: ${k}`} r={k ? 1.3 : 2.4} cx={(Math.cos(k * 2.4) * 6 * Math.sqrt(k / 9)).toFixed(2)} cy={(Math.sin(k * 2.4) * 6 * Math.sqrt(k / 9) + 8).toFixed(2)} />
+									))}
+									<path class="line draw" pathLength="1" d="M0,10 C -6,18 -3,26 -9,32 M0,10 C 5,19 2,25 8,31 M0,10 C 1,20 0,28 1,34" />
+								</g>
+							)}
+							{i === 1 && (
+								<g>
+									<path class="line draw" pathLength="1" d="M0,36 C -6,20 6,6 0,-12" />
+									<path class="leaf draw" pathLength="1" d={BUD} transform="translate(-1,14) rotate(-58)" />
+									<path class="leaf draw" pathLength="1" d={BUD} transform="translate(1,2) rotate(52) scale(0.8)" />
+									<circle class="pollen pop" style="--k: 4" r="2.2" cy="-13" />
+								</g>
+							)}
+							{i === 2 && (
+								<g>
+									<path class="line draw" pathLength="1" d="M0,40 C -4,28 4,18 0,6" />
+									<g transform="translate(0,-6)">
+										{Array.from({ length: 6 }, (_, k) => <path class="leaf draw" pathLength="1" d={BUD} transform={`rotate(${k * 60})`} />)}
+										<circle r="12" fill="url(#glow)" />
+										{Array.from({ length: 7 }, (_, k) => (
+											<circle class="pollen pop" style={`--k: ${k}`} r="1.2" cx={(Math.cos(k * 2.4) * 3.5 * Math.sqrt(k / 7)).toFixed(2)} cy={(Math.sin(k * 2.4) * 3.5 * Math.sqrt(k / 7)).toFixed(2)} />
+										))}
+									</g>
+								</g>
+							)}
+						</svg>
+						<p class="titre mt-6 text-[2.6rem]">{s.name}</p>
+						<p class="mt-2 max-w-[17rem] text-[15px] leading-relaxed text-bone/70">{s.text}</p>
+					</li>
+				))
+			}
+		</ol>
+		<div class="mt-16 flex justify-center" data-reveal>
+			<button type="button" data-open-about class="meta inline-flex items-center gap-3 rounded-full border border-bone/20 px-5 py-2.5 text-bone transition hover:border-acid hover:text-acid">
+				<span>About the studio</span><span aria-hidden="true">→</span>
 			</button>
 		</div>
 	</div>
 </section>
+
+<style>
+	/* ---- La corolle des savoir-faire ---- */
+	.corolla {
+		width: min(620px, 78vw);
+		--R: calc(min(620px, 78vw) * 0.5);
+	}
+	.turn {
+		animation: turn 120s linear infinite;
+	}
+	.corolla:hover .turn,
+	.corolla:hover .label {
+		animation-play-state: paused;
+	}
+	@keyframes turn {
+		to {
+			rotate: 360deg;
+		}
+	}
+	.ring {
+		fill: none;
+		stroke: rgb(230 228 220 / 0.28);
+		stroke-width: 0.35;
+		stroke-dasharray: 1.2 1.6;
+	}
+	.grid-ring {
+		fill: none;
+		stroke: rgb(230 228 220 / 0.08);
+		stroke-width: 0.3;
+	}
+	.tick {
+		stroke: rgb(230 228 220 / 0.35);
+		stroke-width: 0.3;
+	}
+	.petal path:first-child {
+		fill: url(#veil);
+		stroke: rgb(230 228 220 / 0.5);
+		stroke-width: 0.35;
+		transition:
+			stroke 0.4s,
+			fill-opacity 0.4s;
+	}
+	.vein {
+		fill: none;
+		stroke: rgb(158 240 224 / 0.25);
+		stroke-width: 0.25;
+	}
+	.petal {
+		transform-box: view-box;
+		transition: scale 0.6s var(--ease-organic);
+	}
+	.petal.is-on path:first-child {
+		stroke: var(--color-acid);
+	}
+	.petal.is-on {
+		scale: 1.06;
+	}
+	.pollen {
+		fill: var(--color-acid);
+	}
+	/* Les savoir-faire : posés au bout de chaque pétale, toujours droits */
+	.node {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: rotate(var(--a)) translateY(calc(var(--R) * -1.06)) rotate(calc(var(--a) * -1));
+	}
+	.label {
+		position: absolute;
+		left: 0;
+		top: 0;
+		display: block;
+		translate: -50% -50%;
+		width: max-content;
+		max-width: 11rem;
+		padding: 0.4rem 0.7rem;
+		text-align: center;
+		border: 1px solid rgb(230 228 220 / 0.12);
+		border-radius: 999px;
+		background: color-mix(in oklab, var(--color-void) 82%, transparent);
+		backdrop-filter: blur(8px);
+		animation: turn 120s linear infinite reverse;
+		transition: border-color 0.4s;
+	}
+	.label .name {
+		font-size: 14px;
+		color: var(--color-bone);
+	}
+	.label:hover,
+	.label.is-on {
+		border-color: var(--color-acid);
+	}
+	@media (max-width: 639px) {
+		.label {
+			max-width: 7.5rem;
+			padding: 0.3rem 0.5rem;
+		}
+		.label .name {
+			font-size: 12px;
+		}
+	}
+
+	/* ---- Les trois cercles de la méthode ---- */
+	.link {
+		position: absolute;
+		left: 16%;
+		right: 16%;
+		top: 5rem;
+		border-top: 1px dashed rgb(230 228 220 / 0.18);
+	}
+	.stage .ring {
+		stroke-dasharray: none;
+		stroke: rgb(230 228 220 / 0.3);
+	}
+	.ring-turn {
+		fill: none;
+		stroke: var(--color-acid);
+		stroke-width: 0.8;
+		stroke-dasharray: 18 271;
+		transform-box: view-box;
+		animation: turn 9s linear infinite;
+		animation-delay: calc(var(--d) * -4);
+	}
+	.line {
+		fill: none;
+		stroke: rgb(150 196 120 / 0.85);
+		stroke-width: 0.7;
+		stroke-linecap: round;
+	}
+	.leaf {
+		fill: url(#veil);
+		stroke: rgb(230 228 220 / 0.6);
+		stroke-width: 0.5;
+	}
+	/* Tracé à l'apparition : le contour se dessine, puis le voile et le pollen */
+	.draw {
+		stroke-dasharray: 1;
+		stroke-dashoffset: 1;
+		fill-opacity: 0;
+		transition:
+			stroke-dashoffset 1.6s var(--ease-organic) calc(var(--d) + 0.2s),
+			fill-opacity 0.8s calc(var(--d) + 1.2s);
+	}
+	.stage.is-in .draw {
+		stroke-dashoffset: 0;
+		fill-opacity: 1;
+	}
+	.pop {
+		opacity: 0;
+		scale: 0;
+		transform-box: fill-box;
+		transform-origin: center;
+		transition:
+			opacity 0.4s calc(var(--d) + 1s + var(--k) * 60ms),
+			scale 0.5s var(--ease-organic) calc(var(--d) + 1s + var(--k) * 60ms);
+	}
+	.stage.is-in .pop {
+		opacity: 1;
+		scale: 1;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.turn,
+		.label,
+		.ring-turn {
+			animation: none;
+		}
+		.draw {
+			stroke-dashoffset: 0;
+			fill-opacity: 1;
+			transition: none;
+		}
+		.pop {
+			opacity: 1;
+			scale: 1;
+		}
+	}
+</style>
+
+<script>
+	// Survol d'un savoir-faire : son pétale s'allume
+	const corolla = document.querySelector<HTMLElement>('[data-corolla]');
+	if (corolla) {
+		const petals = corolla.querySelectorAll<SVGGElement>('.petal');
+		corolla.querySelectorAll<HTMLElement>('.label').forEach((label) => {
+			const petal = petals[Number(label.dataset.i)];
+			label.addEventListener('pointerenter', () => petal?.classList.add('is-on'));
+			label.addEventListener('pointerleave', () => petal?.classList.remove('is-on'));
+		});
+	}
+</script>

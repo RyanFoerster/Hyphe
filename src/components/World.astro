@@ -21,7 +21,7 @@ import { projects } from '../data/projects';
 	<div class="meta flex items-center justify-between text-mineral" aria-hidden="true">
 		<span class="flex items-center gap-3">
 			<img src="/HYPHE.svg" alt="" width="555" height="146" class="h-[18px] w-auto sm:h-5" />
-			<span class="hidden sm:inline">os v1.0 — boot</span>
+			<span class="hidden sm:inline">a flower, germinating</span>
 		</span>
 		<span>[ germination ]</span>
 	</div>
@@ -33,11 +33,10 @@ import { projects } from '../data/projects';
 			<span class="corner bottom-0 left-0 border-b border-l"></span>
 			<span class="corner bottom-0 right-0 border-b border-r"></span>
 			<p class="meta absolute -top-5 left-0 text-bone/80">specimen 001 — germinating</p>
-			<p class="meta absolute -top-5 right-0 tabular-nums text-acid" data-loader-value>0.00000000</p>
 			<canvas class="absolute inset-3 size-[calc(100%-1.5rem)]" data-loader-canvas></canvas>
 		</div>
-		<p class="meta flex gap-3 tabular-nums text-bone/70">
-			<span data-loader-bar>[::::::::::::::::::::::::]</span>
+		<p class="meta flex items-center gap-3 tabular-nums text-bone/70">
+			<span class="relative block h-px w-44 bg-bone/20"><span class="absolute inset-y-0 left-0 w-0 bg-acid" data-loader-bar></span></span>
 			<span class="text-acid" data-loader-pct>000%</span>
 		</p>
 	</div>
@@ -51,7 +50,6 @@ import { projects } from '../data/projects';
 <div class="pointer-events-none fixed right-[7%] top-[27%] z-[3] hidden w-48 opacity-0 md:block" data-callout-label aria-hidden="true">
 	<p class="meta text-bone/90">01. Hyphae floralis</p>
 	<p class="meta mt-1 text-mineral">Grown in code.<br />No seed, no soil.</p>
-	<p class="meta mt-2 text-mineral-dim"><span data-triangles>—</span> tri / real time</p>
 </div>
 
 <div aria-hidden="true">
@@ -115,8 +113,7 @@ import { projects } from '../data/projects';
 				canvas,
 				overlay,
 				onProgress: (f) => loader?.progress(f),
-				onReady: ({ triangles }) => {
-					document.querySelector('[data-triangles]')!.textContent = triangles.toLocaleString('en-US');
+				onReady: () => {
 					root.dataset.world = 'on';
 					clearTimeout(safety);
 					void loader?.done();

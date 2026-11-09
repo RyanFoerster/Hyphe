@@ -14,7 +14,7 @@ const index = projects.findIndex((p) => p.slug === slug);
 const status = isHome
 	? 'surface — specimen 001'
 	: slug
-		? `${slug}.prj — ${String(index + 1).padStart(2, '0')}/${String(projects.length).padStart(2, '0')}`
+		? `${projects[index]?.name.toLowerCase() ?? slug} — ${String(index + 1).padStart(2, '0')}/${String(projects.length).padStart(2, '0')}`
 		: path.startsWith('/work')
 			? `herbarium — ${String(projects.length).padStart(2, '0')} specimens`
 			: 'lost — 404';
@@ -59,7 +59,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 			<!-- Ouverte : le menu -->
 			<div class="view view-menu" data-view-name="menu" id="island-menu" inert>
 				<div class="head meta">
-					<span class="flex items-center gap-2 text-mineral"><span class="spore text-acid" data-spore aria-hidden="true">*</span> hyphe os — index</span>
+					<span class="flex items-center gap-2 text-mineral"><span class="spore text-acid" data-spore aria-hidden="true">*</span> studio hyphe — index</span>
 					<button type="button" class="close" data-island-go="bar" aria-label="Close menu">esc ×</button>
 				</div>
 				<ul class="items">
@@ -74,7 +74,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 						<button type="button" class="item" data-island-go="about">
 							<span class="meta idx" data-scramble>02</span>
 							<span class="label titre" data-frame-word>About</span>
-							<span class="meta val">studio.sys</span>
+							<span class="meta val">the studio</span>
 						</button>
 					</li>
 					<li data-stagger style="--i: 2">
@@ -101,7 +101,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 			<section class="view view-about" data-view-name="about" data-lenis-prevent aria-labelledby="about-title" inert>
 				<div class="head meta">
 					<button type="button" class="close" data-island-go="menu">← index</button>
-					<span class="text-mineral">studio.sys — read only</span>
+					<span class="text-mineral">the studio</span>
 					<button type="button" class="close" data-island-go="bar" aria-label="Close">×</button>
 				</div>
 				<canvas

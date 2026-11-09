@@ -23,6 +23,8 @@ const BRIGHT_FRAG = /* glsl */ `
 			+ texture2D(tMap, vUv + uTexel * vec2(-1.0, 1.0)).rgb
 			+ texture2D(tMap, vUv + uTexel * vec2(1.0, 1.0)).rgb;
 		c *= 0.25;
+		// Les images nettes (spécimens) ne rayonnent presque pas
+		c *= mix(1.0, 0.12, step(1.5, texture2D(tMap, vUv).a));
 		float br = max(c.r, max(c.g, c.b));
 		float knee = uThreshold * 0.5 + 1e-4;
 		float soft = clamp(br - uThreshold + knee, 0.0, 2.0 * knee);
@@ -184,6 +186,14 @@ const COMPOSITE_FRAG = /* glsl */ `
 		return lens;
 	}
 
+	// Bruit doux (valeur, interpolé) : des taches organiques plutôt que des cases
+	float vnoise(vec2 p) {
+		vec2 i = floor(p);
+		vec2 f = fract(p);
+		f = f * f * (3.0 - 2.0 * f);
+		return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+	}
+
 	// Aura : le halo et les rayons de la fleur, en caractères
 	vec3 aura(vec2 px) {
 		vec2 cell = floor(px / uCell);
@@ -220,29 +230,9 @@ const COMPOSITE_FRAG = /* glsl */ `
 		float disc = (1.0 - smoothstep(uCursor.z - 1.5, uCursor.z, dc)) * uCursor.w;
 		float m = max(rm, disc);
 
-		// Mosaïque : la fleur apparaît tuile par tuile, puis quelques tuiles
-		// restent vivantes et basculent en ASCII ou en scan
-		vec2 tp = (px - uFocus * uRes) / uTile;
-		vec2 tid = floor(tp);
-		vec2 tf = fract(tp);
-		float th = hash(tid + 3.17);
-		float rev = smoothstep(th * 0.7, th * 0.7 + 0.3, uReveal);
-		float near = step(length(tid + 0.5), 3.4) * (1.0 - uInside);
-		float slot = floor(uTime * 0.28 + th * 11.0);
-		float tileCover = texture2D(tColor, ((tid + 0.5) * uTile + uFocus * uRes) / uRes).a;
-		float live = near * step(1.0 - uMosaic, hash(tid * 1.3 + slot)) * step(0.5, tileCover);
-		float revealing = step(0.001, rev) * step(rev, 0.999) * (1.0 - uInside);
-		// Roche scannée par défaut : les tuiles vivantes montrent alors la matière
-		float tileMode = max(live * (1.0 - uScanAll), revealing) * (1.0 - uAscii);
-		if (tileMode > 0.0) {
-			vec3 dig = hash(tid + slot * 0.37) > 0.5 ? scanView(px) : asciiRamp(px).rgb;
-			col = mix(col, dig, tileMode);
-			vec2 e = min(tf, 1.0 - tf) * uTile;
-			float edge = 1.0 - smoothstep(0.0, 1.0 * uDpr, min(e.x, e.y));
-			col += vec3(0.8, 0.82, 0.78) * edge * 0.4 * tileMode;
-			cover = max(cover, edge * 0.4 * tileMode);
-		}
-		float shown = mix(1.0, step(0.001, rev), 1.0 - uInside);
+		// Apparition : la fleur se dépose du centre vers les bords, par taches
+		float ro = clamp(length((px - uFocus * uRes) / uRes.y) / 0.9, 0.0, 1.0) * 0.7 + vnoise(px / 90.0) * 0.3;
+		float shown = mix(1.0, smoothstep(ro - 0.12, ro + 0.02, uReveal * 1.25 - 0.1), 1.0 - uInside);
 		col *= shown;
 		cover *= shown;
 
@@ -262,44 +252,30 @@ const COMPOSITE_FRAG = /* glsl */ `
 			cover = mix(cover, 1.0, uAscii);
 		}
 
-		// Dehors, la lentille révèle le relief chiffré
-		// Par défaut, toute la tige est vue au scan ; le curseur, les fenêtres
-		// et les tuiles vivantes y ouvrent des trouées sur la vraie matière
-		float scanned = clamp(s.a, 0.0, 1.0) * uScanAll * (1.0 - disc) * (1.0 - rm) * (1.0 - live);
-		float lensOut = max(scanned, m * (1.0 - uScanAll)) * (1.0 - uInside) * (1.0 - uAscii);
-		if (lensOut > 0.0) {
-			col = mix(col, topo(px, raw, col), lensOut);
-			cover = max(cover, lensOut);
-		}
 		float ring = (1.0 - smoothstep(0.0, 1.2, abs(dc - uCursor.z))) * uCursor.w;
 		col = mix(col, vec3(0.9, 0.92, 0.88), ring * 0.6);
 		cover = max(cover, ring * 0.6);
 
-		// Fin de la galerie : les caractères s'éteignent un à un, le fond revient
+		// Fin de la galerie : la lumière se retire par taches, le fond revient
 		if (uFade > 0.0) {
-			float keep = smoothstep(uFade, uFade + 0.14, hash(floor(px / uCell) + 7.31) * 0.86 + 0.14 * (1.0 - uFade));
+			float keep = smoothstep(uFade, uFade + 0.2, vnoise(px / 70.0 + 7.31) * 0.8 + 0.2 * (1.0 - uFade));
 			col *= keep;
 			cover *= keep;
 		}
 
-		// Passage dans la fleur : un front de caractères. Dehors il s'éteint du
-		// centre vers les bords ; dedans, la galerie se rallume des bords au centre.
-		// Au point de bascule l'écran est noir : le changement de scène ne se voit pas.
+		// Passage dans la fleur : un front de pollen. Dehors la lumière se retire
+		// du centre vers les bords ; dedans, la galerie se rallume des bords au
+		// centre. Au point de bascule l'écran est noir : le changement ne se voit pas.
 		if (uWipe > 0.0) {
-			vec2 cell = floor(px / uCell);
-			vec2 cc = (cell + 0.5) * uCell;
-			float r = length((cc - uFocus * uRes) / uRes.y);
-			float order = clamp(r / 0.95, 0.0, 1.0) * 0.82 + hash(cell + 1.7) * 0.18;
-			float w = mix(-0.1, 1.1, uWipe);
-			float keep = smoothstep(w - 0.1, w, order);
-			float front = (1.0 - smoothstep(0.0, 0.07, abs(order - w + 0.05))) * step(0.001, uWipe) * step(uWipe, 0.999);
+			float r = length((px - uFocus * uRes) / uRes.y);
+			float order = clamp(r / 0.95, 0.0, 1.0) * 0.8 + vnoise(px / 80.0 + 1.7) * 0.2;
+			float w = mix(-0.15, 1.15, uWipe);
+			float keep = smoothstep(w - 0.14, w, order);
+			float front = (1.0 - smoothstep(0.0, 0.08, abs(order - w + 0.06))) * step(0.001, uWipe) * step(uWipe, 0.999);
 			col *= keep;
 			cover *= keep;
-			// Le front : une rangée de caractères qui brûle à la teinte
-			vec2 g = fract(px / uCell);
-			float glyph = step(0.25, g.x) * step(g.x, 0.75) * step(0.2, g.y) * step(g.y, 0.8) * step(0.45, hash(cell + floor(uTime * 12.0)));
-			col += (uTint * 0.8 + 0.2) * front * glyph * 0.9;
-			cover = max(cover, front * glyph * 0.9);
+			col += (uTint * 0.8 + 0.2) * front * 0.28;
+			cover = max(cover, front * 0.28);
 		}
 
 		// Passage de la surface : éclair de la teinte

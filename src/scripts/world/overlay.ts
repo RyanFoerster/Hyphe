@@ -1,8 +1,6 @@
 // Couche d'analyse, dessinée en 2D par-dessus le rendu, volontairement légère :
-// quelques boîtes de suivi sur la fleur, les hyphes vers les projets, une
-// courbe de légende, et le jardin en caractères sous le curseur.
-
-import { rng } from './shared';
+// les hyphes vers les projets, une courbe de légende, le nom de ce que vise la
+// loupe du curseur.
 
 export interface Pt {
 	x: number;
@@ -28,8 +26,8 @@ export interface OverlayFrame {
 	callouts: { from: Pt; to: { x: number; y: number }; a: number }[];
 	/** Hyphes de la fleur vers les projets en orbite */
 	roots: { x: number; y: number; a: number; lit: boolean }[];
-	/** Curseur sur la fleur : un jardin en caractères pousse sur son passage */
-	cursor: { x: number; y: number; on: boolean };
+	/** Loupe : la partie de la plante visée, nommée à côté du cercle */
+	pick?: { x: number; y: number; r: number; label: string; sub: string } | null;
 	motion: number;
 }
 
@@ -38,22 +36,6 @@ export function createOverlay(canvas: HTMLCanvasElement) {
 	let w = 0;
 	let h = 0;
 	let dpr = 1;
-	const rand = rng(404);
-	// Chaque point suivi a son propre cycle de vie (apparition, maintien, disparition)
-	const tracks = Array.from({ length: 80 }, () => ({
-		period: 2.5 + rand() * 5,
-		phase: rand() * 10,
-		size: 6 + rand() * rand() * 34,
-		value: rand(),
-		group: Math.floor(rand() * 6),
-	}));
-
-	// Le jardin : chaque passage du curseur sur la fleur plante une graine
-	// qui germe, monte en tige, déplie ses feuilles, fleurit puis fane.
-	type Plant = { dx: number; dy: number; born: number; len: number; lean: number; kind: number; seed: number };
-	const plants: Plant[] = [];
-	let lastSeed = { x: -1e4, y: -1e4 };
-	const LIFE = 5.2;
 
 	const resize = (cssW: number, cssH: number, ratio: number) => {
 		w = cssW;
@@ -73,23 +55,6 @@ export function createOverlay(canvas: HTMLCanvasElement) {
 		ctx.textBaseline = 'bottom';
 		const bone = (a: number) => `rgba(222,232,228,${(a * f.alpha).toFixed(3)})`;
 
-		// Quelques boîtes de suivi, petites et sans légende, sur la fleur seulement
-		f.points.forEach((p, i) => {
-			if (i < f.flowerFrom || i % 2 || p.v < 0.3) return;
-			const t = tracks[i % tracks.length];
-			const cycle = ((f.time * f.motion + t.phase) % t.period) / t.period;
-			const life = cycle < 0.08 ? cycle / 0.08 : cycle > 0.8 ? (1 - cycle) / 0.2 : 1;
-			if (life <= 0) return;
-			const s = 6 + (t.size % 10);
-			const x = Math.round(p.x - s / 2) + 0.5;
-			const y = Math.round(p.y - s / 2) + 0.5;
-			const a = life * p.v;
-			ctx.strokeStyle = bone(0.45 * a);
-			ctx.strokeRect(x, y, s, s);
-			ctx.fillStyle = bone(0.8 * a);
-			ctx.fillRect(Math.round(p.x) - 1, Math.round(p.y) - 1, 2, 2);
-		});
-
 		// Spécimens : cadre de mesure, valeur, croix de visée
 		for (const fr of f.frames) {
 			if (fr.a <= 0.01) continue;
@@ -105,9 +70,6 @@ export function createOverlay(canvas: HTMLCanvasElement) {
 			ctx.stroke();
 			ctx.fillStyle = bone(0.8 * fr.a);
 			ctx.fillText(fr.label, x - 10, y - 13);
-			ctx.textAlign = 'right';
-			ctx.fillText(`${fr.w.toFixed(0)} × ${fr.h.toFixed(0)}`, x + fr.w + 10, y - 13);
-			ctx.textAlign = 'left';
 		}
 
 		// Hyphes : de la fleur vers chaque projet, un fil souple et ramifié
@@ -152,79 +114,32 @@ export function createOverlay(canvas: HTMLCanvasElement) {
 			});
 		}
 
-		// Le jardin : on plante en suivant le curseur, puis tout pousse et fane
-		if (f.cursor.on && Math.hypot(f.cursor.x - lastSeed.x, f.cursor.y - lastSeed.y) > 26) {
-			lastSeed = { x: f.cursor.x, y: f.cursor.y };
-			plants.push({
-				dx: f.cursor.x - f.focus.x,
-				dy: f.cursor.y - f.focus.y,
-				born: f.time,
-				len: 3 + Math.floor(rand() * 6),
-				lean: (rand() - 0.5) * 1.4,
-				kind: Math.floor(rand() * 3),
-				seed: rand(),
-			});
-			if (plants.length > 42) plants.shift();
-		}
-		if (!f.cursor.on) lastSeed = { x: -1e4, y: -1e4 };
-		ctx.font = `11px "Fragment Mono", ui-monospace, monospace`;
-		ctx.textBaseline = 'alphabetic';
-		ctx.textAlign = 'center';
-		const CW = 7;
-		const CH = 11;
-		for (let i = plants.length - 1; i >= 0; i--) {
-			const pl = plants[i];
-			const age = (f.time - pl.born) / (f.motion || 1);
-			if (age > LIFE) {
-				plants.splice(i, 1);
-				continue;
-			}
-			const grow = Math.min(1, age / 1.3);
-			const wilt = Math.max(0, (age - (LIFE - 1.4)) / 1.4);
-			const a = (1 - wilt) * Math.min(1, f.alpha * 1.4 + 0.3);
-			const bx = f.focus.x + pl.dx;
-			const by = f.focus.y + pl.dy;
-			// Racines : quelques points qui s'étalent sous la graine
-			ctx.fillStyle = `rgba(222,232,228,${(0.45 * a).toFixed(3)})`;
-			const spread = Math.min(1, age / 0.6);
-			for (let r = -2; r <= 2; r++) if (r) ctx.fillText(Math.abs(r) === 2 ? '.' : ':', bx + r * CW * spread, by + CH * 0.6);
-			// Tige : un caractère par étage, penché selon la plante, qui balance
-			const n = Math.max(1, Math.round(pl.len * grow));
-			const sway = Math.sin(f.time * 1.6 + pl.seed * 9) * 0.25 * f.motion;
-			let x = bx;
-			for (let k = 0; k < n; k++) {
-				const tilt = (pl.lean + sway) * (k / pl.len);
-				x += tilt * CW * 0.55;
-				const y = by - k * CH;
-				const ch = wilt > 0.5 ? '.' : tilt > 0.18 ? '/' : tilt < -0.18 ? '\\' : '|';
-				ctx.fillStyle = `rgba(222,232,228,${(0.85 * a).toFixed(3)})`;
-				ctx.fillText(ch, x, y);
-				// Feuilles, une sur deux, de part et d'autre
-				if (k > 0 && k % 2 === 0 && k < n - 1 && wilt < 0.7) {
-					const side = (k / 2) % 2 ? 1 : -1;
-					ctx.fillStyle = `rgba(150,190,90,${(0.9 * a).toFixed(3)})`;
-					ctx.fillText(side > 0 ? '>' : '<', x + side * CW, y + 2);
-				}
-			}
-			// Fleur au sommet, une fois la tige montée
-			if (grow >= 1 && wilt < 0.85) {
-				const top = by - n * CH;
-				const open = Math.min(1, (age - 1.3) / 0.5);
-				const warm = pl.kind === 0;
-				ctx.fillStyle = warm ? `rgba(240,122,42,${a.toFixed(3)})` : `rgba(200,245,60,${a.toFixed(3)})`;
-				const heart = wilt > 0.3 ? '.' : open < 0.5 ? 'o' : pl.kind === 2 ? String(Math.floor((f.time * 3 + pl.seed * 10) % 10)) : '@';
-				ctx.fillText(heart, x, top);
-				if (open > 0.5 && wilt < 0.3) {
-					ctx.fillStyle = `rgba(230,228,220,${(0.75 * a).toFixed(3)})`;
-					ctx.fillText('*', x - CW, top + 2);
-					ctx.fillText('*', x + CW, top + 2);
-					ctx.fillText('+', x, top - CH * 0.9);
-				}
-			}
-		}
 		ctx.textAlign = 'left';
 		ctx.textBaseline = 'bottom';
-		ctx.font = `8px "Fragment Mono", ui-monospace, monospace`;
+
+		// Loupe : un trait part du cercle, le nom de la partie visée au bout
+		if (f.pick && f.pick.r > 4) {
+			const { x, y, r } = f.pick;
+			const ex = x + r * 0.71;
+			const ey = y - r * 0.71;
+			ctx.strokeStyle = 'rgba(200,245,60,0.75)';
+			ctx.beginPath();
+			ctx.moveTo(ex, ey);
+			ctx.lineTo(ex + 14, ey - 14);
+			ctx.lineTo(ex + 30, ey - 14);
+			ctx.stroke();
+			// Une étiquette sur un fond sombre, lisible même devant les pétales
+			ctx.font = `10px "Fragment Mono", ui-monospace, monospace`;
+			const label = f.pick.label.toUpperCase();
+			const bw = Math.max(ctx.measureText(label).width, ctx.measureText(f.pick.sub).width) + 16;
+			ctx.fillStyle = 'rgba(13,15,14,0.78)';
+			ctx.fillRect(ex + 30, ey - 26, bw, 34);
+			ctx.fillStyle = 'rgba(230,228,220,0.95)';
+			ctx.fillText(label, ex + 38, ey - 11);
+			ctx.fillStyle = 'rgba(200,245,60,0.9)';
+			ctx.fillText(f.pick.sub, ex + 38, ey + 3);
+			ctx.font = `8px "Fragment Mono", ui-monospace, monospace`;
+		}
 
 		// Courbes de légende : une ligne fine et souple, un point à chaque bout
 		for (const c of f.callouts) {
