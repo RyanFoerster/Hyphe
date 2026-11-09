@@ -153,6 +153,14 @@ html.is-loading [data-split].is-in .l::before,
 html.is-loading [data-split].is-in .l::after {
   animation-play-state: paused;
 }
+/* Le titre du hero, lui, attend aussi que les tuiles du loader aient fini de
+   découvrir l'écran : sa germination doit se voir en entier */
+html.is-unveiling [data-hero-title] [data-split].is-in .w,
+html.is-unveiling [data-hero-title] [data-split].is-in .l > .g,
+html.is-unveiling [data-hero-title] [data-split].is-in .l::before,
+html.is-unveiling [data-hero-title] [data-split].is-in .l::after {
+  animation-play-state: paused;
+}
 html.is-loading mark.hl.is-in::before {
   clip-path: inset(0 100% 100% 0);
 }

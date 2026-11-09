@@ -91,7 +91,7 @@ export function createLoader(root: HTMLElement) {
 	const html = document.documentElement;
 	html.style.overflow = 'hidden';
 	// Les entrées de texte du hero attendent la fin du chargement (voir global.css)
-	html.classList.add('is-loading');
+	html.classList.add('is-loading', 'is-unveiling');
 	let gone = false;
 
 	const cw = 8;
@@ -196,11 +196,13 @@ export function createLoader(root: HTMLElement) {
 			html.style.overflow = '';
 			html.classList.remove('is-loading');
 			if (reduced) {
+				html.classList.remove('is-unveiling');
 				root.remove();
 				return;
 			}
-			// Le voile de tuiles est plein dès sa première image : il remplace le loader
-			void mosaic({ x: innerWidth / 2, y: innerHeight / 2 }, false, 1100);
+			// Le voile de tuiles est plein dès sa première image : il remplace le loader.
+			// Le titre du hero attend qu'il soit parti pour germer (voir global.css)
+			void mosaic({ x: innerWidth / 2, y: innerHeight / 2 }, false, 1100).then(() => html.classList.remove('is-unveiling'));
 			root.remove();
 		},
 	};
