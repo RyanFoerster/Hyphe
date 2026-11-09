@@ -2,6 +2,8 @@
 // en partant du point cliqué ; la page suivante se recompose tuile par tuile
 // depuis ce même point. Chaque tuile passe par un cadre, un caractère, une valeur.
 
+import { sound } from './sound';
+
 const KEY = 'hyphe:tiles';
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const GLYPHS = '01#%*+=-:.x';
@@ -95,6 +97,7 @@ export function go(href: string, origin = { x: innerWidth / 2, y: innerHeight / 
 		return;
 	}
 	sessionStorage.setItem(KEY, JSON.stringify({ ...origin, t: Date.now() }));
+	sound.leave();
 	void mosaic(origin, true, 700).then(() => (location.href = href));
 }
 

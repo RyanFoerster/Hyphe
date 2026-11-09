@@ -32,7 +32,14 @@ import { projects } from '../data/projects';
 			<p class="meta text-mineral">Hyphae floralis — <span class="text-bone/85" data-loader-stage>Sowing</span></p>
 			<p class="titre mt-2 text-[clamp(4rem,11vw,9rem)] tabular-nums leading-[0.8]"><span data-loader-pct>000</span><span class="text-acid">%</span></p>
 		</div>
-		<p class="meta hidden pb-2 text-right text-mineral sm:block">Studio Hyphe<br />Digital experiences, grown differently</p>
+		<p class="meta hidden pb-2 text-right text-mineral sm:block" data-loader-sign>Studio Hyphe<br />Digital experiences, grown differently</p>
+	</div>
+	<!-- Fin du chargement, à la première visite : entrer avec ou sans le son -->
+	<div class="enter absolute bottom-[clamp(5.5rem,13vw,10rem)] right-4 flex flex-col items-end gap-3 sm:bottom-8 sm:right-6" data-loader-enter hidden>
+		<button type="button" class="enter-main titre group inline-flex items-baseline gap-3 text-[clamp(2.2rem,4.4vw,3.8rem)] text-bone" data-enter="sound">
+			<span class="enter-word">Enter with sound</span><span class="text-acid" aria-hidden="true">→</span>
+		</button>
+		<button type="button" class="enter-alt meta text-mineral" data-enter="silent">or enter in silence</button>
 	</div>
 	<span class="absolute inset-x-0 bottom-0 block h-px bg-bone/10" aria-hidden="true">
 		<span class="block h-full origin-left scale-x-0 bg-acid" data-loader-bar></span>
@@ -59,6 +66,47 @@ import { projects } from '../data/projects';
 	/* Sans WebGL (ou sans JS), pas de chargement à attendre */
 	:global(html:not(.world)) .loader {
 		display: none;
+	}
+	/* Prête : la signature s'efface, le choix d'entrée monte */
+	.loader.is-ready [data-loader-sign] {
+		opacity: 0;
+	}
+	.enter:not([hidden]) {
+		animation: enter-in 0.9s var(--ease-organic) both;
+	}
+	@keyframes enter-in {
+		from {
+			opacity: 0;
+			translate: 0 16px;
+			filter: blur(6px);
+		}
+	}
+	.enter-word {
+		position: relative;
+	}
+	.enter-word::after {
+		content: '';
+		position: absolute;
+		inset: -0.04em -0.14em 0.02em;
+		border: 1px solid var(--color-acid);
+		clip-path: inset(0 100% 100% 0);
+		transition: clip-path 0.5s var(--ease-organic);
+	}
+	.enter-main:is(:hover, :focus-visible) .enter-word::after {
+		clip-path: inset(0 0 0 0);
+	}
+	.enter-main {
+		outline: none;
+	}
+	.enter-alt {
+		background: linear-gradient(var(--color-acid), var(--color-acid)) 0 100% / 0 1px no-repeat;
+		transition:
+			background-size 0.45s var(--ease-organic),
+			color 0.3s;
+	}
+	.enter-alt:is(:hover, :focus-visible) {
+		color: var(--color-acid);
+		background-size: 100% 1px;
 	}
 </style>
 

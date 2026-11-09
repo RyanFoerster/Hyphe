@@ -2,6 +2,7 @@
 // La taille de la coque suit la vue active (transition CSS sur width/height),
 // les autres vues restent dedans, invisibles et inertes.
 
+import { sound } from './sound';
 import { scramble } from './text';
 
 type View = 'bar' | 'menu' | 'about';
@@ -36,6 +37,7 @@ export function mountIsland(island: HTMLElement) {
 			v.inert = !on;
 		}
 		trigger.setAttribute('aria-expanded', String(next !== 'bar'));
+		sound.menu(next !== 'bar');
 		fit();
 		if (!reduced) {
 			shell.removeAttribute('data-scan');

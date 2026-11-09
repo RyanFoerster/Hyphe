@@ -6,6 +6,7 @@
 
 import { mosaic } from './tiles';
 import { scramble } from './text';
+import { sound } from './sound';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -160,8 +161,10 @@ export function createLoader(root: HTMLElement) {
 	const pollen = Array.from({ length: 34 }, (_, k) => ({ x: Math.sin(k * 12.9) * 0.25, s: 0.3 + ((k * 7) % 10) / 14, o: (k * 0.137) % 1 }));
 
 	/** Légende de planche : un trait coudé et un libellé */
-	const callout = (at: V2, side: 1 | -1, dy: number, label: string, a: number) => {
+	const callout = (at: V2, _side: 1 | -1, dy: number, label: string, a: number) => {
 		if (a <= 0.01) return;
+		// La plante tourne : la légende part toujours vers l'extérieur
+		const side = at[0] < W / 2 ? -1 : 1;
 		const elbow: V2 = [at[0] + side * 40, at[1] + dy];
 		const end: V2 = [Math.max(16, Math.min(W - 16, at[0] + side * Math.min(W * 0.32, 150))), at[1] + dy];
 		const k = ss(0, 0.6, a);
@@ -304,17 +307,42 @@ export function createLoader(root: HTMLElement) {
 			// scramble garde le texte final en mémoire : on lui donne le nouveau
 			stageEl.dataset.scrambleText = STAGES[s][1];
 			scramble(stageEl, 420);
+			if (s > 0) sound.stage(s);
 		}
 		raf = requestAnimationFrame(draw);
 	};
 	raf = requestAnimationFrame(draw);
+
+	// Le choix d'entrée : deux boutons, la touche Entrée vaut « avec le son »
+	const choose = () =>
+		new Promise<void>((resolve) => {
+			const box = root.querySelector<HTMLElement>('[data-loader-enter]');
+			if (!box) return resolve();
+			box.hidden = false;
+			root.classList.add('is-ready');
+			stageEl.dataset.scrambleText = 'In bloom — choose how to enter';
+			scramble(stageEl, 500);
+			const pick = (on: boolean) => {
+				removeEventListener('keydown', key);
+				sound.choose(on);
+				resolve();
+			};
+			const key = (e: KeyboardEvent) => e.key === 'Enter' && pick(true);
+			addEventListener('keydown', key);
+			box.querySelectorAll<HTMLButtonElement>('[data-enter]').forEach((b) =>
+				b.addEventListener('click', () => pick(b.dataset.enter === 'sound'), { once: true }),
+			);
+			box.querySelector<HTMLButtonElement>('[data-enter="sound"]')?.focus({ preventScroll: true });
+		});
 
 	return {
 		/** Avancement réel, 0 → 1 */
 		progress(f: number) {
 			target = Math.max(target, Math.min(0.95, f * 0.9));
 		},
-		/** Fin : la fleur finit de s'ouvrir, puis l'écran part en tuiles */
+		/** Fin : la fleur finit de s'ouvrir ; à la première visite, on choisit
+		 *  d'entrer avec ou sans le son (c'est aussi le geste qui permet au
+		 *  navigateur de jouer), puis l'écran part en tuiles */
 		async done() {
 			finished = true;
 			target = 1;
@@ -322,7 +350,18 @@ export function createLoader(root: HTMLElement) {
 			await new Promise((res) => setTimeout(res, Math.max(reduced ? 0 : 700, minimum)));
 			const until = performance.now() + 1400;
 			while (shown < 1 && performance.now() < until) await new Promise((res) => setTimeout(res, 50));
-			await new Promise((res) => setTimeout(res, reduced ? 0 : 420));
+			let entered = false;
+			try {
+				entered = sessionStorage.getItem('hyphe:entered') === '1';
+			} catch {}
+			if (!entered && !gone) {
+				await choose();
+				try {
+					sessionStorage.setItem('hyphe:entered', '1');
+				} catch {}
+			} else {
+				await new Promise((res) => setTimeout(res, reduced ? 0 : 420));
+			}
 			this.dismiss();
 		},
 		dismiss() {

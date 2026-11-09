@@ -23,13 +23,25 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 <!-- Le logo et l'heure, hors de l'en-tête : en exclusion, ils restent lisibles sur toutes les images -->
 <div class="brand pointer-events-none fixed inset-x-0 top-0 z-50 flex items-start justify-between px-4 pt-4 sm:px-6 sm:pt-5">
-	<a href="/" class="pointer-events-auto mt-2.5 transition-opacity hover:opacity-70" aria-label="Studio Hyphe, home">
-		<img src="/HYPHE.svg" alt="" width="555" height="146" class="h-[16px] w-auto sm:h-5" />
-	</a>
-	<span class="meta mt-3 hidden w-24 text-right text-bone/70 md:block" aria-label={`Local time in ${site.city}`}>
-		<span>{site.cityCode}</span>
-		<time data-clock data-tz={site.timezone} class="tabular-nums text-bone">--:--</time>
-	</span>
+	<div class="flex items-start gap-4">
+		<a href="/" class="pointer-events-auto mt-2.5 transition-opacity hover:opacity-70" aria-label="Studio Hyphe, home">
+			<img src="/HYPHE.svg" alt="" width="555" height="146" class="h-[16px] w-auto sm:h-5" />
+		</a>
+		<button type="button" class="sound-btn meta pointer-events-auto mt-2.5 md:hidden" data-sound-toggle aria-pressed="true" aria-label="Toggle sound">
+			<span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+			<span data-sound-label>Sound on</span>
+		</button>
+	</div>
+	<div class="hidden items-start gap-6 md:flex">
+		<button type="button" class="sound-btn meta pointer-events-auto mt-3" data-sound-toggle aria-pressed="true" aria-label="Toggle sound">
+			<span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+			<span data-sound-label>Sound on</span>
+		</button>
+		<span class="meta mt-3 w-24 text-right text-bone/70" aria-label={`Local time in ${site.city}`}>
+			<span>{site.cityCode}</span>
+			<time data-clock data-tz={site.timezone} class="tabular-nums text-bone">--:--</time>
+		</span>
+	</div>
 </div>
 
 <header class="site-nav pointer-events-none fixed inset-x-0 top-0 z-50">
@@ -141,6 +153,55 @@ const pad = (n: number) => String(n).padStart(2, '0');
 <style>
 	.brand {
 		mix-blend-mode: exclusion;
+	}
+	/* Le son : quatre barres qui ondulent quand il joue, à plat sinon */
+	.sound-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55rem;
+		color: rgb(230 228 220 / 0.8);
+		transition: color 0.3s;
+	}
+	.sound-btn:hover {
+		color: var(--color-bone);
+	}
+	.bars {
+		display: inline-flex;
+		align-items: flex-end;
+		gap: 2px;
+		height: 10px;
+	}
+	.bars i {
+		display: block;
+		width: 2px;
+		height: 100%;
+		background: currentColor;
+		transform-origin: 50% 100%;
+		scale: 1 0.2;
+		transition: scale 0.4s;
+	}
+	:global(html[data-sound='live']) .bars i {
+		animation: bar 1.1s ease-in-out infinite alternate;
+	}
+	.bars i:nth-child(2) {
+		animation-delay: -0.4s !important;
+	}
+	.bars i:nth-child(3) {
+		animation-delay: -0.8s !important;
+	}
+	.bars i:nth-child(4) {
+		animation-delay: -0.2s !important;
+	}
+	@keyframes bar {
+		0% {
+			scale: 1 0.25;
+		}
+		100% {
+			scale: 1 1;
+		}
+	}
+	:global(html[data-sound='off']) .sound-btn {
+		color: rgb(230 228 220 / 0.45);
 	}
 	.island {
 		position: fixed;

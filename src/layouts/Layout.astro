@@ -62,7 +62,10 @@ const canonical = new URL(Astro.url.pathname, site.url);
 			import { mountText } from '../scripts/text';
 			import { mountTiles } from '../scripts/tiles';
 			import { mountScroll } from '../scripts/scroll';
+			import { mountSound } from '../scripts/sound';
 
+			// Le son d'abord : il doit voir si l'on arrive d'une transition
+			mountSound();
 			mountScroll();
 			// Les fleurs isolées (studio, pied de page) : three.js n'est chargé
 			// qu'à l'approche de la première

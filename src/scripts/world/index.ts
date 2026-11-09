@@ -13,6 +13,7 @@ import { createArtefact, SPECIMEN_SIZE } from './artefact';
 import { createCavern } from './cavern';
 import { createOverlay, type Pt } from './overlay';
 import { clamp01, lerp, smoothstep } from './shared';
+import { sound } from '../sound';
 import { smoothed } from '../scroll';
 
 interface Options {
@@ -75,6 +76,8 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 	let orbitScale = 1;
 	let knots: [number, number][] = [];
 	let diveEnd = 1;
+	let soundDive = -1;
+	let soundInside = false;
 	let groundTop = 0;
 	const titleBlock = $<HTMLElement>('[data-hero-title]');
 	// Chaque lettre d'un titre découpé reçoit sa place, de -1 (gauche) à 1 (droite)
@@ -546,12 +549,20 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			const sNow = sAt(sy);
 			const i = cave.specimens.reduce((b, sp, j) => (Math.abs(sp.s - sNow) < Math.abs(cave.specimens[b].s - sNow) ? j : b), 0);
 			status = sNow > cave.sEnd - 2 ? 'end of the gallery' : `specimen.${String(i + 1).padStart(2, '0')} — ${cave.specimens[i].slug}`;
+			if (sNow <= cave.sEnd - 2) sound.specimen(i);
 		} else if (d > 0.04) status = `descending — ${String(Math.round(d * 10) * 10).padStart(3, '0')}%`;
 		if (status !== lastStatus) {
 			lastStatus = status;
 			dispatchEvent(new CustomEvent('hyphe:status', { detail: status }));
 		}
 		dive.style.setProperty('--t', String(inside ? 0 : smoothstep(0.35, 0.6, d) * (1 - smoothstep(0.88, 1, d))));
+		// Le son suit la plongée : le filtre s'ouvre, la basse monte
+		const dRaw = clamp01(sy / diveEnd);
+		if (Math.abs(dRaw - soundDive) > 0.004 || inside !== soundInside) {
+			soundDive = dRaw;
+			soundInside = inside;
+			sound.dive(dRaw, inside);
+		}
 		// Changement de section en typo : le titre du hero s'envole, le trait
 		// traverse, le numéro passe à 01, le titre de la galerie se resserre
 		if (!reduced) {
