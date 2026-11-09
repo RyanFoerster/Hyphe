@@ -59,8 +59,13 @@ npx astro build             # build statique dans dist/
 
 - `src/pages/index.astro` : World (WebGL) + Hero + Work (galerie), puis Studio
   et Footer.
-- `src/pages/work/index.astro` : l'herbier, deux lectures (Sheets flottantes
-  avec étiquette d'herbier *dans* la photo, Index en liste).
+- `src/pages/work/index.astro` : l'herbier, deux lectures. **Sheets** : une
+  planche d'herbier par projet (cadre à coins de visée, en-tête « Sheet 01 /
+  07 »), avec la fleur 3D du projet (`data-specimen="sheet"`, forme et teinte
+  propres à chaque projet, dans `SPECIMENS`), ses savoir-faire légendés au
+  bout des pétales, une règle en mm, puis le nom, l'image « pressed sample » et
+  l'étiquette. Les planches alternent gauche/droite. **Index** : liste,
+  l'aperçu suit le curseur avec coins de visée et nom latin.
 - `src/pages/work/[slug].astro` : fiche projet (`ProjectHero` plein écran),
   qui se termine sur `NextSpecimen` (le hero du projet suivant pousse en
   bas de page, puis on change de page sans que rien ne bouge).
@@ -91,7 +96,8 @@ npx astro build             # build statique dans dist/
 - `src/scripts/specimen.ts` : fleurs isolées hors du monde, rendues avec
   `createPost` (même look que le hero) : `corolla` (studio, repères au bout des
   pétales + fenêtres), `footer`, `drift` (fin de galerie : pétales et pollen
-  qui flottent ; ils fondent avant les bords de la toile).
+  qui flottent ; ils fondent avant les bords de la toile), `sheet` (herbier).
+  `plant()` accepte `veil` (teinte), `shape` (port des pétales), `variant`.
 - `src/scripts/loader.ts` : loader en planche de germination, plein écran, au
   rythme du chargement : graine, racines en caractères sous la ligne de sol,
   tige le long d'une règle d'herbier (mm), voile irisé avec halo et aura en
@@ -107,7 +113,7 @@ npx astro build             # build statique dans dist/
   (à droite), choix mémorisé (`localStorage hyphe:sound`). Le défilement ne
   doit jamais déclencher de sons en rafale.
 - `src/scripts/` aussi : `tiles.ts` (transitions), `text.ts` (split/scramble),
-  `scroll.ts` (Lenis), `island.ts` (menu en île), `ascii.ts`, `hyphae.ts`.
+  `scroll.ts` (Lenis), `island.ts` (menu en île), `ascii.ts`.
 - `src/components/Nav.astro` : logo + Son + heure en `mix-blend-mode:
   exclusion` (hors du header), l'île de menu au centre.
 

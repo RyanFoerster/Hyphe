@@ -1,31 +1,32 @@
 ---
 // L'herbier : tous les projets du studio. Deux lectures :
-//   sheets  des planches qui flottent, reliées entre elles par des hyphes
+//   sheets  des planches d'herbier : la fleur du projet (sa forme, sa teinte),
+//           ses savoir-faire légendés au bout des pétales, une règle, l'image
+//           pressée à côté et l'étiquette
 //   index   une liste serrée, l'image suit le curseur
 import Layout from '../../layouts/Layout.astro';
 import Footer from '../../components/Footer.astro';
 import Figure from '../../components/Figure.astro';
 import Herbarium from '../../components/Herbarium.astro';
-import { coverOf, portraitOf, projects } from '../../data/projects';
+import { coverOf, projects } from '../../data/projects';
 
 const years = projects.map((p) => p.year);
 const pad = (n: number) => String(n).padStart(2, '0');
-// Composition flottante : chaque planche a sa place et son décalage
-const slots = [
-	'md:col-start-1 md:col-span-5',
-	'md:col-start-8 md:col-span-4 md:mt-40',
-	'md:col-start-2 md:col-span-4 md:mt-6',
-	'md:col-start-8 md:col-span-5 md:mt-48',
-	'md:col-start-2 md:col-span-5 md:mt-6',
-	'md:col-start-9 md:col-span-4 md:mt-44',
+const letters = 'abcdefgh';
+
+// Un spécimen par projet : nombre de pétales, teinte du voile, port des pétales
+const SPECIMENS = [
+	{ petals: 6, veil: '9ab4f0', leaves: 2, shape: { len: 1.2, width: 0.9 } },
+	{ petals: 5, veil: 'f0b98a', leaves: 1, shape: { len: 1.05, width: 1.05, tip: -0.2, ruffle: 0.14 } },
+	{ petals: 9, veil: '9fe0c8', leaves: 2, shape: { len: 1.1, width: 0.45, tip: -0.7, twist: 0.6 } },
+	{ petals: 7, veil: 'c8a6f0', leaves: 2, shape: { len: 1.3, width: 0.75, base: 0.85, tip: -0.9, cup: 0.32 } },
+	{ petals: 6, veil: 'd8dccf', leaves: 1, shape: { len: 1.0, width: 0.8, base: 0.35, tip: 0.1, ruffle: 0.04 } },
+	{ petals: 8, veil: '8fd4e8', leaves: 2, shape: { len: 1.15, width: 0.6, ruffle: 0.18, twist: 0.8 } },
+	{ petals: 5, veil: 'e8b8c8', leaves: 1, shape: { len: 1.3, width: 1.1, tip: -0.55, cup: 0.3 } },
 ];
-// Deux formats seulement : 4:5 et 16:9
-const ratios = ['4/5', '16/9', '4/5', '16/9', '4/5', '16/9'] as const;
 ---
 
 <Layout title="Herbarium" description="Every specimen grown by Studio Hyphe: websites, interfaces and interactive worlds.">
-	<canvas class="hyphae pointer-events-none fixed inset-0 z-0 size-full" data-hyphae aria-hidden="true"></canvas>
-
 	<section class="relative z-[1] px-4 pb-16 pt-36 sm:px-6 md:pt-44" aria-labelledby="work-title">
 		<div class="grid gap-8 md:grid-cols-12">
 			<p class="meta text-mineral md:col-span-3" data-reveal>
@@ -50,29 +51,88 @@ const ratios = ['4/5', '16/9', '4/5', '16/9', '4/5', '16/9'] as const;
 		</div>
 	</section>
 
-	<!-- Planches : la lecture flottante -->
-	<section class="sheets relative z-[1] px-4 pb-32 sm:px-6" aria-label="Specimens, sheets" data-herbarium-view="sheets">
-		<ul class="grid gap-20 md:grid-cols-12 md:gap-x-8 md:gap-y-28">
+	<!-- Planches : une feuille d'herbier par projet -->
+	<section class="relative z-[1] px-4 pb-24 sm:px-6" aria-label="Specimens, sheets" data-herbarium-view="sheets">
+		<ol class="flex flex-col gap-10 md:gap-16">
 			{
-				projects.map((p, i) => (
-					<li class={slots[i % slots.length]} data-reveal style={`--reveal-delay: ${(i % 2) * 140}ms`}>
-						<div class="float" style={`--float-delay: ${-i * 1.9}s`}>
-							<a href={`/work/${p.slug}`} data-portal class="sheet group block" data-sheet aria-label={`${p.name} — ${p.latin}, ${p.client}, ${p.year}`}>
-								<Figure src={ratios[i % ratios.length] === '4/5' ? portraitOf(p) : coverOf(p)} alt="" fig={pad(i + 1)} caption={p.category.toLowerCase()} ratio={ratios[i % ratios.length]}>
-									<!-- L'étiquette d'herbier est posée dans la planche, comme sur une vraie feuille -->
-									<span class="label-shade" aria-hidden="true"></span>
-									<Herbarium project={p} inset class="label-in" />
-								</Figure>
-								<div class="mt-3 flex items-end justify-between gap-4">
-									<p class="titre text-[clamp(2.6rem,4.4vw,4.4rem)]">{p.name}</p>
-									<span class="meta mb-2 text-bone/60 transition group-hover:text-acid">open →</span>
+				projects.map((p, i) => {
+					const sp = SPECIMENS[i % SPECIMENS.length];
+					const no = String(i + 1).padStart(3, '0');
+					return (
+						<li data-reveal>
+							<a
+								href={`/work/${p.slug}`}
+								data-portal
+								data-plate
+								class:list={['plate group', i % 2 === 1 && 'is-flip']}
+								aria-label={`${p.name} — ${p.latin}, ${p.client}, ${p.year}`}
+							>
+								<span class="tick left-0 top-0 border-l border-t" aria-hidden="true" />
+								<span class="tick right-0 top-0 border-r border-t" aria-hidden="true" />
+								<span class="tick bottom-0 left-0 border-b border-l" aria-hidden="true" />
+								<span class="tick bottom-0 right-0 border-b border-r" aria-hidden="true" />
+
+								<p class="meta flex items-center justify-between gap-4 border-b border-dashed border-bone/12 pb-3 text-mineral" aria-hidden="true">
+									<span>
+										<span class="text-acid">Sheet {pad(i + 1)}</span> / {pad(projects.length)}
+									</span>
+									<span class="hidden md:inline">Herbarium Hyphe — {p.locality}</span>
+									<span class="tabular-nums">No. {no}</span>
+								</p>
+
+								<div class="body">
+									<!-- Le spécimen : la fleur du projet, sa règle, ses légendes -->
+									<div class="specimen" aria-hidden="true">
+										<canvas
+											class="absolute inset-0 size-full"
+											data-specimen="sheet"
+											data-variant={i}
+											data-petals={sp.petals}
+											data-veil={sp.veil}
+											data-leaves={sp.leaves}
+											data-shape={JSON.stringify(sp.shape)}
+										/>
+										<span class="ruler">
+											<span style="bottom: 0%">0</span>
+											<span style="bottom: 50%">50</span>
+											<span style="bottom: 100%">100 mm</span>
+										</span>
+										<ul class="petals">
+											{p.services.map((s, k) => (
+												<li class="petal" data-petal-label>
+													<span class="node" />
+													<span class="meta tag">
+														<span class="text-acid">{letters[k]}</span> — {s}
+													</span>
+												</li>
+											))}
+										</ul>
+										<p class="caption meta text-mineral">
+											fig. {pad(i + 1)} — <span class="italic text-bone/70">{p.latin}</span>, {sp.petals} petals
+										</p>
+									</div>
+
+									<!-- La fiche : le nom, l'image pressée, l'étiquette -->
+									<div class="info">
+										<p class="meta text-mineral">
+											<span class="kicker">{p.category}</span>
+											<span class="ml-2 tabular-nums">{p.year}</span>
+										</p>
+										<h2 class="name titre mt-5 text-[clamp(3.4rem,6.4vw,6.8rem)]">{p.name}</h2>
+										<p class="mt-5 max-w-md text-[15px] leading-relaxed text-bone/70">{p.summary}</p>
+										<Figure src={coverOf(p)} alt="" fig={`${pad(i + 1)}b`} caption="pressed sample" ratio="16/9" class="mt-8" />
+										<Herbarium project={p} compact class="mt-6" />
+										<span class="meta mt-6 inline-flex items-center gap-2 text-bone/60 transition group-hover:text-acid">
+											Open the sheet <span class="arrow">→</span>
+										</span>
+									</div>
 								</div>
 							</a>
-						</div>
-					</li>
-				))
+						</li>
+					);
+				})
 			}
-		</ul>
+		</ol>
 	</section>
 
 	<!-- Index : la lecture serrée -->
@@ -81,7 +141,7 @@ const ratios = ['4/5', '16/9', '4/5', '16/9', '4/5', '16/9'] as const;
 			{
 				projects.map((p, i) => (
 					<li>
-						<a href={`/work/${p.slug}`} data-portal class="row group" data-row data-preview={coverOf(p)}>
+						<a href={`/work/${p.slug}`} data-portal class="row group" data-row data-preview={coverOf(p)} data-latin={`fig. ${pad(i + 1)} — ${p.latin}`}>
 							<span class="meta tabular-nums text-mineral-dim">{String(i + 1).padStart(3, '0')}</span>
 							<span class="name titre text-[clamp(2.4rem,5vw,4.6rem)]" data-frame-word>{p.name}</span>
 							<span class="meta hidden text-bone/70 md:block">{p.latin}</span>
@@ -92,10 +152,15 @@ const ratios = ['4/5', '16/9', '4/5', '16/9', '4/5', '16/9'] as const;
 				))
 			}
 		</ol>
-		<div class="preview pointer-events-none fixed left-0 top-0 z-[5] hidden w-[300px] md:block" data-preview-box aria-hidden="true">
-			<div class="relative aspect-video overflow-hidden border border-acid/60">
+		<div class="preview pointer-events-none fixed left-0 top-0 z-[5] hidden w-[320px] md:block" data-preview-box aria-hidden="true">
+			<div class="relative aspect-video overflow-hidden border border-bone/15">
 				<img alt="" class="absolute inset-0 size-full object-cover" data-preview-img />
 			</div>
+			<span class="tick left-0 top-0 border-l border-t"></span>
+			<span class="tick right-0 top-0 border-r border-t"></span>
+			<span class="tick bottom-[1.6rem] left-0 border-b border-l"></span>
+			<span class="tick bottom-[1.6rem] right-0 border-b border-r"></span>
+			<p class="meta mt-2 inline-block bg-void/85 px-1 text-bone/80" data-preview-cap></p>
 		</div>
 	</section>
 
@@ -105,20 +170,6 @@ const ratios = ['4/5', '16/9', '4/5', '16/9', '4/5', '16/9'] as const;
 </Layout>
 
 <style>
-	/* L'étiquette dans la planche : un dégradé discret pour qu'elle se lise */
-	.label-shade {
-		position: absolute;
-		inset: 45% 0 0;
-		background: linear-gradient(to top, rgb(9 12 10 / 0.7), transparent);
-		pointer-events: none;
-	}
-	:global(.label-in) {
-		position: absolute !important;
-		left: 0.75rem;
-		bottom: 0.75rem;
-		z-index: 1;
-		width: min(17rem, calc(100% - 1.5rem));
-	}
 	.toggle {
 		padding: 0.25rem 0.5rem;
 		color: rgb(230 228 220 / 0.55);
@@ -129,21 +180,154 @@ const ratios = ['4/5', '16/9', '4/5', '16/9', '4/5', '16/9'] as const;
 		color: var(--color-acid);
 	}
 
-	@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
-		.is-in > .float {
-			animation: drift 9s ease-in-out infinite alternate;
-			animation-delay: var(--float-delay, 0s);
+	/* ---------- La planche : un cadre de visée, une feuille d'herbier ---------- */
+	.plate {
+		position: relative;
+		display: block;
+		padding: 1rem;
+		border: 1px solid rgb(230 228 220 / 0.08);
+		transition: border-color 0.5s var(--ease-organic);
+	}
+	@media (min-width: 768px) {
+		.plate {
+			padding: 1.25rem 1.5rem 1.5rem;
 		}
 	}
-	@keyframes drift {
-		from {
-			translate: 0 -8px;
+	.plate:hover,
+	.plate:focus-visible {
+		border-color: rgb(230 228 220 / 0.16);
+	}
+	.tick {
+		position: absolute;
+		width: 9px;
+		height: 9px;
+		border-color: var(--color-acid);
+		transition:
+			width 0.5s var(--ease-organic),
+			height 0.5s var(--ease-organic);
+	}
+	.plate:is(:hover, :focus-visible) > .tick {
+		width: 22px;
+		height: 22px;
+	}
+	.body {
+		display: grid;
+		gap: 2rem;
+		padding-top: 1.25rem;
+	}
+	@media (min-width: 900px) {
+		.body {
+			grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+			gap: 3rem;
+			align-items: center;
 		}
-		to {
-			translate: 0 10px;
+		.is-flip .body {
+			grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+		}
+		.is-flip .specimen {
+			order: 2;
 		}
 	}
 
+	/* Le spécimen : la toile, la règle d'herbier, les légendes des pétales */
+	.specimen {
+		position: relative;
+		aspect-ratio: 1 / 1;
+		max-height: 82svh;
+		width: 100%;
+		overflow: hidden;
+	}
+	.ruler {
+		position: absolute;
+		left: 0;
+		top: 8%;
+		bottom: 12%;
+		width: 3rem;
+		border-left: 1px solid rgb(230 228 220 / 0.2);
+		background:
+			repeating-linear-gradient(to top, rgb(230 228 220 / 0.32) 0 1px, transparent 1px 10%) left / 10px 100% no-repeat,
+			repeating-linear-gradient(to top, rgb(230 228 220 / 0.16) 0 1px, transparent 1px 2%) left / 5px 100% no-repeat;
+	}
+	.is-flip .ruler {
+		left: auto;
+		right: 0;
+		border-left: 0;
+		border-right: 1px solid rgb(230 228 220 / 0.2);
+		background-position: right, right;
+	}
+	.ruler > span {
+		position: absolute;
+		left: 14px;
+		translate: 0 50%;
+		font: 9px/1 var(--font-mono);
+		letter-spacing: 0.04em;
+		color: rgb(230 228 220 / 0.38);
+		white-space: nowrap;
+	}
+	.is-flip .ruler > span {
+		left: auto;
+		right: 14px;
+	}
+	.petals {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+	.petal {
+		position: absolute;
+		left: 0;
+		top: 0;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		opacity: 0;
+		white-space: nowrap;
+		will-change: transform;
+	}
+	.petal[data-side='left'] {
+		flex-direction: row-reverse;
+	}
+	.node {
+		width: 8px;
+		height: 8px;
+		flex: none;
+		border: 1px solid var(--color-acid);
+		background: rgb(200 245 60 / 0.25);
+	}
+	.tag {
+		padding: 0.15rem 0.4rem;
+		color: rgb(230 228 220 / 0.85);
+		background: color-mix(in oklab, var(--color-void) 72%, transparent);
+	}
+	.caption {
+		position: absolute;
+		left: 3.75rem;
+		bottom: 0.25rem;
+	}
+	.is-flip .caption {
+		left: auto;
+		right: 3.75rem;
+		text-align: right;
+	}
+
+	/* La fiche */
+	.info {
+		position: relative;
+	}
+	.name {
+		transition: translate 0.6s var(--ease-organic);
+	}
+	.plate:is(:hover, :focus-visible) .name {
+		translate: 0.4rem 0;
+	}
+	.arrow {
+		transition: translate 0.5s var(--ease-organic);
+	}
+	.plate:is(:hover, :focus-visible) .arrow {
+		translate: 0.3em 0;
+	}
+
+	/* ---------- L'index ---------- */
 	.row {
 		position: relative;
 		display: grid;
@@ -187,11 +371,14 @@ const ratios = ['4/5', '16/9', '4/5', '16/9', '4/5', '16/9'] as const;
 	.preview[data-on] {
 		opacity: 1;
 	}
+	.preview .tick {
+		width: 7px;
+		height: 7px;
+		margin: -4px;
+	}
 </style>
 
 <script>
-	import { mountHyphae } from '../../scripts/hyphae';
-
 	// Lecture : planches ou index, mémorisée pour ce navigateur
 	const KEY = 'hyphe:herbarium';
 	const views = document.querySelectorAll<HTMLElement>('[data-herbarium-view]');
@@ -212,20 +399,22 @@ const ratios = ['4/5', '16/9', '4/5', '16/9', '4/5', '16/9'] as const;
 		if (saved === 'index') set('index');
 	} catch {}
 
-	// Index : l'image du spécimen suit le curseur
+	// Index : l'image du spécimen suit le curseur, avec sa légende
 	const box = document.querySelector<HTMLElement>('[data-preview-box]')!;
 	const img = document.querySelector<HTMLImageElement>('[data-preview-img]')!;
+	const cap = document.querySelector<HTMLElement>('[data-preview-cap]')!;
 	const pos = { x: 0, y: 0, tx: 0, ty: 0 };
 	let raf = 0;
 	const follow = () => {
 		pos.x += (pos.tx - pos.x) * 0.18;
 		pos.y += (pos.ty - pos.y) * 0.18;
-		box.style.transform = `translate(${pos.x + 24}px, ${pos.y - 90}px)`;
+		box.style.transform = `translate(${pos.x + 24}px, ${pos.y - 100}px)`;
 		raf = requestAnimationFrame(follow);
 	};
 	document.querySelectorAll<HTMLElement>('[data-row]').forEach((row) => {
 		row.addEventListener('pointerenter', (e) => {
 			img.src = row.dataset.preview!;
+			cap.textContent = row.dataset.latin ?? '';
 			pos.x = pos.tx = e.clientX;
 			pos.y = pos.ty = e.clientY;
 			box.setAttribute('data-on', '');
@@ -241,7 +430,4 @@ const ratios = ['4/5', '16/9', '4/5', '16/9', '4/5', '16/9'] as const;
 			cancelAnimationFrame(raf);
 		});
 	});
-
-	// Les hyphes : des fils qui relient les planches, avec leurs nœuds et leurs valeurs
-	mountHyphae(document.querySelector<HTMLCanvasElement>('[data-hyphae]')!, '[data-sheet] .frame');
 </script>
