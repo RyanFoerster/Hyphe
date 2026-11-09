@@ -15,19 +15,37 @@ import { projects } from '../data/projects';
 <canvas class="world-gl pointer-events-none fixed inset-0 z-[2] size-full" data-world-gl aria-hidden="true"></canvas>
 <canvas class="pointer-events-none fixed inset-0 z-[3] size-full" data-world-overlay aria-hidden="true"></canvas>
 
-<!-- Chargement : la fleur pousse au trait (voir scripts/loader.ts) -->
+<!-- Chargement : une planche de germination (voir scripts/loader.ts) -->
 <div class="loader fixed inset-0 z-[150] flex flex-col bg-void px-4 py-4 sm:px-6 sm:py-5" data-loader role="status" aria-live="polite">
 	<span class="sr-only">Loading the specimen</span>
-	<div class="meta flex items-center justify-between text-mineral" aria-hidden="true">
+	<canvas class="absolute inset-0 size-full" data-loader-canvas aria-hidden="true"></canvas>
+	<div class="meta relative flex items-center justify-between text-mineral" data-loader-ui aria-hidden="true">
 		<img src="/HYPHE.svg" alt="" width="555" height="146" class="h-[16px] w-auto sm:h-5" />
 		<span><span class="kicker">[ Specimen 001 ]</span></span>
 	</div>
 
-	<div class="relative flex flex-1 items-center justify-center" aria-hidden="true">
-		<canvas class="h-[min(560px,62svh)] w-[min(640px,96vw)]" data-loader-canvas></canvas>
+	<!-- L'étiquette d'herbier : une ligne de plus à chaque étape -->
+	<div class="label absolute right-6 top-1/2 hidden w-[17.5rem] -translate-y-1/2 xl:block" data-loader-ui aria-hidden="true">
+		<span class="tick left-0 top-0 border-l border-t"></span>
+		<span class="tick right-0 top-0 border-r border-t"></span>
+		<span class="tick bottom-0 left-0 border-b border-l"></span>
+		<span class="tick bottom-0 right-0 border-b border-r"></span>
+		<p class="meta flex justify-between gap-4 border-b border-dashed border-bone/15 pb-2 text-mineral">
+			<span>Herbarium Hyphe</span><span class="tabular-nums">No. 001</span>
+		</p>
+		<p class="titre mt-3 text-[2.2rem] text-bone">Hyphae floralis</p>
+		<dl class="meta grid grid-cols-[3.2rem_1fr] gap-x-3 gap-y-1 pt-3 text-bone/80">
+			<dt class="text-mineral-dim">Fam.</dt><dd data-loader-field data-value="Digital experiences">· · · · · · ·</dd>
+			<dt class="text-mineral-dim">Leg.</dt><dd data-loader-field data-value="Studio Hyphe">· · · · · · ·</dd>
+			<dt class="text-mineral-dim">Loc.</dt><dd data-loader-field data-value="Belgium, worldwide">· · · · · · ·</dd>
+			<dt class="text-mineral-dim">Cult.</dt><dd data-loader-field data-value="Code · WebGL · sound">· · · · · · ·</dd>
+			<dt class="text-mineral-dim">Det.</dt><dd data-loader-field data-value="Grown in code, 2026">· · · · · · ·</dd>
+		</dl>
 	</div>
 
-	<div class="flex items-end justify-between gap-6" aria-hidden="true">
+	<div class="flex-1"></div>
+
+	<div class="relative flex items-end justify-between gap-6" data-loader-ui aria-hidden="true">
 		<div>
 			<p class="meta text-mineral">Hyphae floralis — <span class="text-bone/85" data-loader-stage>Sowing</span></p>
 			<p class="titre mt-2 text-[clamp(4rem,11vw,9rem)] tabular-nums leading-[0.8]"><span data-loader-pct>000</span><span class="text-acid">%</span></p>
@@ -35,13 +53,13 @@ import { projects } from '../data/projects';
 		<p class="meta hidden pb-2 text-right text-mineral sm:block" data-loader-sign>Studio Hyphe<br />Digital experiences, grown differently</p>
 	</div>
 	<!-- Fin du chargement, à la première visite : entrer avec ou sans le son -->
-	<div class="enter absolute bottom-[clamp(5.5rem,13vw,10rem)] right-4 flex flex-col items-end gap-3 sm:bottom-8 sm:right-6" data-loader-enter hidden>
+	<div class="enter absolute bottom-[clamp(5.5rem,13vw,10rem)] right-4 flex flex-col items-end gap-3 sm:bottom-8 sm:right-6" data-loader-ui data-loader-enter hidden>
 		<button type="button" class="enter-main titre group inline-flex items-baseline gap-3 text-[clamp(2.2rem,4.4vw,3.8rem)] text-bone" data-enter="sound">
 			<span class="enter-word">Enter with sound</span><span class="text-acid" aria-hidden="true">→</span>
 		</button>
 		<button type="button" class="enter-alt meta text-mineral" data-enter="silent">or enter in silence</button>
 	</div>
-	<span class="absolute inset-x-0 bottom-0 block h-px bg-bone/10" aria-hidden="true">
+	<span class="absolute inset-x-0 bottom-0 block h-px bg-bone/10" data-loader-ui aria-hidden="true">
 		<span class="block h-full origin-left scale-x-0 bg-acid" data-loader-bar></span>
 	</span>
 </div>
@@ -70,6 +88,36 @@ import { projects } from '../data/projects';
 	/* Prête : la signature s'efface, le choix d'entrée monte */
 	.loader.is-ready [data-loader-sign] {
 		opacity: 0;
+	}
+	/* Sortie : la planche se consume (toile), l'interface s'efface d'abord */
+	.loader.is-leaving {
+		background: transparent;
+		pointer-events: none;
+	}
+	.loader [data-loader-ui] {
+		transition: opacity 0.35s var(--ease-organic);
+	}
+	.loader.is-leaving [data-loader-ui] {
+		opacity: 0;
+	}
+	/* L'étiquette d'herbier, comme celles des projets */
+	.label {
+		padding: 0.9rem 1rem 1rem;
+		background: color-mix(in oklab, var(--color-void) 80%, transparent);
+		border: 1px solid rgb(230 228 220 / 0.12);
+	}
+	.label .tick {
+		position: absolute;
+		width: 7px;
+		height: 7px;
+		border-color: var(--color-acid);
+	}
+	.label dd {
+		color: var(--color-mineral-dim);
+		transition: color 0.4s;
+	}
+	.label dd.is-in {
+		color: rgb(230 228 220 / 0.85);
 	}
 	.enter:not([hidden]) {
 		animation: enter-in 0.9s var(--ease-organic) both;

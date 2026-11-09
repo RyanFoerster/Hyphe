@@ -92,9 +92,15 @@ npx astro build             # build statique dans dist/
   `createPost` (même look que le hero) : `corolla` (studio, repères au bout des
   pétales + fenêtres), `footer`, `drift` (fin de galerie : pétales et pollen
   qui flottent ; ils fondent avant les bords de la toile).
-- `src/scripts/loader.ts` : loader botanique (la fleur pousse au trait au
-  rythme du chargement, légendes « fig. a–d », grand compteur). À la première
-  visite de la session : choix « Enter with sound / in silence ».
+- `src/scripts/loader.ts` : loader en planche de germination, plein écran, au
+  rythme du chargement : graine, racines en caractères sous la ligne de sol,
+  tige le long d'une règle d'herbier (mm), voile irisé avec halo et aura en
+  caractères (comme le hero), légendes « fig. a–f », étiquette d'herbier qui
+  se remplit (≥ 1280 px), grand compteur. À la première visite de la session :
+  choix « Enter with sound / in silence ». Sortie : la planche se consume en
+  caractères, front **carré** depuis le cœur de la fleur, la vraie fleur se
+  recompose derrière. En dev, `?loader=0.4` fige la croissance et
+  `?loader=burn:0.4` la sortie (pour les captures).
 - `src/scripts/sound.ts` : ambiance sonore 100 % synthétisée (Web Audio, aucun
   fichier) : nappe d'accords, air, pollen, sons de survol/clic/menu/pages/
   plongée/spécimens/loader. Bouton `[data-sound-toggle]` dans l'en-tête
