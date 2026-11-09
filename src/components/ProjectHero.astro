@@ -55,7 +55,7 @@ const total = count;
 		) : (
 			<div class="grow absolute inset-0">
 				<img src={visual} alt="" class="absolute inset-0 size-full scale-105 object-cover" fetchpriority={next ? 'low' : 'high'} loading={next ? 'lazy' : 'eager'} />
-				<div class="absolute inset-0 bg-gradient-to-b from-void/30 via-transparent to-void" />
+				<div class="absolute inset-0 bg-gradient-to-b from-void/30 via-transparent to-void/60" />
 				{next && <span class="tiles" aria-hidden="true" style={`--cols: ${COLS}; --rows: ${ROWS}`}>{tiles.map((t) => <span style={`--t: ${t}`} />)}</span>}
 			</div>
 		)
@@ -103,9 +103,15 @@ const total = count;
 </div>
 
 <style>
-	/* Capture vivante plein cadre : assombrie en bas pour que le titre se lise */
+	/* L'image se fond dans le fond de la page plutôt que dans un noir posé
+	   dessus : pas de bord visible avec la section suivante */
+	.grow {
+		-webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+		mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+	}
+	/* Capture vivante plein cadre : assombrie pour que le titre se lise */
 	.shade {
-		background: linear-gradient(to bottom, rgb(9 12 10 / 0.55), rgb(9 12 10 / 0.12) 26%, rgb(9 12 10 / 0.55) 52%, rgb(9 12 10 / 0.9) 76%, var(--color-void) 100%);
+		background: linear-gradient(to bottom, rgb(9 12 10 / 0.55), rgb(9 12 10 / 0.12) 26%, rgb(9 12 10 / 0.5) 56%, rgb(9 12 10 / 0.7) 100%);
 	}
 
 	/* ---- Pousse (fin de la page précédente) ---- */

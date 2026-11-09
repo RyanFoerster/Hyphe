@@ -405,15 +405,16 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			// Post
 			P.uInside.value = 0;
 			P.uFade.value = 0;
-			// La fleur se montre telle quelle : ni scan, ni caractères
+			// Au repos, la fleur se montre telle quelle : ni scan, ni caractères.
+			// En plongeant, tout bascule en caractères, comme la galerie.
 			P.uScanAll.value = 0;
-			P.uAscii.value = 0;
+			P.uAscii.value = reduced ? (d > 0.5 ? 1 : 0) : smoothstep(0.6, 1, d);
 			P.uAura.value = 0;
 			P.uBloom.value = 1 + d * 0.6;
 			// Fin de plongée : les caractères s'éteignent du centre vers les bords,
 			// on tombe dans le trou ; la galerie s'allume ensuite depuis les bords
 			P.uWipe.value = reduced ? 0 : smoothstep(0.8, 1, d);
-			P.uFlash.value = 0;
+			P.uFlash.value = smoothstep(0.6, 0.85, d) * (1 - smoothstep(0.85, 0.97, d)) * 0.12;
 			P.uMosaic.value = narrow ? 0.08 : 0.11;
 			P.uExposure.value = 1.25;
 			P.uCell.value.set(7 * dpr * (1 + smoothstep(0.7, 1, d) * 1.4), 12 * dpr * (1 + smoothstep(0.7, 1, d) * 1.4));
@@ -518,7 +519,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 
 			P.uInside.value = 1;
 			P.uScanAll.value = 0;
-			P.uAscii.value = 0;
+			P.uAscii.value = 1;
 			P.uAura.value = 0;
 			P.uBloom.value = 0.85;
 			P.uWipe.value = reduced ? 0 : 1 - smoothstep(-0.4, 3.2, s);

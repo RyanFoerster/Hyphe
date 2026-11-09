@@ -256,26 +256,31 @@ const COMPOSITE_FRAG = /* glsl */ `
 		col = mix(col, vec3(0.9, 0.92, 0.88), ring * 0.6);
 		cover = max(cover, ring * 0.6);
 
-		// Fin de la galerie : la lumière se retire par taches, le fond revient
+		// Fin de la galerie : les caractères s'éteignent un à un, le fond revient
 		if (uFade > 0.0) {
-			float keep = smoothstep(uFade, uFade + 0.2, vnoise(px / 70.0 + 7.31) * 0.8 + 0.2 * (1.0 - uFade));
+			float keep = smoothstep(uFade, uFade + 0.14, hash(floor(px / uCell) + 7.31) * 0.86 + 0.14 * (1.0 - uFade));
 			col *= keep;
 			cover *= keep;
 		}
 
-		// Passage dans la fleur : un front de pollen. Dehors la lumière se retire
-		// du centre vers les bords ; dedans, la galerie se rallume des bords au
-		// centre. Au point de bascule l'écran est noir : le changement ne se voit pas.
+		// Passage dans la fleur : un front de caractères. Dehors il s'éteint du
+		// centre vers les bords ; dedans, la galerie se rallume des bords au centre.
+		// Au point de bascule l'écran est noir : le changement de scène ne se voit pas.
 		if (uWipe > 0.0) {
-			float r = length((px - uFocus * uRes) / uRes.y);
-			float order = clamp(r / 0.95, 0.0, 1.0) * 0.8 + vnoise(px / 80.0 + 1.7) * 0.2;
-			float w = mix(-0.15, 1.15, uWipe);
-			float keep = smoothstep(w - 0.14, w, order);
-			float front = (1.0 - smoothstep(0.0, 0.08, abs(order - w + 0.06))) * step(0.001, uWipe) * step(uWipe, 0.999);
+			vec2 cell = floor(px / uCell);
+			vec2 cc = (cell + 0.5) * uCell;
+			float r = length((cc - uFocus * uRes) / uRes.y);
+			float order = clamp(r / 0.95, 0.0, 1.0) * 0.82 + hash(cell + 1.7) * 0.18;
+			float w = mix(-0.1, 1.1, uWipe);
+			float keep = smoothstep(w - 0.1, w, order);
+			float front = (1.0 - smoothstep(0.0, 0.07, abs(order - w + 0.05))) * step(0.001, uWipe) * step(uWipe, 0.999);
 			col *= keep;
 			cover *= keep;
-			col += (uTint * 0.8 + 0.2) * front * 0.28;
-			cover = max(cover, front * 0.28);
+			// Le front : une rangée de caractères qui brûle à la teinte
+			vec2 g = fract(px / uCell);
+			float glyph = step(0.25, g.x) * step(g.x, 0.75) * step(0.2, g.y) * step(g.y, 0.8) * step(0.45, hash(cell + floor(uTime * 12.0)));
+			col += (uTint * 0.8 + 0.2) * front * glyph * 0.9;
+			cover = max(cover, front * glyph * 0.9);
 		}
 
 		// Passage de la surface : éclair de la teinte
