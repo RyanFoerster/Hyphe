@@ -66,42 +66,26 @@ const pad = (n: number) => String(n).padStart(2, '0');
 					<li data-stagger style="--i: 0">
 						<a href="/work" class="item" data-island-close>
 							<span class="meta idx" data-scramble>01</span>
-							<span class="label titre">Work</span>
+							<span class="label titre" data-frame-word>Work</span>
 							<span class="meta val">herbarium — {pad(projects.length)}</span>
 						</a>
 					</li>
 					<li data-stagger style="--i: 1">
 						<button type="button" class="item" data-island-go="about">
 							<span class="meta idx" data-scramble>02</span>
-							<span class="label titre">About</span>
+							<span class="label titre" data-frame-word>About</span>
 							<span class="meta val">studio.sys</span>
 						</button>
 					</li>
 					<li data-stagger style="--i: 2">
 						<a href={`mailto:${site.email}`} class="item">
 							<span class="meta idx" data-scramble>03</span>
-							<span class="label titre">Contact</span>
+							<span class="label titre" data-frame-word>Contact</span>
 							<span class="meta val">mail ↗</span>
 						</a>
 					</li>
 				</ul>
-				<div class="block" data-stagger style="--i: 3">
-					<p class="meta mb-2 text-mineral-dim">Specimens</p>
-					<ul class="meta grid gap-1">
-						{
-							projects.map((p, i) => (
-								<li>
-									<a href={`/work/${p.slug}`} data-portal class="spec" aria-current={p.slug === slug ? 'page' : undefined}>
-										<span class="text-mineral-dim">{pad(i + 1)}</span>
-										<span data-scramble>{p.slug}.prj</span>
-										<span class="ml-auto text-mineral-dim">{p.year}</span>
-									</a>
-								</li>
-							))
-						}
-					</ul>
-				</div>
-				<div class="foot meta" data-stagger style="--i: 4">
+				<div class="foot meta" data-stagger style="--i: 3">
 					<span class="flex gap-3">
 						{site.socials.map((s) => (
 							<a href={s.href} target="_blank" rel="noopener" class="transition hover:text-acid">{s.label}</a>

@@ -1,7 +1,6 @@
 ---
 // Le hero : la fleur au centre (rendue par World), le titre d'un seul bloc
 // d'autre, les projets en orbite autour d'elle.
-import Window from './os/Window.astro';
 import { coverOf, projects } from '../data/projects';
 import { site } from '../data/site';
 ---
@@ -13,7 +12,9 @@ import { site } from '../data/site';
 	</div>
 
 	<!-- Composition centrée : la fleur occupe le haut, le titre d'un seul bloc dessous -->
-	<div class="title-block pointer-events-none absolute inset-x-4 z-[3] flex flex-col items-center text-center">
+	<div class="title-block pointer-events-none absolute inset-x-4 z-[3] flex flex-col items-center text-center" data-hero-title>
+		<!-- La tige s'arrête au-dessus du titre ; sous lui, ses racines en caractères -->
+		<canvas class="roots pointer-events-none absolute left-1/2 top-2 -z-10 w-[min(760px,92vw)] -translate-x-1/2 opacity-60" data-ascii data-ascii-kind="roots" data-ascii-seed="21" data-ascii-size="10" aria-hidden="true"></canvas>
 		<p class="meta mb-5 text-mineral" data-reveal style="--reveal-delay: 300ms">
 			<span data-scramble>[ Specimen 001 ] Hyphae floralis — grown in {site.city}</span>
 		</p>
@@ -28,7 +29,7 @@ import { site } from '../data/site';
 		</a>
 	</div>
 
-	<!-- Coins bas : manifeste et statut à gauche, lentille à droite -->
+	<!-- Coin bas gauche : manifeste et statut -->
 	<div class="pointer-events-none absolute inset-x-4 bottom-5 z-[3] flex items-end justify-between gap-6 sm:inset-x-6">
 		<div class="pointer-events-auto max-w-[17rem] space-y-3" data-reveal style="--reveal-delay: 500ms">
 			<p class="hidden text-[14px] leading-relaxed text-bone/70 lg:block">
@@ -40,15 +41,9 @@ import { site } from '../data/site';
 					<span class="absolute inset-0 animate-ping rounded-full bg-acid/60"></span>
 					<span class="relative size-1.5 rounded-full bg-acid"></span>
 				</span>
-				<span data-scramble>Open for projects — {site.city}</span>
+				<span data-scramble>Open for projects — worldwide</span>
 			</p>
 			<p class="orbit-hint meta hidden text-mineral-dim">← drag to turn the orbit →</p>
-		</div>
-
-		<div class="lens-slot pointer-events-auto hidden lg:block" data-reveal style="--reveal-delay: 900ms">
-			<Window title="specimen.matter" meta="lens 01" lens draggable class="h-[150px] w-[200px] lg:h-[160px] lg:w-[216px]">
-				<p class="meta pointer-events-none absolute bottom-2 left-2.5 text-bone/45">drag to reveal</p>
-			</Window>
 		</div>
 	</div>
 
@@ -84,9 +79,6 @@ import { site } from '../data/site';
 <style>
 	.hero[data-fallback] .fallback {
 		display: block;
-	}
-	.hero[data-fallback] .lens-slot {
-		display: none;
 	}
 
 	/* Sans le monde 3D : les projets en rangée sous la fleur */
@@ -192,6 +184,10 @@ import { site } from '../data/site';
 
 	.title-block {
 		bottom: 7svh;
+		isolation: isolate;
+	}
+	.roots {
+		height: calc(100% + 7svh);
 	}
 	@media (max-width: 639px) {
 		.title-block {
@@ -212,10 +208,3 @@ import { site } from '../data/site';
 		50% { scale: 1 1; }
 	}
 </style>
-
-<script>
-	import { makeDraggable } from '../scripts/drag';
-
-	const host = document.querySelector<HTMLElement>('[data-hero]')!;
-	host.querySelectorAll<HTMLElement>('[data-draggable]').forEach((win) => makeDraggable(win, host));
-</script>

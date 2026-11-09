@@ -79,7 +79,7 @@ const ratios = ['4/5', '16/9', '4/5', '16/9', '4/5', '16/9'] as const;
 					<li>
 						<a href={`/work/${p.slug}`} data-portal class="row group" data-row data-preview={coverOf(p)}>
 							<span class="meta tabular-nums text-mineral-dim">{String(i + 1).padStart(3, '0')}</span>
-							<span class="name titre text-[clamp(2.4rem,5vw,4.6rem)]">{p.name}</span>
+							<span class="name titre text-[clamp(2.4rem,5vw,4.6rem)]" data-frame-word>{p.name}</span>
 							<span class="meta hidden text-bone/70 md:block">{p.latin}</span>
 							<span class="meta hidden text-mineral md:block">{p.category}</span>
 							<span class="meta tabular-nums text-mineral">{p.year}</span>

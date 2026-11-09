@@ -222,7 +222,7 @@ export const projects: Project[] = [
 	{
 		slug: 'halo',
 		latin: 'Lithops lucida',
-		locality: 'Liège, BE',
+		locality: 'Antwerp, BE',
 		name: 'Halo',
 		client: 'Oréade',
 		year: 2024,

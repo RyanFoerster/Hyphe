@@ -113,7 +113,7 @@ const parts = (text: string, word: string) => {
 								<a href={`/work/${p.slug}`} data-portal class="crow group">
 									<span class="node" aria-hidden="true" />
 									<span class="meta tabular-nums text-mineral-dim">{String(i + 1).padStart(3, '0')}</span>
-									<span class="cname titre text-[clamp(2.2rem,4.6vw,4.4rem)]">{p.name}</span>
+									<span class="cname titre text-[clamp(2.2rem,4.6vw,4.4rem)]" data-frame-word>{p.name}</span>
 									<span class="meta hidden text-bone/60 md:block">{p.latin}</span>
 									<span class="meta hidden text-mineral md:block">{p.locality}</span>
 									<span class="meta tabular-nums text-mineral transition group-hover:text-acid">{p.year} →</span>

@@ -81,6 +81,7 @@ function stemMaterial(u: Record<string, THREE.IUniform>) {
 			uniform float uTime;
 			uniform float uEnergy;
 			uniform float uDissolve;
+			uniform float uGround;
 			uniform vec3 uTint;
 			varying vec2 vUv;
 			varying vec3 vN;
@@ -91,6 +92,9 @@ function stemMaterial(u: Record<string, THREE.IUniform>) {
 			${DISSOLVE}
 			void main() {
 				${DISSOLVE_CUT}
+				// Au ras du titre, la tige se défait en blocs, comme si elle entrait sous terre
+				float ground = smoothstep(uGround, uGround + 0.55, vWorld.y);
+				if (h3(vec3(floor(gl_FragCoord.xy / 4.0), 0.0)) > ground) discard;
 				vec3 n = normalize(vN);
 				vec3 v = normalize(cameraPosition - vWorld);
 				if (dot(n, v) < 0.0) n = -n;
@@ -132,6 +136,7 @@ function veilMaterial(u: Record<string, THREE.IUniform>, opts: { base: THREE.Col
 				uniform float uTime;
 				uniform float uEnergy;
 				uniform float uDissolve;
+				uniform float uGround;
 				uniform vec3 uTint;
 				uniform vec3 uBase;
 				uniform float uIris;
@@ -172,6 +177,7 @@ function veilMaterial(u: Record<string, THREE.IUniform>, opts: { base: THREE.Col
 					// et vers le cœur ils se superposent tous : la base s'efface
 					col *= 0.42 * (0.03 + 0.97 * smoothstep(0.15, 0.72, vUv.x));
 					col += uTint * (burn * 0.5 + uEnergy * 0.02);
+					col *= smoothstep(uGround, uGround + 0.55, vWorld.y);
 					gl_FragColor = vec4(col, 0.0);
 				}
 			`,
@@ -190,6 +196,7 @@ function strandMaterial(u: Record<string, THREE.IUniform>) {
 				uniform float uTime;
 				uniform float uMotion;
 				uniform float uDissolve;
+				uniform float uGround;
 				varying vec3 vCol;
 				varying float vA;
 				${NOISE}
@@ -200,7 +207,7 @@ function strandMaterial(u: Record<string, THREE.IUniform>) {
 					p += vec3(sin(uTime * 1.3 + sway.y * 20.0), 0.0, cos(uTime * 1.1 + sway.y * 13.0)) * 0.014 * s * uMotion;
 					vec4 w = modelMatrix * vec4(p, 1.0);
 					float field = dissolveField(position, w.z) - (uDissolve * 1.15 - 0.05);
-					vA = smoothstep(0.0, 0.04, field);
+					vA = smoothstep(0.0, 0.04, field) * smoothstep(uGround, uGround + 0.55, w.y);
 					vCol = color;
 					gl_Position = projectionMatrix * viewMatrix * w;
 				}
@@ -229,6 +236,7 @@ function bloomMaterial(u: Record<string, THREE.IUniform>) {
 				uniform float uScale;
 				uniform float uFocusDist;
 				uniform float uDissolve;
+				uniform float uGround;
 				varying vec3 vCol;
 				varying float vA;
 				varying float vKind;
@@ -244,7 +252,7 @@ function bloomMaterial(u: Record<string, THREE.IUniform>) {
 					float coc = abs(-mv.z - uFocusDist);
 					gl_PointSize = (info.x + coc * 3.0) * uScale / max(-mv.z, 0.2);
 					float field = dissolveField(position, w.z) - (uDissolve * 1.15 - 0.05);
-					vA = smoothstep(0.0, 0.04, field) / (1.0 + coc * coc * 1.5);
+					vA = smoothstep(0.0, 0.04, field) * smoothstep(uGround, uGround + 0.55, w.y) / (1.0 + coc * coc * 1.5);
 					vCol = color;
 					vKind = info.y;
 					vSpin = info.w * 6.2831;
@@ -682,6 +690,8 @@ export async function createArtefact(opts: {
 		uFocusDist: { value: 7.4 },
 		uRing: { value: 1 },
 		uMotion: { value: 1 },
+		/** Hauteur (monde) sous laquelle la plante s'efface : le haut du titre */
+		uGround: { value: -100 },
 	};
 
 	const artefact = new THREE.Group();

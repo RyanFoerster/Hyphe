@@ -75,12 +75,15 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 	let orbitScale = 1;
 	let knots: [number, number][] = [];
 	let diveEnd = 1;
+	let groundTop = 0;
+	const titleBlock = $<HTMLElement>('[data-hero-title]');
 	const halfTan = (fov: number) => Math.tan(THREE.MathUtils.degToRad(fov / 2));
 
 	const measure = () => {
 		const top = (el: HTMLElement) => el.getBoundingClientRect().top + scrollY;
 		const vh = innerHeight;
 		diveEnd = Math.max(1, top(dive) + dive.offsetHeight - vh);
+		groundTop = titleBlock ? top(titleBlock) + 8 : vh * 2;
 		knots = [[diveEnd, 0]];
 		chapters.forEach((c, i) => knots.push([top(c) + c.offsetHeight / 2 - vh / 2, cave.sChap[i]]));
 		knots.push([top(exit) + exit.offsetHeight - vh, cave.sEnd + 4]);
@@ -210,6 +213,12 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 		return { x: (tmp2.x * 0.5 + 0.5) * width, y: (-tmp2.y * 0.5 + 0.5) * height, behind: tmp2.z > 1 };
 	};
 	const viewDepth = (v: THREE.Vector3) => -tmp2.copy(v).applyMatrix4(camera.matrixWorldInverse).z;
+	// Hauteur, dans le plan de la fleur (z = 0), du point de l'écran à la hauteur py
+	const groundRay = new THREE.Vector3();
+	const groundAt = (py: number) => {
+		groundRay.set(0, 1 - (2 * py) / height, 0.5).unproject(camera).sub(camera.position);
+		return camera.position.y + groundRay.y * (-camera.position.z / groundRay.z);
+	};
 
 	let sy = scrollY;
 	let running = false;
@@ -304,6 +313,8 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 			ext.uniforms.uRing.value = (1 - smoothstep(0.05, 0.4, d)) * smoothstep(0.3, 0.9, reveal);
 			ext.uniforms.uFocusDist.value = camera.position.distanceTo(ext.artefact.position);
 			ext.uniforms.uTint.value.copy(tint);
+			// La plante s'efface au ras du titre ; dès qu'on plonge, elle reprend toute sa hauteur
+			ext.uniforms.uGround.value = lerp(groundAt(groundTop - sy), -30, smoothstep(0.02, 0.25, d));
 			ext.orbit.scale.setScalar(orbitScale * (1 + e * 1.6));
 			ext.update({ dt, time, px: smooth.x, py: smooth.y, dive: d, energy, motion });
 			ext.artefact.updateMatrixWorld(true);

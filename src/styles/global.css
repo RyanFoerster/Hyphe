@@ -303,7 +303,7 @@ html[data-text="bloom"] [data-split].is-in .g {
 }
 
 /* ---------- Texte : mots mis en exergue ---------- */
-/* Boîte de suivi, point d'ancrage et valeur brute, comme une détection */
+/* Boîte de suivi, comme une détection */
 mark.hl {
   position: relative;
   background: none;
@@ -328,27 +328,11 @@ mark.hl::before {
     --hl 0.8s 1.15s;
   pointer-events: none;
 }
-mark.hl::after {
-  content: attr(data-hl);
-  position: absolute;
-  left: -0.02em;
-  bottom: calc(100% + 0.15em);
-  font: 400 9px/1 var(--font-mono);
-  letter-spacing: 0.04em;
-  color: var(--color-acid);
-  opacity: 0;
-  transition: opacity 0.4s 0.9s;
-  white-space: nowrap;
-  pointer-events: none;
-}
 /* Une fois encadré, le mot reste « détecté » : bord acide et trame */
 mark.hl.is-in::before {
   clip-path: inset(0 0 0 0);
   border-color: var(--color-acid);
   --hl: 1;
-}
-mark.hl.is-in::after {
-  opacity: 1;
 }
 mark.hl:hover::before {
   --hl: 1.8;
@@ -385,5 +369,18 @@ html[data-specimen-hover] body {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Cadres de survol sur les titres ---------- */
+/* Parceh n'a pas les mêmes métriques d'un navigateur à l'autre : on rogne la
+   boîte du mot aux capitales et à la ligne de base, le cadre épouse alors
+   l'encre du mot partout. [data-frame-word]::after reçoit le cadre. */
+@supports (text-box: trim-both cap alphabetic) {
+  [data-frame-word] {
+    text-box: trim-both cap alphabetic;
+  }
+  [data-frame-word]::after {
+    inset: -0.12em -0.16em -0.1em -0.1em !important;
   }
 }

@@ -8,7 +8,7 @@
 //                       du centre du titre vers les bords
 //                     · scan (?text=scan) : les mots se révèlent par paliers,
 //                       chacun encadré un instant par une boîte de suivi
-//   mark.hl           mot mis en exergue : boîte de suivi, point, valeur
+//   mark.hl           mot mis en exergue : boîte de suivi qui reste acide
 //
 // Tout part de la classe .is-in posée par l'observateur d'apparition.
 
@@ -94,12 +94,6 @@ export function mountText(root: ParentNode = document) {
 	const mode = textMode();
 	document.documentElement.dataset.text = mode;
 	root.querySelectorAll<HTMLElement>('[data-split]').forEach((el) => split(el, mode));
-
-	// Valeurs des mots en exergue : un nombre brut, comme une mesure
-	root.querySelectorAll<HTMLElement>('mark.hl:not([data-hl])').forEach((m, i) => {
-		const v = ((Math.sin(i * 12.9898 + (m.textContent?.length ?? 0)) * 43758.5453) % 1 + 1) % 1;
-		m.dataset.hl = v < 0.5 ? (0.5 + v).toFixed(1) : (0.5 + v * 0.5 + 0.00000004).toFixed(8);
-	});
 
 	// Décodage à l'apparition (les éléments observés reçoivent .is-in)
 	const io = new IntersectionObserver(
