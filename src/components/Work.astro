@@ -29,15 +29,12 @@ const parts = (text: string, word: string) => {
 <section id="work" class="relative" aria-labelledby="work-title">
 	<div class="dive relative h-[170svh]" data-dive>
 		<div class="dive-title sticky top-0 z-[3] flex h-[100svh] flex-col items-center justify-center overflow-hidden px-4 text-center">
-			<!-- Changement de section : un trait traverse l'écran, le numéro passe de 00 à 01 -->
+			<!-- Changement de section : un trait traverse l'écran, « 01 » s'allume -->
 			<div class="seam meta pointer-events-none absolute inset-x-4 top-[15svh] flex items-center gap-4 sm:inset-x-6" aria-hidden="true">
 				<span class="from text-mineral-dim">[ 00 ] Surface</span>
 				<span class="line h-px flex-1 bg-bone/25"></span>
 				<span class="to text-acid">[ 01 ] Selected work</span>
 			</div>
-			<p class="index titre pointer-events-none" aria-hidden="true">
-				<span>0</span><span class="roll"><span>0</span><span>1</span></span>
-			</p>
 			<p class="meta relative text-mineral"><span class="kicker" data-scramble>[ 01 ] Selected work — {Math.min(...years)} / {Math.max(...years)}</span></p>
 			<h2 id="work-title" class="specimen-title titre relative mt-7 text-[clamp(3.2rem,9vw,10rem)]" data-split>Enter the specimen</h2>
 			<p class="meta relative mt-7 text-bone/60"><span data-scramble>{pad(selected.length)} projects grown inside</span></p>
@@ -126,8 +123,20 @@ const parts = (text: string, word: string) => {
 			<ul class="floaters absolute inset-0" aria-label="All specimens">
 				{
 					projects.map((p, i) => (
-						<li class="floater" style={`--fx:${FLOAT[i % FLOAT.length][0]};--fy:${FLOAT[i % FLOAT.length][1]};--fz:${FLOAT[i % FLOAT.length][2]};--fd:${11 + ((i * 7) % 9)}s;--fp:${-i * 1.7}s;--t:${0.18 + i * 0.035}`}>
+						<li
+							class:list={['floater', FLOAT[i % FLOAT.length][0] > 50 && 'is-right', FLOAT[i % FLOAT.length][1] > 50 && 'is-low']}
+							style={`--fx:${FLOAT[i % FLOAT.length][0]};--fy:${FLOAT[i % FLOAT.length][1]};--fz:${FLOAT[i % FLOAT.length][2]};--fd:${11 + ((i * 7) % 9)}s;--fp:${-i * 1.7}s;--t:${0.18 + i * 0.035}`}
+						>
 							<a href={`/work/${p.slug}`} data-portal class="group block">
+								<!-- Au survol, la planche du projet se déplie vers le centre de l'écran -->
+								<span class="peek" data-portal-frame aria-hidden="true">
+									<img src={coverOf(p)} alt="" loading="lazy" width="1600" height="900" />
+									<span class="tick left-0 top-0 border-l border-t" />
+									<span class="tick right-0 top-0 border-r border-t" />
+									<span class="tick bottom-0 left-0 border-b border-l" />
+									<span class="tick bottom-0 right-0 border-b border-r" />
+									<span class="peek-cap meta">fig. {pad(i + 1)} — {p.category}</span>
+								</span>
 								<span class="meta block text-mineral">
 									<span class="text-acid">{pad(i + 1)}</span> — {p.year}
 								</span>
@@ -153,7 +162,7 @@ const parts = (text: string, word: string) => {
 <style>
 	/* ---- Passage du hero à la galerie, piloté par la plongée ----
 	   --tin  0 → 1  le titre se rassemble, du contour au plein
-	   --num  0 → 1  le numéro de section passe de 00 à 01
+	   --num  0 → 1  le trait traverse, la section suivante s'annonce
 	   --tout 0 → 1  on traverse le titre en entrant dans la fleur */
 	.dive {
 		--tin: 1;
@@ -173,29 +182,6 @@ const parts = (text: string, word: string) => {
 	.seam .to {
 		opacity: var(--num);
 		translate: calc((1 - var(--num)) * -1.5em) 0;
-	}
-	.index {
-		position: absolute;
-		left: 50%;
-		top: 50%;
-		display: flex;
-		translate: -50% -50%;
-		scale: calc(1 + var(--tout) * 1.6);
-		font-size: min(56vw, 62svh);
-		line-height: 1;
-		color: transparent;
-		-webkit-text-stroke: 1px rgb(230 228 220 / 0.22);
-		opacity: calc(1 - var(--tout));
-	}
-	.index .roll {
-		display: block;
-		height: 1em;
-		overflow: hidden;
-	}
-	.index .roll > span {
-		display: block;
-		height: 1em;
-		translate: 0 calc(var(--num) * -100%);
 	}
 	/* Les lettres arrivent écartées, en contour, et se resserrent en plein */
 	.specimen-title {
@@ -280,8 +266,13 @@ const parts = (text: string, word: string) => {
 		filter: blur(calc((1 - var(--fz)) * 1.6px + clamp(0, 1 - (var(--x) - var(--t)) * 6, 1) * 8px));
 	}
 	.floater > a {
+		position: relative;
 		animation: float var(--fd) ease-in-out var(--fp) infinite alternate;
 		text-align: left;
+	}
+	/* On ne fait pas dériver ce qu'on est en train de lire */
+	.floater > a:hover {
+		animation-play-state: paused;
 	}
 	.floater .name {
 		margin-block: 0.3rem 0.15rem;
@@ -289,10 +280,85 @@ const parts = (text: string, word: string) => {
 		color: var(--color-bone);
 		transition: color 0.3s;
 	}
-	.floater:hover {
+	.floater:hover,
+	.floater:focus-within {
 		opacity: 1;
 		filter: none;
 		z-index: 2;
+	}
+	/* Pendant qu'on en lit un, les autres reculent */
+	.floaters:has(.floater:hover) .floater:not(:hover) {
+		opacity: 0.18;
+		filter: blur(3px);
+	}
+	.floaters:has(.floater:hover) ~ div {
+		opacity: 0.15;
+		filter: blur(4px);
+	}
+	.floaters ~ div {
+		transition:
+			opacity 0.5s,
+			filter 0.5s;
+	}
+	/* La planche : posée à côté du nom, du côté du centre de l'écran */
+	.peek {
+		position: absolute;
+		left: calc(100% + 1.4rem);
+		top: 50%;
+		width: clamp(14rem, 24vw, 22rem);
+		aspect-ratio: 16 / 9;
+		translate: 0 -50%;
+		border: 1px solid rgb(230 228 220 / 0.16);
+		clip-path: inset(50% 100% 50% 0);
+		pointer-events: none;
+		transition: clip-path 0.7s var(--ease-portal);
+	}
+	.is-right .peek {
+		left: auto;
+		right: calc(100% + 1.4rem);
+		clip-path: inset(50% 0 50% 100%);
+	}
+	.is-low .peek {
+		top: auto;
+		bottom: 0;
+		translate: 0 0;
+	}
+	.peek img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		scale: 1.12;
+		transition: scale 1.2s var(--ease-organic);
+	}
+	.peek .tick {
+		position: absolute;
+		z-index: 1;
+		width: 7px;
+		height: 7px;
+		border-color: var(--color-acid);
+	}
+	.peek-cap {
+		position: absolute;
+		left: 0.6rem;
+		bottom: 0.55rem;
+		z-index: 1;
+		padding: 0.15rem 0.4rem;
+		white-space: nowrap;
+		color: var(--color-bone);
+		background: color-mix(in oklab, var(--color-void) 80%, transparent);
+	}
+	.floater > a:hover .peek,
+	.floater > a:focus-visible .peek {
+		clip-path: inset(0 0 0 0);
+	}
+	.floater > a:hover .peek img,
+	.floater > a:focus-visible .peek img {
+		scale: 1;
+	}
+	.is-right > a {
+		text-align: right;
 	}
 	.floater:hover .name {
 		color: var(--color-acid);

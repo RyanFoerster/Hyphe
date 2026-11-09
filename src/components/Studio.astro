@@ -1,29 +1,13 @@
 ---
 // Après la galerie : le studio remonte par-dessus la fleur éteinte.
-// Un manifeste ; ce que l'on fait pousser, accroché aux pétales d'une fleur
-// vue d'en haut (la même que celle du hero) ; la méthode, en trois plantes
-// qui poussent côte à côte : graine, pousse, fleur.
+// Un manifeste, puis ce que l'on fait pousser, accroché aux pétales d'une
+// fleur vue d'en haut (la même que celle du hero).
 import { site } from '../data/site';
 
-const steps = [
-	{ name: 'Seed', text: 'We listen, dig and find the one idea worth growing.' },
-	{ name: 'Grow', text: 'Design and code move together, in small living prototypes.' },
-	{ name: 'Bloom', text: 'Launch, then tend: measure, prune and keep it alive.' },
-];
 ---
 
 <section class="studio relative z-10 overflow-hidden bg-void" aria-labelledby="studio-title">
-	<!-- Le fil sort de la galerie et devient la lisière de la section -->
-	<canvas
-		class="pointer-events-none block h-28 w-full opacity-70"
-		data-ascii
-		data-ascii-kind="mycelium"
-		data-ascii-seed="23"
-		data-ascii-size="10"
-		aria-hidden="true"
-	></canvas>
-
-	<div class="grid gap-8 px-4 pb-16 pt-16 sm:px-6 md:grid-cols-12 md:pb-20 md:pt-24">
+	<div class="grid gap-8 px-4 pb-16 pt-32 sm:px-6 md:grid-cols-12 md:pb-20 md:pt-44">
 		<p class="meta md:col-span-3" data-reveal><span class="kicker" data-scramble>[ 02 ] The studio</span></p>
 		<div class="md:col-span-9">
 			<h2 id="studio-title" class="sr-only">The studio</h2>
@@ -37,10 +21,9 @@ const steps = [
 		</div>
 	</div>
 
-	<!-- Ce que l'on fait pousser : un savoir-faire au bout de chaque pétale,
-	     puis, sous la fleur, la façon dont elle pousse -->
+	<!-- Ce que l'on fait pousser : un savoir-faire au bout de chaque pétale -->
 	<div class="px-4 pb-32 sm:px-6 md:pb-44">
-		<p class="meta mb-4 text-center" data-reveal><span class="kicker" data-scramble>What we grow — and how</span></p>
+		<p class="meta mb-4 text-center" data-reveal><span class="kicker" data-scramble>What we grow</span></p>
 		<div class="corolla relative -mx-4 sm:-mx-6" data-corolla>
 			<canvas class="absolute inset-0 size-full" data-specimen="corolla" aria-hidden="true"></canvas>
 			<ul>
@@ -77,23 +60,6 @@ const steps = [
 			</ul>
 		</div>
 
-		<!-- La tige descend de la fleur jusqu'au sol des trois étapes -->
-		<div class="stem mx-auto h-20 w-px md:h-28" aria-hidden="true"></div>
-		<div class="relative mx-auto max-w-5xl">
-			<canvas class="stages-canvas pointer-events-none absolute inset-x-0 top-0 w-full" data-specimen="stages" aria-hidden="true"></canvas>
-			<div class="soil pointer-events-none absolute inset-x-0" aria-hidden="true"></div>
-			<ol class="relative grid gap-4 md:grid-cols-3 md:gap-8">
-				{
-					steps.map((s, i) => (
-						<li class="stage flex flex-col items-center text-center" data-reveal style={`--reveal-delay: ${i * 180}ms`}>
-							<span class="pot meta mb-3 text-mineral-dim" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-							<p class="titre text-[2.8rem]">{s.name}</p>
-							<p class="mt-2 max-w-[17rem] text-[15px] leading-relaxed text-bone/70">{s.text}</p>
-						</li>
-					))
-				}
-			</ol>
-		</div>
 		<div class="mt-16 flex justify-center" data-reveal>
 			<button type="button" data-open-about class="about meta inline-flex items-center gap-3 border border-bone/20 px-5 py-2.5 text-bone transition hover:border-acid hover:text-acid">
 				<span>About the studio</span><span aria-hidden="true">→</span>
@@ -196,29 +162,4 @@ const steps = [
 		}
 	}
 
-	/* ---- La méthode, accrochée sous la fleur ---- */
-	.stem {
-		background: linear-gradient(to bottom, rgb(200 245 60 / 0.5), rgb(230 228 220 / 0.12));
-	}
-	.stages-canvas {
-		height: 380px;
-	}
-	/* Le sol commun aux trois plantes */
-	.soil {
-		top: 340px;
-		height: 1px;
-		background: repeating-linear-gradient(to right, rgb(230 228 220 / 0.22) 0 6px, transparent 6px 12px);
-	}
-	.stage {
-		padding-top: 360px;
-	}
-	@media (max-width: 767px) {
-		/* Sur mobile, les plantes se partagent la largeur : textes en dessous */
-		.stage {
-			padding-top: 0;
-		}
-		ol:has(.stage) {
-			padding-top: 360px;
-		}
-	}
 </style>

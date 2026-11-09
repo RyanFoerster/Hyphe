@@ -7,13 +7,15 @@ interface Props {
 	project: Project;
 	class?: string;
 	compact?: boolean;
+	/** Posée dans l'image : le nom latin seul, la fiche se déplie au survol */
+	inset?: boolean;
 }
 
-const { project: p, class: className, compact = false } = Astro.props;
+const { project: p, class: className, compact = false, inset = false } = Astro.props;
 const no = String(projects.indexOf(p) + 1).padStart(3, '0');
 ---
 
-<div class:list={['herbarium relative', className]}>
+<div class:list={['herbarium relative', inset && 'inset', className]}>
 	<span class="tick left-0 top-0 border-l border-t" aria-hidden="true"></span>
 	<span class="tick right-0 top-0 border-r border-t" aria-hidden="true"></span>
 	<span class="tick bottom-0 left-0 border-b border-l" aria-hidden="true"></span>
@@ -21,14 +23,16 @@ const no = String(projects.indexOf(p) + 1).padStart(3, '0');
 	<p class="meta flex justify-between gap-4 border-b border-dashed border-bone/15 pb-2 text-mineral">
 		<span>Herbarium Hyphe</span><span class="tabular-nums">No. {no}</span>
 	</p>
-	<p class:list={['titre mt-3 text-bone', compact ? 'text-[1.9rem]' : 'text-[2.4rem]']}>{p.latin}</p>
-	<dl class="meta mt-3 grid grid-cols-[3.2rem_1fr] gap-x-3 gap-y-1 text-bone/80">
-		<dt class="text-mineral-dim">Fam.</dt><dd>{p.category}</dd>
-		<dt class="text-mineral-dim">Leg.</dt><dd>{p.client}</dd>
-		<dt class="text-mineral-dim">Loc.</dt><dd>{p.locality}</dd>
-		{!compact && <><dt class="text-mineral-dim">Cult.</dt><dd>{p.services.join(' · ')}</dd></>}
-		<dt class="text-mineral-dim">Det.</dt><dd>Studio Hyphe, {p.year}</dd>
-	</dl>
+	<p class:list={['titre mt-3 text-bone', inset ? 'text-[1.6rem]' : compact ? 'text-[1.9rem]' : 'text-[2.4rem]']}>{p.latin}</p>
+	<div class="more">
+		<dl class="meta grid grid-cols-[3.2rem_1fr] gap-x-3 gap-y-1 pt-3 text-bone/80">
+			<dt class="text-mineral-dim">Fam.</dt><dd>{p.category}</dd>
+			<dt class="text-mineral-dim">Leg.</dt><dd>{p.client}</dd>
+			<dt class="text-mineral-dim">Loc.</dt><dd>{p.locality}</dd>
+			{!compact && !inset && <><dt class="text-mineral-dim">Cult.</dt><dd>{p.services.join(' · ')}</dd></>}
+			<dt class="text-mineral-dim">Det.</dt><dd>Studio Hyphe, {p.year}</dd>
+		</dl>
+	</div>
 </div>
 
 <style>
@@ -38,6 +42,31 @@ const no = String(projects.indexOf(p) + 1).padStart(3, '0');
 		backdrop-filter: blur(14px);
 		-webkit-backdrop-filter: blur(14px);
 		border: 1px solid rgb(230 228 220 / 0.12);
+	}
+	.more {
+		display: grid;
+		grid-template-rows: 1fr;
+	}
+	.more > dl {
+		overflow: hidden;
+		min-height: 0;
+	}
+	/* Dans l'image : une étiquette discrète, la fiche entière au survol */
+	.inset {
+		padding: 0.7rem 0.85rem 0.8rem;
+		background: color-mix(in oklab, var(--color-void) 80%, transparent);
+	}
+	.inset .more {
+		grid-template-rows: 0fr;
+		opacity: 0;
+		transition:
+			grid-template-rows 0.55s var(--ease-portal),
+			opacity 0.4s;
+	}
+	:global(.group:hover) .inset .more,
+	:global(.group:focus-visible) .inset .more {
+		grid-template-rows: 1fr;
+		opacity: 1;
 	}
 	.tick {
 		position: absolute;

@@ -4,8 +4,7 @@
 //   <canvas data-specimen="corolla">   la fleur vue d'en haut, un pétale par
 //                                      savoir-faire ; les étiquettes [data-petal-label]
 //                                      suivent le bout de leur pétale
-//   <canvas data-specimen="stages">    graine, pousse, fleur, côte à côte, qui
-//                                      grandissent à l'apparition
+//   <canvas data-specimen="drift">      fin de galerie : pétales et pollen qui flottent
 //   <canvas data-specimen="footer">    une grande fleur qui s'ouvre au bord de la page
 //
 // Chaque toile ne dessine que lorsqu'elle est à l'écran.
@@ -315,40 +314,6 @@ function corolla(canvas: HTMLCanvasElement) {
 	});
 }
 
-/** Graine, pousse, fleur : trois plantes alignées sur les trois colonnes */
-function stages(canvas: HTMLCanvasElement) {
-	const st = stage(canvas, 30);
-	const plants = [
-		{ p: plant(st.u, { petals: 5, stem: 0.5, leaves: 0, seed: true, glow: 1.4 }), g: 0.12, open: 0 },
-		{ p: plant(st.u, { petals: 5, stem: 1.1, leaves: 2, glow: 1.4 }), g: 0.75, open: 0.08 },
-		{ p: plant(st.u, { petals: 6, stem: 1.25, leaves: 3, glow: 1.4 }), g: 1, open: 1 },
-	];
-	plants.forEach(({ p }, i) => {
-		// La graine, seule, a besoin d'être un peu plus grande pour se lire
-		if (i === 0) p.root.scale.setScalar(1.8);
-		st.scene.add(p.root);
-	});
-	st.camera.position.set(0, 0.95, 4.4);
-	st.camera.lookAt(0, 0.6, 0);
-	st.u.uFocusDist.value = 4.4;
-	let start = -1;
-	new IntersectionObserver(([e]) => e.isIntersecting && start < 0 && (start = performance.now() / 1000), { threshold: 0.35 }).observe(canvas);
-	st.loop((t) => {
-		// Une plante par colonne : on cale leur écartement sur la largeur visible
-		const { w, h } = st.size();
-		const half = Math.tan(THREE.MathUtils.degToRad(15)) * 4.4 * (w / h);
-		const k = start < 0 ? 0 : reduced() ? 1 : t - start;
-		plants.forEach(({ p, g, open }, i) => {
-			p.root.position.set(((i - 1) * 2 * half) / 3, i === 0 ? -0.1 : -0.45, 0);
-			const gi = Math.min(1, Math.max(0, (k - i * 0.5) / 2.2));
-			const e = 1 - (1 - gi) ** 3;
-			p.set(g * e, open * smoothstep(0.55, 1, e));
-			p.root.rotation.y = t * 0.12 + i;
-			p.root.rotation.z = Math.sin(t * 0.8 + i) * 0.04;
-		});
-	});
-}
-
 /** Le pied de page : une grande fleur qui s'ouvre et respire */
 function footer(canvas: HTMLCanvasElement) {
 	const st = stage(canvas, 32);
@@ -474,6 +439,8 @@ function drift(canvas: HTMLCanvasElement) {
 		px += (tx - px) * 0.03;
 		py += (ty - py) * 0.03;
 		st.camera.position.set(px * 0.6, -py * 0.35, 6);
+		const { w, h } = st.size();
+		const aspect = w / h;
 		st.camera.lookAt(0, 0, 0);
 		data.forEach((d, i) => {
 			if (!still) {
@@ -482,7 +449,11 @@ function drift(canvas: HTMLCanvasElement) {
 			}
 			dummy.position.set(d.p.x + Math.sin(t * 0.3 + d.ph) * 0.4, d.p.y, d.p.z);
 			dummy.rotation.set(d.r.x + t * d.w.x, d.r.y + t * d.w.y, d.r.z + t * d.w.z);
-			dummy.scale.setScalar(d.s);
+			// Un pétale ne touche jamais le bord de la toile : il fond avant
+			const halfH = Math.tan(THREE.MathUtils.degToRad(20)) * (6 - d.p.z);
+			const halfW = halfH * aspect;
+			const edge = Math.min(halfH - Math.abs(d.p.y), halfW - Math.abs(dummy.position.x));
+			dummy.scale.setScalar(d.s * smoothstep(0, 1.1, edge));
 			dummy.updateMatrix();
 			petals.setMatrixAt(i, dummy.matrix);
 		});
@@ -502,7 +473,6 @@ export function mountSpecimens(root: ParentNode = document) {
 		const kind = c.dataset.specimen;
 		if (kind === 'corolla') corolla(c);
 		else if (kind === 'drift') drift(c);
-		else if (kind === 'stages') stages(c);
 		else if (kind === 'footer') footer(c);
 	}
 }

@@ -15,36 +15,28 @@ import { projects } from '../data/projects';
 <canvas class="world-gl pointer-events-none fixed inset-0 z-[2] size-full" data-world-gl aria-hidden="true"></canvas>
 <canvas class="pointer-events-none fixed inset-0 z-[3] size-full" data-world-overlay aria-hidden="true"></canvas>
 
-<!-- Chargement : une spore qui germe (voir scripts/loader.ts) -->
+<!-- Chargement : la fleur pousse au trait (voir scripts/loader.ts) -->
 <div class="loader fixed inset-0 z-[150] flex flex-col bg-void px-4 py-4 sm:px-6 sm:py-5" data-loader role="status" aria-live="polite">
 	<span class="sr-only">Loading the specimen</span>
 	<div class="meta flex items-center justify-between text-mineral" aria-hidden="true">
-		<span class="flex items-center gap-3">
-			<img src="/HYPHE.svg" alt="" width="555" height="146" class="h-[18px] w-auto sm:h-5" />
-			<span class="hidden sm:inline">a flower, germinating</span>
-		</span>
-		<span>[ germination ]</span>
+		<img src="/HYPHE.svg" alt="" width="555" height="146" class="h-[16px] w-auto sm:h-5" />
+		<span><span class="kicker">[ Specimen 001 ]</span></span>
 	</div>
 
-	<div class="flex flex-1 flex-col items-center justify-center gap-5" aria-hidden="true">
-		<div class="frame relative h-[min(360px,44svh)] w-[min(560px,88vw)]">
-			<span class="corner left-0 top-0 border-l border-t"></span>
-			<span class="corner right-0 top-0 border-r border-t"></span>
-			<span class="corner bottom-0 left-0 border-b border-l"></span>
-			<span class="corner bottom-0 right-0 border-b border-r"></span>
-			<p class="meta absolute -top-5 left-0 text-bone/80">specimen 001 — germinating</p>
-			<canvas class="absolute inset-3 size-[calc(100%-1.5rem)]" data-loader-canvas></canvas>
+	<div class="relative flex flex-1 items-center justify-center" aria-hidden="true">
+		<canvas class="h-[min(560px,62svh)] w-[min(640px,96vw)]" data-loader-canvas></canvas>
+	</div>
+
+	<div class="flex items-end justify-between gap-6" aria-hidden="true">
+		<div>
+			<p class="meta text-mineral">Hyphae floralis — <span class="text-bone/85" data-loader-stage>Sowing</span></p>
+			<p class="titre mt-2 text-[clamp(4rem,11vw,9rem)] tabular-nums leading-[0.8]"><span data-loader-pct>000</span><span class="text-acid">%</span></p>
 		</div>
-		<p class="meta flex items-center gap-3 tabular-nums text-bone/70">
-			<span class="relative block h-px w-44 bg-bone/20"><span class="absolute inset-y-0 left-0 w-0 bg-acid" data-loader-bar></span></span>
-			<span class="text-acid" data-loader-pct>000%</span>
-		</p>
+		<p class="meta hidden pb-2 text-right text-mineral sm:block">Studio Hyphe<br />Digital experiences, grown differently</p>
 	</div>
-
-	<div class="meta flex items-end justify-between gap-6 text-mineral" aria-hidden="true">
-		<ul class="space-y-1" data-loader-log></ul>
-		<span class="hidden text-right sm:block">Studio Hyphe<br />Digital experience studio</span>
-	</div>
+	<span class="absolute inset-x-0 bottom-0 block h-px bg-bone/10" aria-hidden="true">
+		<span class="block h-full origin-left scale-x-0 bg-acid" data-loader-bar></span>
+	</span>
 </div>
 
 <div class="pointer-events-none fixed right-[7%] top-[27%] z-[3] hidden w-48 opacity-0 md:block" data-callout-label aria-hidden="true">
@@ -67,12 +59,6 @@ import { projects } from '../data/projects';
 	/* Sans WebGL (ou sans JS), pas de chargement à attendre */
 	:global(html:not(.world)) .loader {
 		display: none;
-	}
-	.corner {
-		position: absolute;
-		width: 14px;
-		height: 14px;
-		border-color: rgb(230 228 220 / 0.6);
 	}
 </style>
 
