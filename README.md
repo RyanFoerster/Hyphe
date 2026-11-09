@@ -1,43 +1,46 @@
-# Astro Starter Kit: Minimal
+# Studio Hyphe
 
-```sh
-npm create astro@latest -- --template minimal
-```
+Site vitrine d'un studio d'expériences digitales (fictif). Une fleur
+botanique transparente, procédurale, pousse dans un monde ASCII discret ;
+les projets se lisent comme des planches d'herbier.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+En ligne : https://hyphe.ryanfoerster.dev
 
-## 🚀 Project Structure
+## Pile
 
-Inside of your Astro project, you'll see the following folders and files:
+Astro 7 (statique) · Tailwind 4 · three.js r187 · Lenis · Web Audio
+(ambiance 100 % synthétisée). Déployé sur Cloudflare (assets statiques,
+voir `wrangler.jsonc`).
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+## Commandes
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+Node ≥ 22.23 (`.nvmrc`).
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+| Commande              | Effet                                          |
+| :-------------------- | :--------------------------------------------- |
+| `npm install`         | installe les dépendances                       |
+| `npm run dev`         | serveur de dev sur http://localhost:4321       |
+| `npx astro check`     | vérifie les types                              |
+| `npm run build`       | build statique dans `dist/`                    |
+| `npm run preview`     | sert `dist/` en local                          |
 
-Any static assets, like images, can be placed in the `public/` directory.
+Les pages sont écrites en fichiers (`work/loum.html`) et servies sans
+extension ni barre finale (`/work/loum`).
 
-## 🧞 Commands
+## Vérifier le rendu
 
-All commands are run from the root of the project, from a terminal:
+Le WebGL ne se juge qu'en capture : `scripts/cdp-shot.mjs` pilote un Chrome
+sans interface (mode d'emploi en tête du script).
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+## Structure
 
-## 👀 Want to learn more?
+- `src/pages/` : accueil, herbier (`/work`), fiches projet
+  (`/work/[slug]`), 404, visuels SVG générés (`/visuals/…`).
+- `src/components/` : sections et éléments de page.
+- `src/scripts/world/` : le monde 3D du hero (la fleur, la chaîne de rendu,
+  l'intérieur de la fleur).
+- `src/scripts/` : loader, son, transitions, texte, défilement, menu.
+- `src/data/` : projets et coordonnées du studio.
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Le détail (direction artistique, pièges connus, carte du code) est dans
+[`CLAUDE.md`](CLAUDE.md).

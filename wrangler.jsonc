@@ -12,8 +12,8 @@
   "assets": {
     "directory": "./dist",
 
-    // `build.format: 'file'` écrit `herbier.html` ; l'assets server sert
-    // `/herbier` et redirige les formes `/herbier/` et `/herbier.html`
+    // `build.format: 'file'` (astro.config.mjs) écrit `work.html` ; l'assets
+    // server sert `/work` et redirige les formes `/work/` et `/work.html`
     // vers elle — ce que dit aussi `trailingSlash: 'never'`.
     "html_handling": "auto-trailing-slash",
 

@@ -25,7 +25,7 @@ sur Cloudflare (voir `wrangler.jsonc`). Dépôt : github.com/RyanFoerster/Hyphe.
 
 ```
 npm install
-astro dev --background      # serveur de dev (http://localhost:4321)
+npx astro dev --background  # serveur de dev (http://localhost:4321)
 npx astro check             # types
 npx astro build             # build statique dans dist/
 ```
@@ -59,7 +59,15 @@ npx astro build             # build statique dans dist/
   et Footer.
 - `src/pages/work/index.astro` : l'herbier, deux lectures (Sheets flottantes
   avec étiquette d'herbier *dans* la photo, Index en liste).
-- `src/pages/work/[slug].astro` : fiche projet (`ProjectHero` plein écran).
+- `src/pages/work/[slug].astro` : fiche projet (`ProjectHero` plein écran),
+  qui se termine sur `NextSpecimen` (le hero du projet suivant pousse en
+  bas de page, puis on change de page sans que rien ne bouge).
+- `src/pages/visuals/` : SVG génératifs calculés au build
+  (`/visuals/<slug>.svg` et 6 déclinaisons `/visuals/<slug>/<n>.svg`), tracés
+  par `src/lib/generative.ts` (familles topo, strata, bloom).
+- `src/components/` aussi : `Herbarium.astro` (étiquette d'herbier d'un
+  projet), `Figure.astro` (image qui se recompose en tuiles, légende de
+  planche), `os/Window.astro` (fenêtres de la galerie).
 - `src/data/projects.ts` : les 7 projets. **Réels** : Loum (studioloum.com,
   captures du site uniquement, jamais les projets de Loum) et Farmlize
   (farmlize.ryanfoerster.dev ; source sur le Mac dans
@@ -76,6 +84,8 @@ npx astro build             # build statique dans dist/
     plongée dans la fleur (`d`), galerie intérieure, transition typo hero →
     galerie (`--hx`, `--tin`, `--tout`, `--num`).
   - `cavern.ts`, `overlay.ts` : intérieur de la fleur, annotations.
+  - `shared.ts` : bruit GLSL, mélange additif, atlas de caractères, et la
+    convention d'alpha de la cible (0 vide, 1 matière → ASCII, 2 image nette).
 - `src/scripts/specimen.ts` : fleurs isolées hors du monde, rendues avec
   `createPost` (même look que le hero) : `corolla` (studio, repères au bout des
   pétales + fenêtres), `footer`, `drift` (fin de galerie : pétales et pollen
@@ -105,6 +115,16 @@ npx astro build             # build statique dans dist/
 - Le hero attend `html.is-unveiling` (fin des tuiles du loader) pour germer.
 - Les navigateurs exigent un geste avant de jouer du son ; la molette ne
   compte pas.
+- Pages écrites en fichiers (`build.format: 'file'`, `trailingSlash:
+  'never'`) : liens internes sans barre finale (`/work/loum`), et
+  `Astro.url.pathname` vaut `/work/loum.html` (et `/index.html`) au build :
+  toujours passer par `pagePath()` (`src/lib/path.ts`). `wrangler.jsonc` sert ces fichiers sans
+  extension ; rien ne tourne côté serveur.
+- Déploiement : Workers Builds de Cloudflare, à chaque push sur `main`. Un
+  échec « 504 Gateway Timeout » sur `…/workers/scripts/hyphe/versions` vient
+  de leur API, pas du site : relancer le build (ou pousser à nouveau).
+  L'état de chaque commit se lit dans les checks GitHub
+  (`api.github.com/repos/RyanFoerster/Hyphe/commits/<sha>/check-runs`).
 
 ## À relire / ouvert
 

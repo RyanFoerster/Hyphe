@@ -6,8 +6,9 @@
 //   about  la fiche du studio
 import { site } from '../data/site';
 import { projects } from '../data/projects';
+import { pagePath } from '../lib/path';
 
-const path = Astro.url.pathname;
+const path = pagePath(Astro.url);
 const isHome = path === '/';
 const slug = path.match(/^\/work\/([^/]+)/)?.[1];
 const index = projects.findIndex((p) => p.slug === slug);

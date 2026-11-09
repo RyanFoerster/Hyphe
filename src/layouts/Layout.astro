@@ -3,6 +3,7 @@ import 'lenis/dist/lenis.css';
 import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import { site } from '../data/site';
+import { pagePath } from '../lib/path';
 
 interface Props {
 	title?: string;
@@ -12,7 +13,7 @@ interface Props {
 
 const { title, description = site.description, image } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : `${site.name} — ${site.tagline}`;
-const canonical = new URL(Astro.url.pathname, site.url);
+const canonical = new URL(pagePath(Astro.url), site.url);
 ---
 
 <html lang="en">
