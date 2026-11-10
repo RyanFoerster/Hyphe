@@ -1,0 +1,62 @@
+---
+// Le bandeau de savoir-faire qui défile en boucle : il ouvre le pied de page et
+// la fin des fiches projet.
+import { site } from '../data/site';
+
+const ticker = [...site.services.map((s) => s.name), 'Grown in ' + site.city, 'Open for projects'];
+---
+
+<div class="ticker meta relative z-[1] border-y border-dashed border-bone/15 bg-void py-3 text-bone/70" aria-hidden="true">
+	<div class="track">
+		{
+			[0, 1].map(() => (
+				<span class="run">
+					{ticker.map((t) => (
+						<>
+							<span>{t}</span>
+							<span class="dot" />
+						</>
+					))}
+				</span>
+			))
+		}
+	</div>
+</div>
+
+<style>
+	.ticker {
+		overflow: hidden;
+		white-space: nowrap;
+	}
+	.track {
+		display: flex;
+		width: max-content;
+		animation: run 46s linear infinite;
+	}
+	.ticker:hover .track {
+		animation-play-state: paused;
+	}
+	.run {
+		display: flex;
+		align-items: center;
+		gap: 1.6rem;
+		padding-right: 1.6rem;
+	}
+	.dot {
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--color-acid);
+		box-shadow: 0 0 10px 1px rgb(200 245 60 / 0.6);
+	}
+	@keyframes run {
+		to {
+			translate: -50% 0;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.track {
+			animation: none;
+		}
+	}
+</style>

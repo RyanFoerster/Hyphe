@@ -1,155 +1,27 @@
 ---
 // Le pied de page, plein écran : un bandeau de savoir-faire qui défile,
 // l'invitation et l'adresse, une grande fleur (la même que celle du hero) qui
-// s'ouvre sur le bord droit.
-import { site } from '../data/site';
-
-const ticker = [...site.services.map((s) => s.name), 'Grown in ' + site.city, 'Open for projects'];
+// s'ouvre sur le bord droit. Les fiches projet n'ont pas ce pied de page : elles
+// se terminent sur NextSpecimen, qui reprend le bandeau et le contact.
+import Ticker from './Ticker.astro';
+import ContactBlock from './ContactBlock.astro';
 ---
 
 <footer class="foot relative z-10 flex min-h-[100svh] flex-col overflow-hidden bg-void" aria-labelledby="footer-title">
 	<!-- Bandeau : ce que l'on fait pousser, en boucle -->
-	<div class="ticker meta relative z-[1] border-y border-dashed border-bone/15 bg-void py-3 text-bone/70" aria-hidden="true">
-		<div class="track">
-			{
-				[0, 1].map(() => (
-					<span class="run">
-						{ticker.map((t) => (
-							<>
-								<span>{t}</span>
-								<span class="dot" />
-							</>
-						))}
-					</span>
-				))
-			}
-		</div>
-	</div>
+	<Ticker />
 
 	<!-- La fleur, qui s'ouvre quand on arrive en bas de page -->
 	<canvas class="bloom pointer-events-none absolute inset-0 size-full" data-specimen="footer" aria-hidden="true"></canvas>
 	<div class="glow pointer-events-none absolute bottom-[-20%] right-[-10%] h-[80%] w-[60%]" aria-hidden="true"></div>
 
 	<div class="relative grid flex-1 content-center gap-12 px-4 py-24 sm:px-6 md:grid-cols-12">
-		<div class="md:col-span-7" data-reveal>
-			<p class="meta mb-6"><span class="kicker" data-scramble>[ Contact ]</span></p>
-			<h2 id="footer-title" class="titre text-[clamp(3.2rem,8vw,9rem)]" data-split>Grow something with us.</h2>
-			<a href={`mailto:${site.email}`} class="mail group mt-12 inline-flex items-baseline gap-4 text-[clamp(1.4rem,2.6vw,2.4rem)] text-bone">
-				<span class="word">{site.email}</span>
-				<span class="arrow text-acid" aria-hidden="true">↗</span>
-			</a>
-			<p class="meta mt-6 flex items-center gap-2 text-mineral">
-				<span class="relative flex size-1.5">
-					<span class="absolute inset-0 animate-ping rounded-full bg-acid/60"></span>
-					<span class="relative size-1.5 rounded-full bg-acid"></span>
-				</span>
-				Taking on new projects for {new Date().getFullYear()}
-			</p>
-		</div>
-
-		<div class="grid max-w-xl grid-cols-2 gap-8 md:col-span-7" data-reveal style="--reveal-delay: 150ms">
-			<div>
-				<p class="meta mb-4"><span class="kicker">Elsewhere</span></p>
-				<ul class="space-y-2 text-[15px]">
-					{
-						site.socials.map((s) => (
-							<li>
-								<a href={s.href} target="_blank" rel="noopener" class="social text-bone/85">
-									{s.label} <span aria-hidden="true">↗</span>
-								</a>
-							</li>
-						))
-					}
-				</ul>
-			</div>
-			<div>
-				<p class="meta mb-4"><span class="kicker">Studio</span></p>
-				<p class="text-[15px] text-bone/85">{site.city}<br />Working worldwide</p>
-				<p class="meta mt-2 text-mineral">
-					Local time <time data-clock data-tz={site.timezone} class="tabular-nums text-bone/80">--:--</time>
-				</p>
-				<button type="button" data-open-about class="social meta mt-4 text-bone/70">About the studio →</button>
-			</div>
-		</div>
+		<ContactBlock />
 	</div>
-
 </footer>
 
 <style>
-	/* ---- Bandeau ---- */
-	.ticker {
-		overflow: hidden;
-		white-space: nowrap;
-	}
-	.track {
-		display: flex;
-		width: max-content;
-		animation: run 46s linear infinite;
-	}
-	.ticker:hover .track {
-		animation-play-state: paused;
-	}
-	.run {
-		display: flex;
-		align-items: center;
-		gap: 1.6rem;
-		padding-right: 1.6rem;
-	}
-	.dot {
-		width: 5px;
-		height: 5px;
-		border-radius: 50%;
-		background: var(--color-acid);
-		box-shadow: 0 0 10px 1px rgb(200 245 60 / 0.6);
-	}
-	@keyframes run {
-		to {
-			translate: -50% 0;
-		}
-	}
-
 	.glow {
 		background: radial-gradient(closest-side, rgb(154 180 240 / 0.1), rgb(200 245 60 / 0.04) 55%, transparent);
-	}
-
-	/* ---- L'adresse : encadrée au survol, la flèche s'envole ---- */
-	.mail .word {
-		position: relative;
-	}
-	.mail .word::after {
-		content: '';
-		position: absolute;
-		inset: -0.12em -0.25em -0.1em;
-		border: 1px solid var(--color-acid);
-		clip-path: inset(0 100% 100% 0);
-		transition: clip-path 0.5s var(--ease-organic);
-	}
-	.mail:hover .word::after,
-	.mail:focus-visible .word::after {
-		clip-path: inset(0 0 0 0);
-	}
-	.mail .arrow {
-		transition: translate 0.5s var(--ease-organic);
-	}
-	.mail:hover .arrow,
-	.mail:focus-visible .arrow {
-		translate: 0.2em -0.2em;
-	}
-	.social {
-		background: linear-gradient(var(--color-acid), var(--color-acid)) 0 100% / 0 1px no-repeat;
-		transition:
-			background-size 0.45s var(--ease-organic),
-			color 0.3s;
-	}
-	.social:hover,
-	.social:focus-visible {
-		color: var(--color-acid);
-		background-size: 100% 1px;
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.track {
-			animation: none;
-		}
 	}
 </style>

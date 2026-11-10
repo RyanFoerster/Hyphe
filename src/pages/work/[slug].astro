@@ -1,7 +1,6 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import Layout from '../../layouts/Layout.astro';
-import Footer from '../../components/Footer.astro';
 import Figure from '../../components/Figure.astro';
 import ProjectHero from '../../components/ProjectHero.astro';
 import NextSpecimen from '../../components/NextSpecimen.astro';
@@ -211,7 +210,7 @@ const palette = [
 		}
 	</section>
 
-	<Footer />
+	<!-- Pas de pied de page ici : la fiche se termine sur le contact et le spécimen suivant -->
 	<NextSpecimen next={next} />
 </Layout>
 

@@ -1,0 +1,93 @@
+---
+// L'invitation et l'adresse. Deux tailles : le pied de page plein écran, et la
+// version serrée (compact) qui clôt les fiches projet, à côté du spécimen suivant.
+import { site } from '../data/site';
+
+interface Props {
+	compact?: boolean;
+	titleId?: string;
+}
+
+const { compact = false, titleId = 'footer-title' } = Astro.props;
+---
+
+<div class={compact ? '' : 'md:col-span-7'} data-reveal>
+	<p class:list={['meta', compact ? 'mb-4' : 'mb-6']}><span class="kicker" data-scramble>[ Contact ]</span></p>
+	<h2 id={titleId} class:list={['titre', compact ? 'text-balance text-[clamp(2.5rem,4.1vw,4.6rem)]' : 'text-[clamp(3.2rem,8vw,9rem)]']} data-split>Grow something with us.</h2>
+	<a
+		href={`mailto:${site.email}`}
+		class:list={['mail group inline-flex items-baseline gap-4 text-bone', compact ? 'mt-7 text-[clamp(1.15rem,1.7vw,1.5rem)]' : 'mt-12 text-[clamp(1.4rem,2.6vw,2.4rem)]']}
+	>
+		<span class="word">{site.email}</span>
+		<span class="arrow text-acid" aria-hidden="true">↗</span>
+	</a>
+	<p class:list={['meta items-center gap-2 text-mineral', compact ? 'mt-5 hidden md:flex' : 'mt-6 flex']}>
+		<span class="relative flex size-1.5">
+			<span class="absolute inset-0 animate-ping rounded-full bg-acid/60"></span>
+			<span class="relative size-1.5 rounded-full bg-acid"></span>
+		</span>
+		Taking on new projects for {new Date().getFullYear()}
+	</p>
+</div>
+
+<div class:list={['grid grid-cols-2', compact ? 'mt-8 max-w-md gap-6 md:mt-10' : 'max-w-xl gap-8 md:col-span-7']} data-reveal style="--reveal-delay: 150ms">
+	<div>
+		<p class="meta mb-4"><span class="kicker">Elsewhere</span></p>
+		<ul class="space-y-2 text-[15px]">
+			{
+				site.socials.map((s) => (
+					<li>
+						<a href={s.href} target="_blank" rel="noopener" class="social text-bone/85">
+							{s.label} <span aria-hidden="true">↗</span>
+						</a>
+					</li>
+				))
+			}
+		</ul>
+	</div>
+	<div>
+		<p class="meta mb-4"><span class="kicker">Studio</span></p>
+		<p class="text-[15px] text-bone/85">{site.city}<br />Working worldwide</p>
+		<p class="meta mt-2 text-mineral">
+			Local time <time data-clock data-tz={site.timezone} class="tabular-nums text-bone/80">--:--</time>
+		</p>
+		<button type="button" data-open-about class="social meta mt-4 text-bone/70">About the studio →</button>
+	</div>
+</div>
+
+<style>
+	/* ---- L'adresse : encadrée au survol, la flèche s'envole ---- */
+	.mail .word {
+		position: relative;
+	}
+	.mail .word::after {
+		content: '';
+		position: absolute;
+		inset: -0.12em -0.25em -0.1em;
+		border: 1px solid var(--color-acid);
+		clip-path: inset(0 100% 100% 0);
+		transition: clip-path 0.5s var(--ease-organic);
+	}
+	.mail:hover .word::after,
+	.mail:focus-visible .word::after {
+		clip-path: inset(0 0 0 0);
+	}
+	.mail .arrow {
+		transition: translate 0.5s var(--ease-organic);
+	}
+	.mail:hover .arrow,
+	.mail:focus-visible .arrow {
+		translate: 0.2em -0.2em;
+	}
+	.social {
+		background: linear-gradient(var(--color-acid), var(--color-acid)) 0 100% / 0 1px no-repeat;
+		transition:
+			background-size 0.45s var(--ease-organic),
+			color 0.3s;
+	}
+	.social:hover,
+	.social:focus-visible {
+		color: var(--color-acid);
+		background-size: 100% 1px;
+	}
+</style>

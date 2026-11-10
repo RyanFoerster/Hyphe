@@ -65,9 +65,14 @@ npx astro build             # build statique dans dist/
   année » dessous ; la 8e case est une planche vide « Yours? » qui mène au
   contact. Ryan a refusé une fleur 3D par projet et les grandes cartes larges.
   **Index** : liste, l'aperçu image suit le curseur (coins de visée, nom latin).
-- `src/pages/work/[slug].astro` : fiche projet (`ProjectHero` plein écran),
-  qui se termine sur `NextSpecimen` (le hero du projet suivant pousse en
-  bas de page, puis on change de page sans que rien ne bouge).
+- `src/pages/work/[slug].astro` : fiche projet (`ProjectHero` plein écran). **Pas de
+  pied de page ici** : la fiche se termine sur `NextSpecimen`, un seul écran
+  épinglé avec le contact à gauche (`ContactBlock` en serré, le même bloc que le
+  pied de page) et, à droite, la planche du projet suivant en miniature dans son
+  cadre. En continuant de défiler, le contact s'efface, la planche grandit
+  jusqu'à remplir l'écran (c'est le hero suivant), puis on change de page sans
+  que rien ne bouge. `Ticker.astro` : le bandeau qui ouvre cet écran et le
+  pied de page.
 - `src/pages/visuals/` : SVG génératifs calculés au build
   (`/visuals/<slug>.svg` et 6 déclinaisons `/visuals/<slug>/<n>.svg`), tracés
   par `src/lib/generative.ts` (familles topo, strata, bloom).

@@ -1,8 +1,13 @@
 ---
-// Fin de page projet : on continue de défiler et le spécimen suivant pousse.
-// La scène finale est le hero de la page suivante, rendu à l'identique
-// (ProjectHero en mode next) : au bout, on change de page sans que rien ne bouge.
+// Fin de fiche projet, en un seul écran : il n'y a pas de pied de page ici.
+// À gauche, l'invitation et l'adresse (le contact du pied de page, en serré) ;
+// à droite, la planche du spécimen suivant en miniature dans son cadre. Si l'on
+// continue de défiler, le contact s'efface et la planche grandit jusqu'à remplir
+// l'écran : c'est le hero de la page suivante, rendu à l'identique (ProjectHero en mode next), et
+// au bout on change de page sans que rien ne bouge.
 import ProjectHero from './ProjectHero.astro';
+import ContactBlock from './ContactBlock.astro';
+import Ticker from './Ticker.astro';
 import { projects, type Project } from '../data/projects';
 
 interface Props {
@@ -14,21 +19,40 @@ const no = String(projects.indexOf(next) + 1).padStart(2, '0');
 const total = String(projects.length).padStart(2, '0');
 ---
 
-<section class="next relative" aria-label={`Next project: ${next.name}`} data-next data-href={`/work/${next.slug}`}>
+<Ticker />
+<section class="next relative" aria-label={`Contact, then the next project: ${next.name}`} data-next data-href={`/work/${next.slug}`}>
 	<div class="stage sticky top-0 h-[100svh] overflow-hidden">
 		<ProjectHero project={next} mode="next" />
+
+		<!-- Le cadre de la planche : il suit la pousse, puis s'efface -->
+		<div class="frame pointer-events-none absolute" aria-hidden="true">
+			<i class="left-0 top-0 border-l border-t"></i>
+			<i class="right-0 top-0 border-r border-t"></i>
+			<i class="bottom-0 left-0 border-b border-l"></i>
+			<i class="bottom-0 right-0 border-b border-r"></i>
+			<p class="cap meta text-mineral">
+				<span><span class="text-bone/85">fig. {no}</span> — next specimen</span>
+				<span class="text-bone/70">{next.name}</span>
+				<span class="more text-acid">keep scrolling ↓</span>
+			</p>
+		</div>
+
+		<!-- La fin de la fiche : le contact -->
+		<div class="end absolute inset-x-0 top-0 flex h-[56%] flex-col justify-end px-4 pb-4 sm:px-6 md:inset-y-0 md:h-auto md:w-[48%] md:justify-center md:pb-0 md:pt-16" data-next-end>
+			<ContactBlock compact titleId="end-title" />
+		</div>
 
 		<!-- L'interface de la pousse : elle s'efface avant la fin -->
 		<div class="ui pointer-events-none absolute inset-x-4 top-24 sm:inset-x-6" aria-hidden="true">
 			<p class="meta flex justify-between text-mineral">
 				<span>Keep scrolling — specimen {no} / {total}</span>
-				<span class="text-bone/70">{next.latin}</span>
+				<span class="hidden text-bone/70 sm:inline">{next.category} — {next.year}</span>
 			</p>
 			<p class="meta mt-3 flex items-center gap-4 text-bone/70">
 				<span class="relative block h-px w-40 bg-bone/20"><span class="absolute inset-y-0 left-0 w-0 bg-acid" data-next-bar></span></span>
 				<span class="tabular-nums text-acid" data-next-pct>000%</span>
 			</p>
-			<svg class="mt-3 block h-5 w-full overflow-visible" viewBox="0 0 1000 24" preserveAspectRatio="none">
+			<svg class="thread mt-3 block h-5 w-full overflow-visible" viewBox="0 0 1000 24" preserveAspectRatio="none">
 				<path d="M0 12 C 80 2, 140 22, 220 12 S 360 4, 430 13 S 560 22, 640 11 S 790 3, 860 12 S 960 20, 1000 12" pathLength="1" class="hypha" />
 				<path d="M220 12 l 10 -10 M430 13 l -8 9 M640 11 l 9 -9 M860 12 l -7 9" pathLength="1" class="twig" />
 			</svg>
@@ -40,13 +64,88 @@ const total = String(projects.length).padStart(2, '0');
 </section>
 
 <style>
+	/* --p : la pousse, de 0 (contact et planche dans son cadre) à 1 (le hero suivant).
+	   Le premier cinquième du défilement ne fait rien pousser : on a le temps de lire.
+	   La planche : le hero entier réduit à --f, agrandi depuis le point (--ox, --oy) ;
+	   elle garde donc les proportions de l'écran. Étroit : en bas à droite, sous le
+	   contact. Large : à droite du contact, centrée en hauteur. */
 	.next {
-		height: 260svh;
+		height: 300svh;
 		--p: 0;
+		--f: 0.36;
+		--ox: 0.906;
+		--oy: 0.875;
+		--s: calc(var(--f) + (1 - var(--f)) * var(--p));
+	}
+	@media (min-width: 768px) {
+		.next {
+			--f: 0.44;
+			--ox: 0.9286;
+			--oy: 0.5;
+		}
 	}
 	.ui,
 	.enter {
 		opacity: calc(1 - clamp(0, (var(--p) - 0.82) * 7, 1));
+	}
+	/* Le contact s'efface dès que la planche se met à pousser */
+	.end {
+		opacity: calc(1 - clamp(0, var(--p) * 9, 1));
+		translate: 0 calc(var(--p) * -3rem);
+	}
+	.frame {
+		inset: calc(var(--oy) * (1 - var(--s)) * 100%) calc((1 - var(--ox)) * (1 - var(--s)) * 100%) calc((1 - var(--oy)) * (1 - var(--s)) * 100%)
+			calc(var(--ox) * (1 - var(--s)) * 100%);
+		opacity: calc(1 - clamp(0, (var(--p) - 0.55) * 4, 1));
+	}
+	.frame i {
+		position: absolute;
+		width: 12px;
+		height: 12px;
+		margin: -5px;
+		border-color: var(--color-acid);
+		border-style: solid;
+		border-width: 0;
+	}
+	.frame i.border-l {
+		border-left-width: 1px;
+	}
+	.frame i.border-r {
+		border-right-width: 1px;
+	}
+	.frame i.border-t {
+		border-top-width: 1px;
+	}
+	.frame i.border-b {
+		border-bottom-width: 1px;
+	}
+	/* La légende : à gauche de la planche sur mobile, au-dessus sur grand écran */
+	.cap {
+		position: absolute;
+		right: calc(100% + 1rem);
+		bottom: 0;
+		display: flex;
+		width: 11rem;
+		flex-direction: column;
+		gap: 0.35rem;
+		opacity: calc(1 - clamp(0, var(--p) * 9, 1));
+	}
+	@media (min-width: 768px) {
+		.cap {
+			inset: auto 0 calc(100% + 0.9rem);
+			width: auto;
+			flex-direction: row;
+			justify-content: space-between;
+			gap: 1rem;
+		}
+		.cap .more {
+			display: none;
+		}
+	}
+	/* Le fil se découvre de gauche à droite avec la pousse (un tracé en pointillés
+	   étiré par le viewBox ne se referme pas juste) */
+	.thread {
+		clip-path: inset(-1rem calc((1 - var(--p)) * 100%) -1rem 0);
 	}
 	.hypha,
 	.twig {
@@ -54,20 +153,35 @@ const total = String(projects.length).padStart(2, '0');
 		stroke: var(--color-acid);
 		stroke-width: 1;
 		vector-effect: non-scaling-stroke;
-		stroke-dasharray: 1;
-		stroke-dashoffset: calc(1 - var(--p));
 	}
 	.twig {
 		stroke: rgb(230 228 220 / 0.6);
-		stroke-dashoffset: calc(1 - clamp(0, (var(--p) - 0.4) * 1.6, 1));
 	}
 	@media (prefers-reduced-motion: reduce) {
+		/* Sans mouvement : le contact, puis le hero suivant, l'un sous l'autre */
 		.next {
 			height: auto;
 			--p: 1;
 		}
 		.stage {
 			position: relative;
+			display: flex;
+			height: auto;
+			flex-direction: column;
+			overflow: visible;
+		}
+		.end {
+			position: relative;
+			order: -1;
+			height: auto;
+			width: auto;
+			padding-block: 8rem 5rem;
+			opacity: 1;
+			translate: none;
+		}
+		.frame,
+		.ui {
+			display: none;
 		}
 	}
 </style>
@@ -80,6 +194,9 @@ const total = String(projects.length).padStart(2, '0');
 		const href = zone.dataset.href!;
 		const bar = zone.querySelector<HTMLElement>('[data-next-bar]')!;
 		const pct = zone.querySelector<HTMLElement>('[data-next-pct]')!;
+		const end = zone.querySelector<HTMLElement>('[data-next-end]')!;
+		// Part du défilement où rien ne pousse encore : l'écran de fin se lit
+		const HOLD = 0.2;
 
 		// La page suivante est préchargée dès que la zone approche
 		new IntersectionObserver(
@@ -114,15 +231,18 @@ const total = String(projects.length).padStart(2, '0');
 		let shown = 0;
 		const tick = () => {
 			const r = zone.getBoundingClientRect();
-			const p = Math.min(1, Math.max(0, -r.top / (r.height - innerHeight)));
-			if (p < 0.85) armed = true;
+			const raw = Math.min(1, Math.max(0, -r.top / (r.height - innerHeight)));
+			const p = Math.max(0, (raw - HOLD) / (1 - HOLD));
+			if (raw < 0.85) armed = true;
 			shown += (p - shown) * 0.2;
 			if (Math.abs(p - shown) < 0.001) shown = p;
 			zone.style.setProperty('--p', shown.toFixed(4));
 			bar.style.width = `${(shown * 100).toFixed(1)}%`;
 			pct.textContent = `${String(Math.round(shown * 100)).padStart(3, '0')}%`;
+			// Une fois effacé, le contact ne doit plus capter ni clic ni tabulation
+			end.inert = shown > 0.1;
 			// On attend que la scène soit posée (shown = 1) pour que le passage soit invisible
-			if (armed && !gone && p >= 0.995 && shown >= 0.999) {
+			if (armed && !gone && raw >= 0.995 && shown >= 0.999) {
 				gone = true;
 				cross();
 			}

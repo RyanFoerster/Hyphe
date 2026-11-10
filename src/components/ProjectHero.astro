@@ -1,7 +1,8 @@
 ---
 // Le haut d'une page projet. Rendu à l'identique en deux endroits :
 //   page  le hero de la page du projet
-//   next  la fin de la page précédente, où il pousse au défilement (--p de 0 à 1)
+//   next  la fin de la page précédente : une planche en miniature dans son cadre
+//         (posé par NextSpecimen), qui grandit au défilement (--p de 0 à 1)
 // À p = 1 les deux sont pixel pour pixel les mêmes : le changement de page ne se voit pas.
 import Herbarium from './Herbarium.astro';
 import { coverOf, type Project } from '../data/projects';
@@ -18,18 +19,6 @@ const organism = { topo: 'mycelium', strata: 'roots', bloom: 'flower' }[p.visual
 const accent = p.visual.accent === '#f07a2a' ? 'ember' : 'acid';
 const media = p.media?.heroVideo ? { video: p.media.heroVideo, poster: p.media.heroPoster } : null;
 
-// Tuiles de la pousse (mode next) : du centre vers les bords, un peu au hasard
-const COLS = 10;
-const ROWS = 6;
-let seed = p.visual.seed * 7919;
-const rand = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
-const tiles = next
-	? Array.from({ length: COLS * ROWS }, (_, i) => {
-			const x = (i % COLS) / (COLS - 1) - 0.5;
-			const y = Math.floor(i / COLS) / (ROWS - 1) - 0.5;
-			return (0.06 + Math.hypot(x, y) * 0.6 + rand() * 0.2).toFixed(3);
-		})
-	: [];
 // Mots du nom (comme le découpage du titre de la page) : une lettre = un bloc
 let count = 0;
 const words = p.name.split(' ').map((word) => {
@@ -50,13 +39,11 @@ const total = count;
 					<video src={media.video} poster={media.poster} muted loop playsinline autoplay class="absolute inset-0 size-full object-cover" data-motion aria-label={`${p.name} website, live`} />
 				)}
 				<div class="shade absolute inset-0" />
-				{next && <span class="tiles" aria-hidden="true" style={`--cols: ${COLS}; --rows: ${ROWS}`}>{tiles.map((t) => <span style={`--t: ${t}`} />)}</span>}
 			</div>
 		) : (
 			<div class="grow absolute inset-0">
 				<img src={visual} alt="" class="absolute inset-0 size-full scale-105 object-cover" fetchpriority={next ? 'low' : 'high'} loading={next ? 'lazy' : 'eager'} />
 				<div class="absolute inset-0 bg-gradient-to-b from-void/30 via-transparent to-void/60" />
-				{next && <span class="tiles" aria-hidden="true" style={`--cols: ${COLS}; --rows: ${ROWS}`}>{tiles.map((t) => <span style={`--t: ${t}`} />)}</span>}
 			</div>
 		)
 	}
@@ -115,24 +102,22 @@ const total = count;
 	}
 
 	/* ---- Pousse (fin de la page précédente) ---- */
+	/* La planche : le hero entier en miniature (--f), posé par NextSpecimen autour du
+	   point (--ox, --oy), qui grandit jusqu'à remplir l'écran */
 	.is-next .grow {
-		clip-path: inset(calc((1 - var(--p, 1)) * 34%) calc((1 - var(--p, 1)) * 36%));
+		transform-origin: calc(var(--ox, 0.5) * 100%) calc(var(--oy, 0.5) * 100%);
+		scale: calc(var(--f, 0.4) + (1 - var(--f, 0.4)) * var(--p, 1));
+		/* le fondu du bas n'arrive qu'avec la fin de la pousse : la planche garde son bord */
+		-webkit-mask-image: linear-gradient(to bottom, #000 60%, rgb(0 0 0 / calc(1 - clamp(0, (var(--p, 1) - 0.6) * 2.5, 1))) 100%);
+		mask-image: linear-gradient(to bottom, #000 60%, rgb(0 0 0 / calc(1 - clamp(0, (var(--p, 1) - 0.6) * 2.5, 1))) 100%);
 	}
-	.is-next .late {
+	.is-next .late,
+	.is-next :global(.late) {
 		opacity: clamp(0, (var(--p, 1) - 0.78) * 6, 1);
 	}
-	.tiles {
-		position: absolute;
-		inset: 0;
-		display: grid;
-		grid-template-columns: repeat(var(--cols), 1fr);
-		grid-template-rows: repeat(var(--rows), 1fr);
-	}
-	/* Chaque tuile tombe à son seuil, avec un bord acide au passage */
-	.tiles span {
-		background: var(--color-void);
-		opacity: clamp(0, (var(--t) - var(--p, 1)) * 9, 1);
-		box-shadow: inset 0 0 0 1px rgb(200 245 60 / calc(clamp(0, 1 - max(var(--t) - var(--p, 1), var(--p, 1) - var(--t)) * 14, 1) * 0.7));
+	/* l'organisme en caractères n'arrive qu'une fois la planche assez grande */
+	.is-next [data-hero-ascii] {
+		opacity: calc(clamp(0, (var(--p, 1) - 0.55) * 3, 1) * 0.8);
 	}
 	.nw {
 		display: inline-block;
