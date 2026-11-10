@@ -13,38 +13,38 @@ const years = projects.map((p) => p.year);
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
-<Layout title="Herbarium" description="Every specimen grown by Studio Hyphe: websites, interfaces and interactive worlds.">
+<Layout title="Work" description="Everything Studio Hyphe has grown so far: websites, apps and interactive worlds, all made by hand.">
 	<section class="relative z-[1] px-4 pb-16 pt-36 sm:px-6 md:pt-44" aria-labelledby="work-title">
 		<div class="grid gap-8 md:grid-cols-12">
 			<p class="meta text-mineral md:col-span-3" data-reveal>
-				<span class="kicker" data-scramble>[ Index ] Herbarium</span><br />
-				<span class="text-mineral-dim">{pad(projects.length)} specimens — {Math.min(...years)} / {Math.max(...years)}</span>
+				<span class="kicker" data-scramble>[ Work ] All projects</span><br />
+				<span class="text-mineral-dim">{pad(projects.length)} projects — {Math.min(...years)} / {Math.max(...years)}</span>
 			</p>
 			<div class="md:col-span-9">
-				<h1 id="work-title" class="titre text-[clamp(4rem,13vw,13rem)]" data-split>Herbarium</h1>
+				<h1 id="work-title" class="titre text-[clamp(4rem,13vw,13rem)]" data-split>All the work</h1>
 				<p class="mt-8 max-w-xl text-[15px] leading-relaxed text-bone/75" data-reveal style="--reveal-delay: 200ms">
-					Every project the studio has grown, pressed and labelled. Websites, interfaces and interactive worlds,
-					<mark class="hl">collected</mark> like specimens.
+					Everything we have grown so far. Websites, apps and interactive worlds, each one
+					<mark class="hl">made by hand</mark>. Pick one and take a look around.
 				</p>
 			</div>
 		</div>
 
 		<div class="meta mt-14 flex items-center justify-between border-y border-dashed border-bone/15 py-3 text-mineral" data-reveal>
-			<span>Read as</span>
+			<span>View as</span>
 			<div class="flex gap-1" role="group" aria-label="Display">
-				<button type="button" class="toggle" data-mode="sheets" aria-pressed="true">[ Sheets ]</button>
-				<button type="button" class="toggle" data-mode="index" aria-pressed="false">[ Index ]</button>
+				<button type="button" class="toggle" data-mode="sheets" aria-pressed="true">[ Photos ]</button>
+				<button type="button" class="toggle" data-mode="index" aria-pressed="false">[ List ]</button>
 			</div>
 		</div>
 	</section>
 
 	<!-- Planches : une grille serrée, toutes au même format -->
-	<section class="relative z-[1] px-4 pb-28 sm:px-6" aria-label="Specimens, sheets" data-herbarium-view="sheets">
+	<section class="relative z-[1] px-4 pb-28 sm:px-6" aria-label="Projects, photos" data-herbarium-view="sheets">
 		<ol class="grid gap-x-5 gap-y-14 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-20 xl:grid-cols-4">
 			{
 				projects.map((p, i) => (
 					<li data-reveal style={`--reveal-delay: ${(i % 4) * 100}ms`}>
-						<a href={`/work/${p.slug}`} data-portal class="card group block" aria-label={`${p.name} — ${p.latin}, ${p.client}, ${p.year}`}>
+						<a href={`/work/${p.slug}`} data-portal class="card group block" aria-label={`${p.name} — ${p.category}, ${p.client}, ${p.year}`}>
 							<Figure src={portraitOf(p)} alt="" fig={pad(i + 1)} caption={p.category.toLowerCase()} ratio="4/5">
 								<!-- L'étiquette d'herbier est posée dans la planche, comme sur une vraie feuille -->
 								<span class="label-shade" aria-hidden="true" />
@@ -70,15 +70,15 @@ const pad = (n: number) => String(n).padStart(2, '0');
 						<span class="tick bottom-0 left-0 border-b border-l" aria-hidden="true"></span>
 						<span class="tick bottom-0 right-0 border-b border-r" aria-hidden="true"></span>
 						<span class="meta flex justify-between text-mineral">
-							<span>Herbarium Hyphe</span><span class="tabular-nums">No. {String(projects.length + 1).padStart(3, '0')}</span>
+							<span>Studio Hyphe</span><span class="tabular-nums">No. {String(projects.length + 1).padStart(3, '0')}</span>
 						</span>
 						<span class="dot mx-auto" aria-hidden="true"></span>
-						<span class="meta text-center text-mineral">Not yet grown — <span class="text-bone/80">a seed, waiting</span></span>
+						<span class="meta text-center text-mineral">Not grown yet — <span class="text-bone/80">could be yours</span></span>
 					</span>
 					<span class="meta mt-3 text-mineral"><span class="text-bone/85">fig. {pad(projects.length + 1)}</span> — your project</span>
 					<span class="mt-2 flex items-baseline justify-between gap-4 border-t border-dashed border-bone/12 pt-3">
 						<span class="name titre min-w-0 truncate pb-1 text-[clamp(2rem,2.3vw,2.7rem)]">Yours?</span>
-						<span class="meta shrink-0 text-acid">grow it →</span>
+						<span class="meta shrink-0 text-acid">let’s talk →</span>
 					</span>
 				</a>
 			</li>
@@ -86,15 +86,15 @@ const pad = (n: number) => String(n).padStart(2, '0');
 	</section>
 
 	<!-- Index : la lecture serrée -->
-	<section class="index relative z-[1] hidden px-4 pb-32 sm:px-6" aria-label="Specimens, index" data-herbarium-view="index">
+	<section class="index relative z-[1] hidden px-4 pb-32 sm:px-6" aria-label="Projects, list" data-herbarium-view="index">
 		<ol class="border-t border-dashed border-bone/15">
 			{
 				projects.map((p, i) => (
 					<li>
-						<a href={`/work/${p.slug}`} data-portal class="row group" data-row data-preview={coverOf(p)} data-latin={`fig. ${pad(i + 1)} — ${p.latin}`}>
+						<a href={`/work/${p.slug}`} data-portal class="row group" data-row data-preview={coverOf(p)} data-cap={`fig. ${pad(i + 1)} — ${p.tagline}`}>
 							<span class="meta tabular-nums text-mineral-dim">{String(i + 1).padStart(3, '0')}</span>
 							<span class="name titre text-[clamp(2.4rem,5vw,4.6rem)]" data-frame-word>{p.name}</span>
-							<span class="meta hidden text-bone/70 md:block">{p.latin}</span>
+							<span class="meta hidden text-bone/70 md:block">{p.tagline}</span>
 							<span class="meta hidden text-mineral md:block">{p.category}</span>
 							<span class="meta tabular-nums text-mineral">{p.year}</span>
 						</a>
@@ -294,7 +294,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 	document.querySelectorAll<HTMLElement>('[data-row]').forEach((row) => {
 		row.addEventListener('pointerenter', (e) => {
 			img.src = row.dataset.preview!;
-			cap.textContent = row.dataset.latin ?? '';
+			cap.textContent = row.dataset.cap ?? '';
 			pos.x = pos.tx = e.clientX;
 			pos.y = pos.ty = e.clientY;
 			box.setAttribute('data-on', '');

@@ -64,7 +64,7 @@ const total = count;
 	<div class="relative flex h-full flex-col justify-end gap-8 px-4 pb-6 pt-24 sm:px-6 md:flex-row md:items-end md:justify-between md:pb-8">
 		<div>
 			<p class="late meta mb-6 text-mineral" aria-hidden={next ? 'true' : undefined}>
-				<a href="/work" class="transition hover:text-bone" tabindex={next ? -1 : undefined}>Herbarium</a>
+				<a href="/work" class="transition hover:text-bone" tabindex={next ? -1 : undefined}>Work</a>
 				<span class="text-mineral-dim"> / </span><span class="text-bone/80">{p.name}</span>
 			</p>
 			{
@@ -83,7 +83,7 @@ const total = count;
 					<h1 id="project-title" class="titre text-[clamp(4rem,13vw,13rem)]" data-split style="--split-delay: 700ms">{p.name}</h1>
 				)
 			}
-			<p class="late meta mt-5 max-w-xl text-bone/70">{p.latin} — {p.summary}</p>
+			<p class="late meta mt-5 max-w-xl text-bone/70">{p.summary}</p>
 		</div>
 		<Herbarium project={p} class="late w-full shrink-0 md:w-[340px]" />
 	</div>

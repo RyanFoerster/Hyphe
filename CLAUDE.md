@@ -48,6 +48,16 @@ npx astro build             # build statique dans dist/
   avec tiges vertes), textes mono qui se déplient (`[data-scramble]`),
   transitions de page en **mosaïque de tuiles carrées** (`tiles.ts`),
   cadres acides au survol des mots (`[data-frame-word]`).
+- **Ton des textes** (réécrits en novembre 2026, à la demande de Ryan) : anglais
+  simple, à la première personne (« we »), humain. **Plus de latin** : ni faux
+  noms d'espèces, ni « Hyphae floralis », ni « Fam. / Leg. / Loc. / Cult. / Det. »,
+  ni « specimen » ou « herbarium » à l'écran (on dit « project » et « work »).
+  Un seul fil du loader au contact : une idée, des racines, une tige, des
+  feuilles, des pétales, la fleur (étapes du loader, loupe du hero, titres :
+  « We grow websites people remember. », « Come in, look around. », « Grow
+  something with us. »). Chaque projet a une accroche courte (`tagline` dans
+  `projects.ts`) qui sert de titre à sa fiche. Titres en Parceh : lettres,
+  espaces, virgules et points seulement (pas d'apostrophe ni de « ? »).
 - **Refusé par Ryan (ne pas réintroduire)** : roche (remplacée par la fleur),
   cercles partout (seule la section studio est circulaire), morceaux de
   « code » dans le hero, le grand « 01 » derrière « Enter the specimen »,
@@ -64,7 +74,7 @@ npx astro build             # build statique dans dist/
   l'étiquette d'herbier *dans* la photo (dépliée au survol), une ligne « nom —
   année » dessous ; la 8e case est une planche vide « Yours? » qui mène au
   contact. Ryan a refusé une fleur 3D par projet et les grandes cartes larges.
-  **Index** : liste, l'aperçu image suit le curseur (coins de visée, nom latin).
+  **Index** : liste, l'aperçu image suit le curseur (coins de visée, accroche du projet).
 - `src/pages/work/[slug].astro` : fiche projet (`ProjectHero` plein écran). **Pas de
   pied de page ici** : la fiche se termine sur `NextSpecimen`, un seul écran
   épinglé avec le contact à gauche (`ContactBlock` en serré, le même bloc que le

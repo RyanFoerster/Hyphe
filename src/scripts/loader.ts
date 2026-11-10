@@ -14,12 +14,12 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const lowPower = matchMedia('(pointer: coarse)').matches || (navigator.hardwareConcurrency ?? 8) <= 4;
 
 const STAGES: [number, string][] = [
-	[0, 'Sowing'],
-	[0.14, 'Rooting'],
-	[0.32, 'Raising the stem'],
-	[0.48, 'Unfurling leaves'],
-	[0.66, 'Opening the veil'],
-	[0.86, 'Lighting the stamens'],
+	[0, 'Planting an idea'],
+	[0.14, 'Putting down roots'],
+	[0.32, 'Growing a stem'],
+	[0.48, 'Opening the leaves'],
+	[0.66, 'Unfolding the petals'],
+	[0.86, 'Adding the details'],
 	[1, 'In bloom'],
 ];
 
@@ -660,15 +660,15 @@ export function createLoader(root: HTMLElement) {
 		const side = narrow ? 0.6 : 1;
 		// La racine légendée : à droite, juste sous le sol (loin du compteur)
 		const rootTip = roots.filter((p) => p.d < 0.35 && p.t < 0.5).sort((a, b) => b.c - a.c)[0];
-		callout([axis, soilY], -16 * side, 'fig. a — seed', ss(0.02, 0.1, shown) * (1 - ss(0.3, 0.4, shown)));
+		callout([axis, soilY], -16 * side, 'fig. a — the idea', ss(0.02, 0.1, shown) * (1 - ss(0.3, 0.4, shown)));
 		// Sur téléphone, seules les légendes du haut : en bas, elles se marchent dessus
 		if (!narrow) {
-			if (rootTip) callout([rootTip.c * CW + CW / 2, rootTip.r * CH + CH / 2], 12, 'fig. b — root', ss(0.2, 0.3, shown));
+			if (rootTip) callout([rootTip.c * CW + CW / 2, rootTip.r * CH + CH / 2], 12, 'fig. b — roots', ss(0.2, 0.3, shown));
 			callout(proj(stemAt(0.2)), 18, 'fig. c — stem', ss(0.34, 0.44, shown));
-			callout(proj(leafPoint(stemAt(0.3), 0.3, 0.3, 0.075, 0.4, -0.5, 0.6, 0)), 10, 'fig. d — leaf', ss(0.5, 0.6, shown));
+			callout(proj(leafPoint(stemAt(0.3), 0.3, 0.3, 0.075, 0.4, -0.5, 0.6, 0)), 10, 'fig. d — leaves', ss(0.5, 0.6, shown));
 		}
-		callout(proj(leafPoint(head, Math.PI, 0.34 * g.petal, 0.15, 0.4, -0.35, 0.8, 0)), -24 * side, 'fig. e — petal, veil', ss(0.72, 0.84, shown));
-		callout(proj([head[0], head[1] + 0.13 * g.stamen, head[2]]), -40 * side, 'fig. f — stamen', ss(0.9, 1, shown));
+		callout(proj(leafPoint(head, Math.PI, 0.34 * g.petal, 0.15, 0.4, -0.35, 0.8, 0)), -24 * side, 'fig. e — petals', ss(0.72, 0.84, shown));
+		callout(proj([head[0], head[1] + 0.13 * g.stamen, head[2]]), -40 * side, 'fig. f — the heart', ss(0.9, 1, shown));
 
 		// ---- l'interface
 		bar.style.transform = `scaleX(${shown.toFixed(4)})`;

@@ -13,11 +13,11 @@ const isHome = path === '/';
 const slug = path.match(/^\/work\/([^/]+)/)?.[1];
 const index = projects.findIndex((p) => p.slug === slug);
 const status = isHome
-	? 'surface — specimen 001'
+	? 'home — scroll to come in'
 	: slug
 		? `${projects[index]?.name.toLowerCase() ?? slug} — ${String(index + 1).padStart(2, '0')}/${String(projects.length).padStart(2, '0')}`
 		: path.startsWith('/work')
-			? `herbarium — ${String(projects.length).padStart(2, '0')} specimens`
+			? `work — ${String(projects.length).padStart(2, '0')} projects`
 			: 'lost — 404';
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
@@ -65,7 +65,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 			<!-- Ouverte : le menu -->
 			<div class="view view-menu" data-view-name="menu" id="island-menu" inert>
 				<div class="head meta">
-					<span class="flex items-center gap-2 text-mineral"><span class="spore text-acid" data-spore aria-hidden="true">*</span> studio hyphe — index</span>
+					<span class="flex items-center gap-2 text-mineral"><span class="spore text-acid" data-spore aria-hidden="true">*</span> studio hyphe — menu</span>
 					<button type="button" class="close" data-island-go="bar" aria-label="Close menu">esc ×</button>
 				</div>
 				<ul class="items">
@@ -73,7 +73,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 						<a href="/work" class="item" data-island-close>
 							<span class="meta idx" data-scramble>01</span>
 							<span class="label titre" data-frame-word>Work</span>
-							<span class="meta val">herbarium — {pad(projects.length)}</span>
+							<span class="meta val">all projects — {pad(projects.length)}</span>
 						</a>
 					</li>
 					<li data-stagger style="--i: 1">
@@ -106,16 +106,16 @@ const pad = (n: number) => String(n).padStart(2, '0');
 			<!-- Ouverte : la fiche du studio -->
 			<section class="view view-about" data-view-name="about" data-lenis-prevent aria-labelledby="about-title" inert>
 				<div class="head meta">
-					<button type="button" class="close" data-island-go="menu">← index</button>
+					<button type="button" class="close" data-island-go="menu">← menu</button>
 					<span class="text-mineral">the studio</span>
 					<button type="button" class="close" data-island-go="bar" aria-label="Close">×</button>
 				</div>
 				<div class="space-y-6 px-5 pb-6 pt-7">
 					<h2 id="about-title" class="titre pb-[0.18em] text-[3.4rem]" data-split data-stagger style="--i: 0">Studio Hyphe</h2>
 					<p class="text-[15px] leading-relaxed text-bone/80" data-stagger style="--i: 1">
-						Hyphae are the threads a fungus grows through the soil — invisible, patient,
-						<mark class="hl">connecting</mark> everything. We work the same way: a small studio designing and
-						building digital experiences for brands that want to be felt, not just seen.
+						The name comes from the fine threads a mushroom grows underground, quietly
+						<mark class="hl">connecting</mark> everything around it. We work a bit like that: a small studio that listens
+						first, then designs and builds websites for brands that want to be felt, not just seen.
 					</p>
 					<div data-stagger style="--i: 2">
 						<p class="meta mb-2"><span class="kicker">What we do</span></p>

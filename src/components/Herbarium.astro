@@ -1,5 +1,6 @@
 ---
-// Étiquette d'herbier : chaque projet est un spécimen récolté par le studio.
+// La fiche d'un projet, en étiquette à coins de visée : une accroche, puis
+// quelques lignes en clair (type, client, lieu, travail, année). Pas de latin.
 import type { Project } from '../data/projects';
 import { projects } from '../data/projects';
 
@@ -7,7 +8,7 @@ interface Props {
 	project: Project;
 	class?: string;
 	compact?: boolean;
-	/** Posée dans l'image : le nom latin seul, la fiche se déplie au survol */
+	/** Posée dans l'image : l'accroche seule, la fiche se déplie au survol */
 	inset?: boolean;
 }
 
@@ -21,16 +22,16 @@ const no = String(projects.indexOf(p) + 1).padStart(3, '0');
 	<span class="tick bottom-0 left-0 border-b border-l" aria-hidden="true"></span>
 	<span class="tick bottom-0 right-0 border-b border-r" aria-hidden="true"></span>
 	<p class="meta flex justify-between gap-4 border-b border-dashed border-bone/15 pb-2 text-mineral">
-		<span>Herbarium Hyphe</span><span class="tabular-nums">No. {no}</span>
+		<span>Studio Hyphe</span><span class="tabular-nums">No. {no}</span>
 	</p>
-	<p class:list={['titre mt-3 text-bone', inset ? 'text-[1.6rem]' : compact ? 'text-[1.9rem]' : 'text-[2.4rem]']}>{p.latin}</p>
+	<p class:list={['titre mt-3 text-bone', inset ? 'text-[1.6rem]' : compact ? 'text-[1.9rem]' : 'text-[2.4rem]']}>{p.tagline}</p>
 	<div class="more">
 		<dl class="meta grid grid-cols-[3.2rem_1fr] gap-x-3 gap-y-1 pt-3 text-bone/80">
-			<dt class="text-mineral-dim">Fam.</dt><dd>{p.category}</dd>
-			<dt class="text-mineral-dim">Leg.</dt><dd>{p.client}</dd>
-			<dt class="text-mineral-dim">Loc.</dt><dd>{p.locality}</dd>
-			{!compact && !inset && <><dt class="text-mineral-dim">Cult.</dt><dd>{p.services.join(' · ')}</dd></>}
-			<dt class="text-mineral-dim">Det.</dt><dd>Studio Hyphe, {p.year}</dd>
+			<dt class="text-mineral-dim">Type</dt><dd>{p.category}</dd>
+			<dt class="text-mineral-dim">For</dt><dd>{p.client}</dd>
+			<dt class="text-mineral-dim">Where</dt><dd>{p.locality}</dd>
+			{!compact && !inset && <><dt class="text-mineral-dim">Work</dt><dd>{p.services.join(' · ')}</dd></>}
+			<dt class="text-mineral-dim">Year</dt><dd>{p.year}</dd>
 		</dl>
 	</div>
 </div>

@@ -224,12 +224,12 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 		pickLocal.copy(hit.point);
 		ext.spin.worldToLocal(pickLocal);
 		const u = hit.uv?.x ?? 0;
-		if (pickLocal.distanceTo(ext.centre) < 0.32) return { label: 'Stamen', sub: 'anthers, ripe pollen' };
-		if (hit.object === ext.parts.stem) return { label: 'Stem', sub: 'fibres, sap rising' };
-		if (hit.object === ext.parts.leaves) return { label: 'Leaf', sub: 'a veined blade' };
-		if (u < 0.3) return { label: 'Petal — claw', sub: 'where the flower opens' };
-		if (u < 0.75) return { label: 'Petal — blade', sub: 'a translucent veil' };
-		return { label: 'Petal — margin', sub: 'the ruffled edge' };
+		if (pickLocal.distanceTo(ext.centre) < 0.32) return { label: 'The heart', sub: 'the idea it all grows from' };
+		if (hit.object === ext.parts.stem) return { label: 'The stem', sub: 'code, holding it all up' };
+		if (hit.object === ext.parts.leaves) return { label: 'A leaf', sub: 'content, where it breathes' };
+		if (u < 0.3) return { label: 'Petal, the base', sub: 'where the design starts' };
+		if (u < 0.75) return { label: 'Petal', sub: 'what you see first' };
+		return { label: 'Petal, the edge', sub: 'details nobody asked for' };
 	};
 
 	// ---------------------------------------------------------------- boucle
@@ -264,7 +264,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 	let reveal = reduced ? 1 : 0;
 	let readyAt = -1;
 	let revealArmed = false;
-	let lastStatus = 'surface — specimen 001';
+	let lastStatus = 'home — scroll to come in';
 
 	const sAt = (y: number) => {
 		if (y <= knots[0][0]) return 0;
@@ -522,7 +522,7 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 						w: x1 - x0,
 						h: y1 - y0,
 						a: focus * smoothstep(0.6, 1, rev),
-						label: `specimen.${String(i + 1).padStart(2, '0')} — ${sp.slug}`,
+						label: `project ${String(i + 1).padStart(2, '0')} — ${sp.slug}`,
 					});
 				}
 				chapters[i]?.style.setProperty('--focus', focus.toFixed(3));
@@ -544,13 +544,13 @@ export async function createWorld({ canvas, overlay, onProgress, onReady }: Opti
 		document.documentElement.toggleAttribute('data-specimen-hover', hoverSpecimen >= 0);
 
 		// État lisible dans l'île de navigation : surface, descente, spécimen
-		let status = 'surface — specimen 001';
+		let status = 'home — scroll to come in';
 		if (inside) {
 			const sNow = sAt(sy);
 			const i = cave.specimens.reduce((b, sp, j) => (Math.abs(sp.s - sNow) < Math.abs(cave.specimens[b].s - sNow) ? j : b), 0);
-			status = sNow > cave.sEnd - 2 ? 'end of the gallery' : `specimen.${String(i + 1).padStart(2, '0')} — ${cave.specimens[i].slug}`;
+			status = sNow > cave.sEnd - 2 ? 'end of the gallery' : `project ${String(i + 1).padStart(2, '0')} — ${cave.specimens[i].slug}`;
 			if (sNow <= cave.sEnd - 2) sound.specimen(i);
-		} else if (d > 0.04) status = `descending — ${String(Math.round(d * 10) * 10).padStart(3, '0')}%`;
+		} else if (d > 0.04) status = `going in — ${String(Math.round(d * 10) * 10).padStart(3, '0')}%`;
 		if (status !== lastStatus) {
 			lastStatus = status;
 			dispatchEvent(new CustomEvent('hyphe:status', { detail: status }));

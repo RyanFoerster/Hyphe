@@ -16,8 +16,8 @@ export interface Project {
 	summary: string;
 	/** Le mot du résumé mis en exergue (boîte de suivi) */
 	highlight: string;
-	/** Fiche d'herbier : nom latin (inventé) et lieu de récolte */
-	latin: string;
+	/** Fiche du projet : une accroche courte (en Parceh : lettres, virgules, points) et le lieu */
+	tagline: string;
 	locality: string;
 	intro: string;
 	challenge: string;
@@ -78,7 +78,7 @@ export const portraitOf = (p: Project, i = 0) => platesOf(p).filter((x) => x.rat
 export const projects: Project[] = [
 	{
 		slug: 'loum',
-		latin: 'Loumia gridiflora',
+		tagline: 'Endless contact sheet',
 		locality: 'Belgium',
 		name: 'Loum',
 		client: 'Loum',
@@ -120,7 +120,7 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'farmlize',
-		latin: 'Fermia vicinalis',
+		tagline: 'Farms, near you',
 		locality: 'Belgium',
 		name: 'Farmlize',
 		client: 'Farmlize',
@@ -168,21 +168,21 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'lichen-archive',
-		latin: 'Cladonia archiva',
+		tagline: 'Soil, as a landscape',
 		locality: 'Paris, FR',
 		name: 'Lichen Archive',
 		client: 'Musée des Sols',
 		year: 2026,
 		category: 'Digital museum',
 		services: ['Art direction', 'WebGL', 'Web platform', 'Content design'],
-		summary: 'A living online archive of 4,000 soil specimens, explored like a landscape.',
+		summary: 'A living online archive of 4,000 soil samples, explored like a landscape.',
 		highlight: 'landscape',
 		intro:
 			'Musée des Sols holds one of Europe’s largest collections of soil cores — and almost nobody had ever seen it. We turned the archive into a terrain you can walk through.',
 		challenge:
 			'Scientific data, no hero images, and an audience split between researchers and curious visitors. The archive had to stay rigorous for one and become irresistible for the other.',
 		approach: [
-			'Every specimen became a contour map generated from its real layer measurements, so the visual identity is literally the data.',
+			'Every sample became a contour map generated from its real layer measurements, so the visual identity is literally the data.',
 			'A single continuous WebGL terrain replaces the classic catalogue grid. Zooming in moves you from continent to core sample without a page load.',
 			'A quiet editorial layer sits on top: long-form stories written with the curators, set like a field notebook.',
 		],
@@ -195,7 +195,7 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'nocturne',
-		latin: 'Oenothera nocturna',
+		tagline: 'A garden after dark',
 		locality: 'Grasse, FR',
 		name: 'Nocturne',
 		client: 'Maison Ombelle',
@@ -221,7 +221,7 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'strata',
-		latin: 'Saxifraga strata',
+		tagline: 'Drawn from the ground',
 		locality: 'Lyon, FR',
 		name: 'Strata',
 		client: 'Atelier Basalte',
@@ -243,7 +243,7 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'spore-index',
-		latin: 'Mycena reticulata',
+		tagline: 'Under the forest',
 		locality: 'Zurich, CH',
 		name: 'Spore Index',
 		client: 'Mycelia Lab',
@@ -269,7 +269,7 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'halo',
-		latin: 'Lithops lucida',
+		tagline: 'Light through stone',
 		locality: 'Antwerp, BE',
 		name: 'Halo',
 		client: 'Oréade',
@@ -284,7 +284,7 @@ export const projects: Project[] = [
 			'A transparent product, a minimal brand and a very short launch window.',
 		approach: [
 			'We built a real-time scene where light passes through a slice of mineral; the visitor’s cursor moves the light source.',
-			'Product information appears as small glass labels anchored to the object, like specimen notes.',
+			'Product information appears as small glass labels anchored to the object, like handwritten notes.',
 			'The whole experience weighs under 2 MB and runs on mid-range phones.',
 		],
 		results: [{ value: '1.8 MB', label: 'total page weight' }],

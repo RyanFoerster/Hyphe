@@ -31,13 +31,13 @@ const parts = (text: string, word: string) => {
 		<div class="dive-title sticky top-0 z-[3] flex h-[100svh] flex-col items-center justify-center overflow-hidden px-4 text-center">
 			<!-- Changement de section : un trait traverse l'écran, « 01 » s'allume -->
 			<div class="seam meta pointer-events-none absolute inset-x-4 top-[15svh] flex items-center gap-4 sm:inset-x-6" aria-hidden="true">
-				<span class="from text-mineral-dim">[ 00 ] Surface</span>
+				<span class="from text-mineral-dim">[ 00 ] Home</span>
 				<span class="line h-px flex-1 bg-bone/25"></span>
 				<span class="to text-acid">[ 01 ] Selected work</span>
 			</div>
 			<p class="meta relative text-mineral"><span class="kicker" data-scramble>[ 01 ] Selected work — {Math.min(...years)} / {Math.max(...years)}</span></p>
-			<h2 id="work-title" class="specimen-title titre relative mt-7 text-[clamp(3.2rem,9vw,10rem)]" data-split>Enter the specimen</h2>
-			<p class="meta relative mt-7 text-bone/60"><span data-scramble>{pad(selected.length)} projects grown inside</span></p>
+			<h2 id="work-title" class="specimen-title titre relative mt-7 text-[clamp(3.2rem,9vw,10rem)]" data-split>Come in, look around.</h2>
+			<p class="meta relative mt-7 text-bone/60"><span data-scramble>{pad(selected.length)} projects, grown in here</span></p>
 		</div>
 	</div>
 
@@ -61,7 +61,7 @@ const parts = (text: string, word: string) => {
 							]}
 						>
 							<article class="chapter-card w-full max-w-[25rem]" aria-labelledby={`chapter-${p.slug}`}>
-								<Window title={`specimen.${pad(i + 1)}`} meta={`${p.year}`}>
+								<Window title={`project.${pad(i + 1)}`} meta={`${p.year}`}>
 									<img
 										src={coverOf(p)}
 										alt=""
@@ -77,7 +77,7 @@ const parts = (text: string, word: string) => {
 										<h3 id={`chapter-${p.slug}`} class="titre mt-4 text-[clamp(2.9rem,5vw,5rem)]" data-split>
 											{p.name}
 										</h3>
-										<p class="meta mt-2 text-bone/60">{p.latin} — {p.locality}</p>
+										<p class="meta mt-2 text-bone/60">{p.tagline} — {p.locality}</p>
 										<ul class="mt-5 hidden grid-cols-3 gap-2 md:grid" aria-hidden="true">
 											{[0, 1, 2].map((n) => (
 												<li class="strip aspect-[4/5] overflow-hidden">
@@ -102,7 +102,7 @@ const parts = (text: string, word: string) => {
 											data-portal-target={`#frame-${p.slug}`}
 											class="meta mt-6 inline-flex items-center gap-3 border border-bone/20 px-4 py-2.5 text-bone transition hover:border-acid hover:text-acid"
 										>
-											<span data-scramble>Open the specimen</span>
+											<span data-scramble>See the project</span>
 											<span aria-hidden="true">→</span>
 										</a>
 									</div>
@@ -120,7 +120,7 @@ const parts = (text: string, word: string) => {
 	<div class="exit relative h-[160svh]" data-exit>
 		<div class="sticky top-0 z-[5] h-[100svh] overflow-hidden">
 			<canvas class="drift absolute inset-0 size-full" data-specimen="drift" aria-hidden="true"></canvas>
-			<ul class="floaters absolute inset-0" aria-label="All specimens">
+			<ul class="floaters absolute inset-0" aria-label="All projects">
 				{
 					projects.map((p, i) => (
 						<li
@@ -141,19 +141,19 @@ const parts = (text: string, word: string) => {
 									<span class="text-acid">{pad(i + 1)}</span> — {p.year}
 								</span>
 								<span class="name titre block">{p.name}</span>
-								<span class="latin meta block text-bone/45 italic">{p.latin}</span>
+								<span class="place meta block text-bone/45">{p.tagline}</span>
 							</a>
 						</li>
 					))
 				}
 			</ul>
 			<div class="pointer-events-none relative flex h-full flex-col items-center justify-center px-4 text-center">
-				<p class="ex-in meta" style="--t: 0.1"><span class="kicker">{pad(selected.length)} of {pad(projects.length)} specimens — end of the selection</span></p>
+				<p class="ex-in meta" style="--t: 0.1"><span class="kicker">That was {pad(selected.length)} of {pad(projects.length)} projects</span></p>
 				<a href="/work" data-portal class="all ex-in pointer-events-auto group mt-8 inline-flex items-baseline gap-[0.25em]" style="--t: 0.2">
 					<span class="titre text-[clamp(3rem,8vw,8.5rem)]" data-frame-word>View all projects</span>
 					<span class="arrow titre text-[clamp(2rem,5vw,5rem)] text-acid" aria-hidden="true">→</span>
 				</a>
-				<p class="ex-in meta mt-6 text-bone/50" style="--t: 0.3">The whole herbarium, pressed and labelled</p>
+				<p class="ex-in meta mt-6 text-bone/50" style="--t: 0.3">The rest is waiting, all on one page</p>
 			</div>
 		</div>
 	</div>
@@ -378,7 +378,7 @@ const parts = (text: string, word: string) => {
 		.floater {
 			scale: calc(0.45 + var(--fz) * 0.35);
 		}
-		.floater .latin {
+		.floater .place {
 			display: none;
 		}
 	}
