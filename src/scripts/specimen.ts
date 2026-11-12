@@ -251,7 +251,8 @@ function corolla(canvas: HTMLCanvasElement) {
 	const labels = [...host.querySelectorAll<HTMLElement>('[data-petal-label]')];
 	const st = stage(canvas, 34);
 	const p = plant(st.u, { petals: labels.length || 6, stem: 0, leaves: 0, big: true, glow: 2.6 });
-	p.root.scale.setScalar(0.92);
+	const BASE = 0.92;
+	p.root.scale.setScalar(BASE);
 	st.scene.add(p.root);
 	st.camera.position.set(0, 3.1, 2.5);
 	st.camera.lookAt(0, -0.05, 0);
@@ -266,14 +267,30 @@ function corolla(canvas: HTMLCanvasElement) {
 		l.addEventListener('pointerleave', () => hover === i && (hover = -1));
 	});
 	const pointer = { x: 0, y: 0, in: false };
-	host.addEventListener('pointermove', (e) => {
+	const aim = (e: PointerEvent | MouseEvent) => {
 		const r = host.getBoundingClientRect();
 		pointer.x = e.clientX - r.left;
 		pointer.y = e.clientY - r.top;
 		pointer.in = true;
-	});
+	};
+	// Au doigt, on ne suit pas le glissement (faire défiler la page ouvrait et
+	// fermait les fenêtres en rafale) : un pétale se lit en le touchant, et se
+	// referme dès que la page défile
+	let touch = false;
+	host.addEventListener('pointermove', (e) => e.pointerType !== 'touch' && aim(e));
 	host.addEventListener('pointerleave', () => (pointer.in = false));
+	host.addEventListener('pointerdown', (e) => (touch = e.pointerType === 'touch'));
+	host.addEventListener('click', (e) => touch && aim(e));
+	addEventListener('scroll', () => touch && (pointer.in = false), { passive: true });
 	let hot = -1;
+	// La fenêtre d'un pétale ne s'ouvre que si le curseur s'y attarde : en
+	// traversant la fleur, seuls les pétales s'éclairent
+	let lit = -1;
+	let since = 0;
+	// Les repères doivent tenir dans l'écran : la fleur rétrécit s'il le faut
+	let pad = 0;
+	let lastW = 0;
+	const edge = new THREE.Vector3();
 	let open = reduced() ? 1 : 0;
 	let shown = false;
 	new IntersectionObserver(([e]) => e.isIntersecting && (shown = true), { threshold: 0.25 }).observe(canvas);
@@ -289,8 +306,29 @@ function corolla(canvas: HTMLCanvasElement) {
 		// La fleur s'arrête de tourner quand on lit l'un de ses pétales
 		spinT += hot >= 0 || reduced() ? 0 : dt * 0.06;
 		p.root.rotation.y = spinT;
-		p.root.updateMatrixWorld(true);
 		const { w, h } = st.size();
+		if (w !== lastW) {
+			lastW = w;
+			pad = Math.max(0, ...labels.map((l) => l.offsetWidth)) + 12;
+		}
+		// Le bout de pétale le plus à droite possible, à l'échelle de base : s'il
+		// dépasse la place laissée par les repères, on réduit la fleur d'autant
+		p.root.scale.setScalar(BASE);
+		p.root.updateMatrixWorld(true);
+		let reach = 0;
+		let lift = 0;
+		p.tips.forEach((tip) => {
+			tip.getWorldPosition(v);
+			if (Math.hypot(v.x, v.z) > reach) {
+				reach = Math.hypot(v.x, v.z);
+				lift = v.y;
+			}
+		});
+		edge.set(reach * 1.18, lift * 1.18, 0).project(st.camera);
+		const need = edge.x * 0.5 * w;
+		const room = w / 2 - pad;
+		p.root.scale.setScalar(BASE * Math.min(1, Math.max(0.5, need > 0 ? room / need : 1)));
+		p.root.updateMatrixWorld(true);
 		c.set(0, 0, 0).applyMatrix4(p.root.matrixWorld).project(st.camera);
 		const cx = (c.x * 0.5 + 0.5) * w;
 		const cy = (-c.y * 0.5 + 0.5) * h;
@@ -316,6 +354,11 @@ function corolla(canvas: HTMLCanvasElement) {
 			});
 		}
 		hot = hover >= 0 ? hover : petal;
+		if (petal !== lit) {
+			lit = petal;
+			since = t;
+		}
+		const settled = lit >= 0 && (touch || t - since > 0.22);
 		p.mats.forEach((m, i) => {
 			const on = i === hot ? 1 : 0;
 			m.uniforms.uEnergy.value += (on * 6 - m.uniforms.uEnergy.value) * 0.12;
@@ -325,7 +368,7 @@ function corolla(canvas: HTMLCanvasElement) {
 			if (!l) return;
 			const left = q.x < cx;
 			if ((l.dataset.side === 'left') !== left) l.dataset.side = left ? 'left' : 'right';
-			l.toggleAttribute('data-hot', i === hot && hover < 0);
+			l.toggleAttribute('data-hot', i === hot && hover < 0 && settled);
 			// Le repère carré se pose sur le bout du pétale
 			l.style.transform = `translate(${q.x.toFixed(1)}px, ${q.y.toFixed(1)}px) translate(${left ? 'calc(-100% + 5px)' : '-5px'}, -50%)`;
 			l.style.opacity = String(Math.min(1, open * 1.5));

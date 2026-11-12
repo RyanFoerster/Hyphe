@@ -20,17 +20,7 @@ const FLOAT = [
 	[66, 82, 0.8],
 	[92, 38, 0.4],
 ];
-// Sur mobile : deux zones, au-dessus et en dessous du lien, jamais contre un bord
-const FLOAT_M = [
-	[24, 16],
-	[72, 22],
-	[67, 67],
-	[23, 73],
-	[38, 90],
-	[44, 30],
-	[65, 81],
-	[50, 96],
-];
+// Sur mobile, pas de noms flottants : les projets pas encore vus sont en liste
 const parts = (text: string, word: string) => {
 	const i = text.indexOf(word);
 	return i < 0 ? [text, '', ''] : [text.slice(0, i), word, text.slice(i + word.length)];
@@ -136,7 +126,7 @@ const parts = (text: string, word: string) => {
 					projects.map((p, i) => (
 						<li
 							class:list={['floater', FLOAT[i % FLOAT.length][0] > 50 && 'is-right', FLOAT[i % FLOAT.length][1] > 50 && 'is-low']}
-							style={`--fxm:${FLOAT_M[i % FLOAT_M.length][0]};--fym:${FLOAT_M[i % FLOAT_M.length][1]};--fx:${FLOAT[i % FLOAT.length][0]};--fy:${FLOAT[i % FLOAT.length][1]};--fz:${FLOAT[i % FLOAT.length][2]};--fd:${11 + ((i * 7) % 9)}s;--fp:${-i * 1.7}s;--t:${0.18 + i * 0.035}`}
+							style={`--fx:${FLOAT[i % FLOAT.length][0]};--fy:${FLOAT[i % FLOAT.length][1]};--fz:${FLOAT[i % FLOAT.length][2]};--fd:${11 + ((i * 7) % 9)}s;--fp:${-i * 1.7}s;--t:${0.18 + i * 0.035}`}
 						>
 							<a href={`/work/${p.slug}`} data-portal class="group block">
 								<!-- Au survol, la planche du projet se déplie vers le centre de l'écran -->
@@ -158,12 +148,26 @@ const parts = (text: string, word: string) => {
 					))
 				}
 			</ul>
-			<div class="pointer-events-none relative flex h-full flex-col items-center justify-center px-4 text-center">
+			<div class="pointer-events-none relative flex h-full flex-col items-start justify-center px-4 text-left md:items-center md:text-center">
 				<p class="ex-in meta" style="--t: 0.1"><span class="kicker">That was {pad(selected.length)} of {pad(projects.length)} projects</span></p>
-				<a href="/work" data-portal class="all ex-in pointer-events-auto group mt-8 inline-flex items-baseline gap-[0.25em]" style="--t: 0.2">
-					<span class="titre text-[clamp(2.5rem,8vw,8.5rem)]" data-frame-word>View all projects</span>
-					<span class="arrow titre text-[clamp(1.6rem,5vw,5rem)] text-acid" aria-hidden="true">→</span>
+				<a href="/work" data-portal class="all ex-in pointer-events-auto group mt-8 inline-flex items-baseline gap-[0.25em] max-md:items-end" style="--t: 0.2">
+					<span class="titre text-[clamp(3.6rem,8vw,8.5rem)] max-md:leading-[0.92]" data-frame-word>View all <br class="md:hidden" />projects</span>
+					<span class="arrow titre text-[clamp(2.2rem,5vw,5rem)] text-acid max-md:pb-[0.18em]" aria-hidden="true">→</span>
 				</a>
+				<!-- Mobile : les projets que la galerie n'a pas montrés, en liste -->
+				<ol class="rest pointer-events-auto mt-10 w-full border-b border-dashed border-bone/15 md:hidden">
+					{
+						projects.slice(selected.length).map((p, i) => (
+							<li class="ex-in" style={`--t: ${0.26 + i * 0.05}`}>
+								<a href={`/work/${p.slug}`} data-portal class="flex items-baseline gap-4 border-t border-dashed border-bone/15 py-3">
+									<span class="meta tabular-nums text-acid">{pad(selected.length + i + 1)}</span>
+									<span class="titre min-w-0 flex-1 truncate pb-1 text-[1.9rem]">{p.name}</span>
+									<span class="meta tabular-nums text-mineral">{p.year}</span>
+								</a>
+							</li>
+						))
+					}
+				</ol>
 				<p class="ex-in meta mt-6 text-bone/50" style="--t: 0.3">The rest is waiting, all on one page</p>
 			</div>
 		</div>
@@ -237,6 +241,7 @@ const parts = (text: string, word: string) => {
 	/* Le lien vers l'herbier : le mot est détecté au survol, la flèche avance */
 	.all [data-frame-word] {
 		position: relative;
+		display: inline-block;
 	}
 	.all [data-frame-word]::after {
 		content: '';
@@ -385,14 +390,9 @@ const parts = (text: string, word: string) => {
 			transform: translate(14px, -12px) rotate(1.5deg);
 		}
 	}
+	/* Mobile : les noms flottants se bousculaient, ils laissent la place à la liste */
 	@media (max-width: 767px) {
-		.floater {
-			left: calc(var(--fxm) * 1%);
-			top: calc(var(--fym) * 1%);
-			scale: calc(0.55 + var(--fz) * 0.3);
-			filter: blur(calc((1 - var(--fz)) * 0.7px + clamp(0, 1 - (var(--x) - var(--t)) * 6, 1) * 8px));
-		}
-		.floater .place {
+		.floaters {
 			display: none;
 		}
 	}

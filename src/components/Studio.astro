@@ -100,6 +100,8 @@ import { site } from '../data/site';
 			scale 0.4s var(--ease-organic);
 	}
 	.tag {
+		display: inline-flex;
+		gap: 0.5em;
 		white-space: nowrap;
 		color: rgb(230 228 220 / 0.75);
 		transition: color 0.3s;
@@ -126,15 +128,17 @@ import { site } from '../data/site';
 		padding: 1rem 1.1rem 1.15rem;
 		translate: -0.9rem -50%;
 		border: 1px solid rgb(230 228 220 / 0.18);
-		background: color-mix(in oklab, var(--color-void) 92%, transparent);
-		backdrop-filter: blur(14px);
-		-webkit-backdrop-filter: blur(14px);
+		/* Fond plein, sans flou d'arrière-plan : six calques floutés au-dessus de la
+		   toile WebGL clignotaient en carrés noirs. Fermée, la fenêtre n'est plus peinte. */
+		background: color-mix(in oklab, var(--color-void) 96%, transparent);
 		clip-path: inset(50% 0 50% 100%);
 		opacity: 0;
+		visibility: hidden;
 		pointer-events: none;
 		transition:
 			clip-path 0.55s var(--ease-portal),
-			opacity 0.3s;
+			opacity 0.3s,
+			visibility 0s 0.55s;
 	}
 	.label[data-side='left'] .card {
 		right: auto;
@@ -145,6 +149,8 @@ import { site } from '../data/site';
 	.label:is(:hover, :focus, [data-hot]) .card {
 		clip-path: inset(0 0 0 0);
 		opacity: 1;
+		visibility: visible;
+		transition-delay: 0s;
 	}
 	.card .tick {
 		position: absolute;
@@ -152,11 +158,14 @@ import { site } from '../data/site';
 		height: 7px;
 		border-color: var(--color-acid);
 	}
-	@media (max-width: 639px) {
-		/* Sur téléphone, le numéro seul : le nom est dans la fenêtre, au toucher */
+	@media (max-width: 899px) {
+		/* Sur téléphone et tablette, le numéro seul (les noms sortaient de l'écran) :
+		   le nom est dans la fenêtre, au toucher */
 		.tag-name {
 			display: none;
 		}
+	}
+	@media (max-width: 639px) {
 		.card {
 			width: 15rem;
 		}
