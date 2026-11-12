@@ -126,7 +126,8 @@ import { site } from '../data/site';
 		display: block;
 		width: 19rem;
 		padding: 1rem 1.1rem 1.15rem;
-		translate: -0.9rem -50%;
+		/* --dx, --dy : le décalage qui garde la fenêtre à l'écran (specimen.ts) */
+		translate: calc(-0.9rem + var(--dx, 0px)) calc(-50% + var(--dy, 0px));
 		border: 1px solid rgb(230 228 220 / 0.18);
 		/* Fond plein, sans flou d'arrière-plan : six calques floutés au-dessus de la
 		   toile WebGL clignotaient en carrés noirs. Fermée, la fenêtre n'est plus peinte. */
@@ -143,7 +144,7 @@ import { site } from '../data/site';
 	.label[data-side='left'] .card {
 		right: auto;
 		left: 100%;
-		translate: 0.9rem -50%;
+		translate: calc(0.9rem + var(--dx, 0px)) calc(-50% + var(--dy, 0px));
 		clip-path: inset(50% 100% 50% 0);
 	}
 	.label:is(:hover, :focus, [data-hot]) .card {

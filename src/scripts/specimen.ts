@@ -290,6 +290,9 @@ function corolla(canvas: HTMLCanvasElement) {
 	// Les repères doivent tenir dans l'écran : la fleur rétrécit s'il le faut
 	let pad = 0;
 	let lastW = 0;
+	// Les fenêtres doivent rester entières à l'écran : on les décale s'il le faut
+	const cards = labels.map((l) => l.querySelector<HTMLElement>('.card'));
+	let sizes: { w: number; h: number }[] = [];
 	const edge = new THREE.Vector3();
 	let open = reduced() ? 1 : 0;
 	let shown = false;
@@ -310,6 +313,7 @@ function corolla(canvas: HTMLCanvasElement) {
 		if (w !== lastW) {
 			lastW = w;
 			pad = Math.max(0, ...labels.map((l) => l.offsetWidth)) + 12;
+			sizes = cards.map((k) => ({ w: k?.offsetWidth ?? 0, h: k?.offsetHeight ?? 0 }));
 		}
 		// Le bout de pétale le plus à droite possible, à l'échelle de base : s'il
 		// dépasse la place laissée par les repères, on réduit la fleur d'autant
@@ -363,6 +367,7 @@ function corolla(canvas: HTMLCanvasElement) {
 			const on = i === hot ? 1 : 0;
 			m.uniforms.uEnergy.value += (on * 6 - m.uniforms.uEnergy.value) * 0.12;
 		});
+		const top = host.getBoundingClientRect().top;
 		pts.forEach((q, i) => {
 			const l = labels[i];
 			if (!l) return;
@@ -372,6 +377,16 @@ function corolla(canvas: HTMLCanvasElement) {
 			// Le repère carré se pose sur le bout du pétale
 			l.style.transform = `translate(${q.x.toFixed(1)}px, ${q.y.toFixed(1)}px) translate(${left ? 'calc(-100% + 5px)' : '-5px'}, -50%)`;
 			l.style.opacity = String(Math.min(1, open * 1.5));
+			// La fenêtre part du repère vers le cœur (à 0,9rem) : on la ramène dans
+			// l'écran, en largeur comme en hauteur (sous l'en-tête)
+			const k = sizes[i];
+			if (!k?.w) return;
+			const x0 = left ? q.x + 19.4 : q.x - 19.4 - k.w;
+			const y0 = top + q.y - k.h / 2;
+			const dx = x0 < 10 ? 10 - x0 : x0 + k.w > w - 10 ? w - 10 - x0 - k.w : 0;
+			const dy = y0 < 76 ? 76 - y0 : y0 + k.h > innerHeight - 12 ? Math.max(76 - y0, innerHeight - 12 - y0 - k.h) : 0;
+			l.style.setProperty('--dx', dx.toFixed(1) + 'px');
+			l.style.setProperty('--dy', dy.toFixed(1) + 'px');
 		});
 	});
 }
