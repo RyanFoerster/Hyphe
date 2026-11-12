@@ -4,7 +4,7 @@ Site vitrine d'un studio d'expériences digitales (fictif). Une fleur
 botanique transparente, procédurale, pousse dans un monde ASCII discret ;
 les projets se lisent comme des planches d'herbier.
 
-En ligne : https://hyphe.ryanfoerster.dev
+En ligne : https://studiohyphe.com
 
 ## Pile
 

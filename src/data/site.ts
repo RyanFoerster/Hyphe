@@ -1,7 +1,7 @@
 // Coordonnées et réseaux : valeurs provisoires, à remplacer.
 export const site = {
 	name: 'Studio Hyphe',
-	url: 'https://hyphe.ryanfoerster.dev',
+	url: 'https://studiohyphe.com',
 	tagline: 'We grow websites people remember.',
 	description:
 		'Studio Hyphe is a small studio from Belgium. We design and build websites, apps and interactive worlds by hand, for brands that want to be felt, not just seen.',
