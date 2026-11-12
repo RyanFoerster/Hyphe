@@ -24,4 +24,19 @@ import ContactBlock from './ContactBlock.astro';
 	.glow {
 		background: radial-gradient(closest-side, rgb(154 180 240 / 0.1), rgb(200 245 60 / 0.04) 55%, transparent);
 	}
+	/* Sous 1280 px (mobile, tablette, petit écran) la fleur passerait sur le contact :
+	   elle pousse dans une bande réservée sous le texte (specimen.ts l'y cadre au
+	   centre, même seuil). */
+	@media (max-width: 1279px) {
+		.foot {
+			padding-bottom: 52svh;
+		}
+		.bloom {
+			top: auto;
+			height: 60svh;
+		}
+		.glow {
+			display: none;
+		}
+	}
 </style>

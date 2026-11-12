@@ -20,6 +20,17 @@ const FLOAT = [
 	[66, 82, 0.8],
 	[92, 38, 0.4],
 ];
+// Sur mobile : deux zones, au-dessus et en dessous du lien, jamais contre un bord
+const FLOAT_M = [
+	[24, 16],
+	[72, 22],
+	[67, 67],
+	[23, 73],
+	[38, 90],
+	[44, 30],
+	[65, 81],
+	[50, 96],
+];
 const parts = (text: string, word: string) => {
 	const i = text.indexOf(word);
 	return i < 0 ? [text, '', ''] : [text.slice(0, i), word, text.slice(i + word.length)];
@@ -125,7 +136,7 @@ const parts = (text: string, word: string) => {
 					projects.map((p, i) => (
 						<li
 							class:list={['floater', FLOAT[i % FLOAT.length][0] > 50 && 'is-right', FLOAT[i % FLOAT.length][1] > 50 && 'is-low']}
-							style={`--fx:${FLOAT[i % FLOAT.length][0]};--fy:${FLOAT[i % FLOAT.length][1]};--fz:${FLOAT[i % FLOAT.length][2]};--fd:${11 + ((i * 7) % 9)}s;--fp:${-i * 1.7}s;--t:${0.18 + i * 0.035}`}
+							style={`--fxm:${FLOAT_M[i % FLOAT_M.length][0]};--fym:${FLOAT_M[i % FLOAT_M.length][1]};--fx:${FLOAT[i % FLOAT.length][0]};--fy:${FLOAT[i % FLOAT.length][1]};--fz:${FLOAT[i % FLOAT.length][2]};--fd:${11 + ((i * 7) % 9)}s;--fp:${-i * 1.7}s;--t:${0.18 + i * 0.035}`}
 						>
 							<a href={`/work/${p.slug}`} data-portal class="group block">
 								<!-- Au survol, la planche du projet se déplie vers le centre de l'écran -->
@@ -150,8 +161,8 @@ const parts = (text: string, word: string) => {
 			<div class="pointer-events-none relative flex h-full flex-col items-center justify-center px-4 text-center">
 				<p class="ex-in meta" style="--t: 0.1"><span class="kicker">That was {pad(selected.length)} of {pad(projects.length)} projects</span></p>
 				<a href="/work" data-portal class="all ex-in pointer-events-auto group mt-8 inline-flex items-baseline gap-[0.25em]" style="--t: 0.2">
-					<span class="titre text-[clamp(3rem,8vw,8.5rem)]" data-frame-word>View all projects</span>
-					<span class="arrow titre text-[clamp(2rem,5vw,5rem)] text-acid" aria-hidden="true">→</span>
+					<span class="titre text-[clamp(2.5rem,8vw,8.5rem)]" data-frame-word>View all projects</span>
+					<span class="arrow titre text-[clamp(1.6rem,5vw,5rem)] text-acid" aria-hidden="true">→</span>
 				</a>
 				<p class="ex-in meta mt-6 text-bone/50" style="--t: 0.3">The rest is waiting, all on one page</p>
 			</div>
@@ -376,7 +387,10 @@ const parts = (text: string, word: string) => {
 	}
 	@media (max-width: 767px) {
 		.floater {
-			scale: calc(0.45 + var(--fz) * 0.35);
+			left: calc(var(--fxm) * 1%);
+			top: calc(var(--fym) * 1%);
+			scale: calc(0.55 + var(--fz) * 0.3);
+			filter: blur(calc((1 - var(--fz)) * 0.7px + clamp(0, 1 - (var(--x) - var(--t)) * 6, 1) * 8px));
 		}
 		.floater .place {
 			display: none;

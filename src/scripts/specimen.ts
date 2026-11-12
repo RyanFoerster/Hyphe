@@ -316,7 +316,6 @@ function corolla(canvas: HTMLCanvasElement) {
 			});
 		}
 		hot = hover >= 0 ? hover : petal;
-		host.style.cursor = petal >= 0 ? 'pointer' : '';
 		p.mats.forEach((m, i) => {
 			const on = i === hot ? 1 : 0;
 			m.uniforms.uEnergy.value += (on * 6 - m.uniforms.uEnergy.value) * 0.12;
@@ -362,9 +361,12 @@ function footer(canvas: HTMLCanvasElement) {
 		// tige plantée dans le bas, sans jamais toucher un bord de la toile
 		const { w, h } = st.size();
 		const half = Math.tan(THREE.MathUtils.degToRad(16)) * 4.2 * (w / h);
-		const scale = Math.min(1, Math.max(0.55, h / 900));
-		p.root.scale.setScalar(scale * (w < 768 ? 0.8 : 1));
-		p.root.position.set(w < 768 ? half * 0.35 : half * 0.48, -1.4 + (1 - scale) * 0.6, 0);
+		// Sur mobile la toile est une bande sous le contact : la fleur s'y tient au
+		// centre, à sa taille, pour ne plus passer sur le texte
+		const narrow = w < 1280;
+		const scale = narrow ? 0.7 : Math.min(1, Math.max(0.55, h / 900));
+		p.root.scale.setScalar(scale);
+		p.root.position.set(narrow ? 0 : half * 0.48, narrow ? -1.08 : -1.4 + (1 - scale) * 0.6, 0);
 	});
 }
 
