@@ -23,7 +23,7 @@ export const site = {
 	/** Tant qu'un lien pointe sur la racine d'un réseau (pas encore de profil),
 	    il n'entre pas dans les données structurées (`sameAs`, voir lib/seo.ts) */
 	socials: [
-		{ label: 'Instagram', href: 'https://instagram.com/' },
+		{ label: 'Instagram', href: 'https://www.instagram.com/studio.hyphe/' },
 		{ label: 'LinkedIn', href: 'https://linkedin.com/' },
 	],
 	/** Ce que l'on fait pousser : un pétale de la corolle par savoir-faire */
