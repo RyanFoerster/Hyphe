@@ -135,5 +135,13 @@ const canonical = abs(pagePath(Astro.url));
 			);
 			document.querySelectorAll('[data-reveal], [data-split], [data-tiles], mark.hl').forEach((el) => io.observe(el));
 		</script>
+
+		<!-- Mesure d'audience Cloudflare, sans cookie. En ligne seulement : le
+		     serveur de dev ne doit pas compter nos propres visites. -->
+		{
+			import.meta.env.PROD && (
+				<script is:inline type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "85324afadc454ecbbeea5673e4f42dc6"}' />
+			)
+		}
 	</body>
 </html>
