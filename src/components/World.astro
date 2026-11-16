@@ -53,7 +53,8 @@ import { projects } from '../data/projects';
 		<p class="meta hidden pb-2 text-right text-mineral sm:block" data-loader-sign>Studio Hyphe<br />We grow websites people remember</p>
 	</div>
 	<!-- Fin du chargement, à la première visite : entrer avec ou sans le son -->
-	<div class="enter absolute bottom-[clamp(5.5rem,13vw,10rem)] right-4 flex flex-col items-end gap-3 outline-none sm:bottom-8 sm:right-6" data-loader-ui data-loader-enter tabindex="-1" hidden>
+	<!-- Mobile : centré, au-dessus du compteur ; plus large : en bas à droite -->
+	<div class="enter absolute inset-x-4 bottom-44 flex flex-col items-center gap-3 outline-none sm:bottom-8 sm:left-auto sm:right-6 sm:items-end" data-loader-ui data-loader-enter tabindex="-1" hidden>
 		<button type="button" class="enter-main titre group inline-flex items-baseline gap-3 text-[clamp(2.2rem,4.4vw,3.8rem)] text-bone" data-enter="sound">
 			<span class="enter-word" data-frame-word>Enter with sound</span><span class="text-acid" aria-hidden="true">→</span>
 		</button>
