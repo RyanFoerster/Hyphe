@@ -21,6 +21,6 @@ export const site = {
 		{ name: 'Creative development', text: 'We write the code ourselves, so every detail moves the way it should.', items: ['Astro & React', 'Animation', 'Performance'] },
 		{ name: 'WebGL & 3D', text: 'Worlds in 3D that run right in the browser, like the flower above.', items: ['Three.js', 'Shaders', 'Generative'] },
 		{ name: 'Interactive installations', text: 'Screens and spaces that react when people come close.', items: ['Exhibitions', 'Events', 'Touch & motion'] },
-		{ name: 'Design systems', text: 'A tidy kit of parts, so your brand stays itself as it grows.', items: ['Tokens', 'Components', 'Documentation'] },
+		{ name: 'Site redesigns', text: 'Your site has aged. We rebuild it so it looks like the work you do today.', items: ['Audit', 'New structure', 'Migration'] },
 	],
 };
