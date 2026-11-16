@@ -91,8 +91,12 @@ const canonical = new URL(pagePath(Astro.url), site.url);
 				(entries) => {
 					for (const entry of entries) {
 						if (!entry.isIntersecting) continue;
-						entry.target.classList.add('is-in');
-						io.unobserve(entry.target);
+						const el = entry.target;
+						el.classList.add('is-in');
+						io.unobserve(el);
+						// Safari laisse parfois des tuiles à mi-course sur l'image : une fois
+						// l'animation passée (1,5 s au plus), le voile est retiré pour de bon
+						if (el.matches('[data-tiles]')) setTimeout(() => el.classList.add('is-done'), 1800);
 					}
 				},
 				{ threshold: 0.01 },

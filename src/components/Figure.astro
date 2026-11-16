@@ -129,6 +129,9 @@ const tiles = Array.from({ length: COLS * ROWS }, (_, i) => {
 		animation: tile-off 0.55s steps(4, end) both;
 		animation-delay: var(--d);
 	}
+	.fig:global(.is-done) .tiles {
+		display: none;
+	}
 	@keyframes tile-off {
 		0% {
 			background: var(--color-void);
