@@ -11,6 +11,7 @@ import { coverOf, portraitOf, projects } from '../../data/projects';
 import { workSchema } from '../../lib/seo';
 
 const years = projects.map((p) => p.year);
+const span = Math.min(...years) === Math.max(...years) ? `${years[0]}` : `${Math.min(...years)} / ${Math.max(...years)}`;
 const pad = (n: number) => String(n).padStart(2, '0');
 // Pour les moteurs de recherche et les partages (rien de cela ne s'affiche)
 const title = 'Our work: websites, web apps and WebGL worlds — Studio Hyphe';
@@ -23,7 +24,7 @@ const description =
 		<div class="grid gap-8 md:grid-cols-12">
 			<p class="meta text-mineral md:col-span-3" data-reveal>
 				<span class="kicker" data-scramble>[ Work ] All projects</span><br />
-				<span class="text-mineral-dim">{pad(projects.length)} projects — {Math.min(...years)} / {Math.max(...years)}</span>
+				<span class="text-mineral-dim">{pad(projects.length)} projects — {span}</span>
 			</p>
 			<div class="md:col-span-9">
 				<h1 id="work-title" class="titre text-[clamp(4rem,13vw,13rem)]" data-split>All the work</h1>

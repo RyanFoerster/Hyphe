@@ -9,6 +9,9 @@ import { coverAlt } from '../lib/seo';
 const years = projects.map((p) => p.year);
 // La galerie n'en montre qu'une sélection ; l'herbier les garde tous
 const selected = projects.slice(0, 4);
+// Ceux que la galerie ne montre pas (aucun tant qu'il y a quatre projets ou moins)
+const rest = projects.slice(selected.length);
+const span = Math.min(...years) === Math.max(...years) ? `${years[0]}` : `${Math.min(...years)} / ${Math.max(...years)}`;
 const pad = (n: number) => String(n).padStart(2, '0');
 // Où flottent les noms de l'herbier : x, y (en % de l'écran) et profondeur
 const FLOAT = [
@@ -37,7 +40,7 @@ const parts = (text: string, word: string) => {
 				<span class="line h-px flex-1 bg-bone/25"></span>
 				<span class="to text-acid">[ 01 ] Selected work</span>
 			</div>
-			<p class="meta relative text-mineral"><span class="kicker" data-scramble>[ 01 ] Selected work — {Math.min(...years)} / {Math.max(...years)}</span></p>
+			<p class="meta relative text-mineral"><span class="kicker" data-scramble>[ 01 ] Selected work — {span}</span></p>
 			<h2 id="work-title" class="specimen-title titre relative mt-7 text-[clamp(3.2rem,9vw,10rem)]" data-split>Come in, look around.</h2>
 			<p class="meta relative mt-7 text-bone/60"><span data-scramble>{pad(selected.length)} projects, grown in here</span></p>
 		</div>
@@ -151,15 +154,15 @@ const parts = (text: string, word: string) => {
 			</ul>
 			<!-- Mobile : calé en bas de l'écran, sinon un grand vide le sépare du studio -->
 			<div class="pointer-events-none relative flex h-full flex-col items-start justify-end px-4 pb-20 text-left md:items-center md:justify-center md:pb-0 md:text-center">
-				<p class="ex-in meta" style="--t: 0.1"><span class="kicker">That was {pad(selected.length)} of {pad(projects.length)} projects</span></p>
+				<p class="ex-in meta" style="--t: 0.1"><span class="kicker">{rest.length ? `That was ${pad(selected.length)} of ${pad(projects.length)} projects` : 'That was all of them, for now'}</span></p>
 				<a href="/work" data-portal class="all ex-in pointer-events-auto group mt-8 inline-flex items-baseline gap-[0.25em] max-md:items-end" style="--t: 0.2">
 					<span class="titre text-[clamp(3.6rem,8vw,8.5rem)] max-md:leading-[0.92]" data-frame-word>View all <br class="md:hidden" />projects</span>
 					<span class="arrow titre text-[clamp(2.2rem,5vw,5rem)] text-acid max-md:pb-[0.18em]" aria-hidden="true">→</span>
 				</a>
 				<!-- Mobile : les projets que la galerie n'a pas montrés, en liste -->
-				<ol class="rest pointer-events-auto mt-10 w-full border-b border-dashed border-bone/15 md:hidden">
+				<ol class:list={['rest pointer-events-auto mt-10 w-full border-b border-dashed border-bone/15 md:hidden', !rest.length && 'hidden']}>
 					{
-						projects.slice(selected.length).map((p, i) => (
+						rest.map((p, i) => (
 							<li class="ex-in" style={`--t: ${0.26 + i * 0.05}`}>
 								<a href={`/work/${p.slug}`} data-portal class="flex items-baseline gap-4 border-t border-dashed border-bone/15 py-3">
 									<span class="meta tabular-nums text-acid">{pad(selected.length + i + 1)}</span>
@@ -170,7 +173,7 @@ const parts = (text: string, word: string) => {
 						))
 					}
 				</ol>
-				<p class="ex-in meta mt-6 text-bone/50" style="--t: 0.3">The rest is waiting, all on one page</p>
+				<p class="ex-in meta mt-6 text-bone/50" style="--t: 0.3">{rest.length ? 'The rest is waiting, all on one page' : 'The next one could be yours'}</p>
 			</div>
 		</div>
 	</div>

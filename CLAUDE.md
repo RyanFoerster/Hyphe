@@ -72,7 +72,7 @@ npx astro build             # build statique dans dist/
 - `src/pages/work/index.astro` : l'herbier, deux lectures. **Sheets** : grille
   serrée (4 colonnes ≥ 1280 px, 3, 2, 1), planches toutes en 4:5 avec
   l'étiquette d'herbier *dans* la photo (dépliée au survol), une ligne « nom —
-  année » dessous ; la 8e case est une planche vide « Yours? » qui mène au
+  année » dessous ; la dernière case est une planche vide « Yours? » qui mène au
   contact. Ryan a refusé une fleur 3D par projet et les grandes cartes larges.
   **Index** : liste, l'aperçu image suit le curseur (coins de visée, accroche du projet).
 - `src/pages/work/[slug].astro` : fiche projet (`ProjectHero` plein écran). **Pas de
@@ -91,10 +91,13 @@ npx astro build             # build statique dans dist/
 - `src/components/` aussi : `Herbarium.astro` (étiquette d'herbier d'un
   projet), `Figure.astro` (image qui se recompose en tuiles, légende de
   planche), `os/Window.astro` (fenêtres de la galerie).
-- `src/data/projects.ts` : les 7 projets. **Réels** : Loum (studioloum.com,
+- `src/data/projects.ts` : les projets, **tous réels** : Loum (studioloum.com,
   captures du site uniquement, jamais les projets de Loum) et Farmlize
   (farmlize.ryanfoerster.dev ; source sur le Mac dans
-  `~/Documents/Dev/farmlize`). Les 5 autres sont fictifs.
+  `~/Documents/Dev/farmlize`). Les cinq projets fictifs du début ont été
+  retirés en novembre 2026, à la demande de Ryan : ne pas en réinventer. La
+  galerie de l'accueil montre les quatre premiers ; tant qu'il y en a moins,
+  la fin de galerie dit « That was all of them, for now ».
 - `src/lib/seo.ts` : tout ce que lisent les moteurs et les réseaux — titres et
   descriptions des fiches, textes alternatifs des couvertures, données
   structurées JSON-LD (studio, site, page, fil d'Ariane, projet). Le `<head>`
