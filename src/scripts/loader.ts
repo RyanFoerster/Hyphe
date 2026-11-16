@@ -727,7 +727,9 @@ export function createLoader(root: HTMLElement) {
 			box.querySelectorAll<HTMLButtonElement>('[data-enter]').forEach((b) =>
 				b.addEventListener('click', () => pick(b.dataset.enter === 'sound'), { once: true }),
 			);
-			box.querySelector<HTMLButtonElement>('[data-enter="sound"]')?.focus({ preventScroll: true });
+			// Le focus va au bloc, pas au bouton : sinon le bouton s'affichait déjà
+			// encadré, comme survolé. Entrée et Tab marchent pareil.
+			box.focus({ preventScroll: true });
 		});
 
 	return {
