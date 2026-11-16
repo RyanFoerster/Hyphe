@@ -81,7 +81,9 @@ npx astro build             # build statique dans dist/
   pied de page) et, à droite, la planche du projet suivant en miniature dans son
   cadre. En continuant de défiler, le contact s'efface, la planche grandit
   jusqu'à remplir l'écran (c'est le hero suivant), puis on change de page sans
-  que rien ne bouge. `Ticker.astro` : le bandeau qui ouvre cet écran et le
+  que rien ne bouge. Sur téléphone l'ordre est inversé, à la demande de Ryan :
+  la planche du projet suivant en haut, le contact (réduit à une ligne de
+  liens) dessous. `Ticker.astro` : le bandeau qui ouvre cet écran et le
   pied de page.
 - `src/pages/visuals/` : SVG génératifs calculés au build
   (`/visuals/<slug>.svg` et 6 déclinaisons `/visuals/<slug>/<n>.svg`), tracés

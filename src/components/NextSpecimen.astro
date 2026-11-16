@@ -38,7 +38,7 @@ const total = String(projects.length).padStart(2, '0');
 		</div>
 
 		<!-- La fin de la fiche : le contact -->
-		<div class="end absolute inset-x-0 top-0 flex h-[56%] flex-col justify-end px-4 pb-4 sm:px-6 md:inset-y-0 md:h-auto md:w-[48%] md:justify-center md:pb-0 md:pt-16" data-next-end>
+		<div class="end absolute inset-x-0 bottom-0 top-[60%] flex flex-col justify-start px-4 sm:px-6 md:inset-y-0 md:w-[48%] md:justify-center md:pt-16" data-next-end>
 			<ContactBlock compact titleId="end-title" />
 		</div>
 
@@ -49,7 +49,7 @@ const total = String(projects.length).padStart(2, '0');
 				<span class="hidden text-bone/70 sm:inline">{next.category} — {next.year}</span>
 			</p>
 			<p class="meta mt-3 flex items-center gap-4 text-bone/70">
-				<span class="relative block h-px w-40 bg-bone/20"><span class="absolute inset-y-0 left-0 w-0 bg-acid" data-next-bar></span></span>
+				<span class="relative block h-px w-28 bg-bone/20 md:w-40"><span class="absolute inset-y-0 left-0 w-0 bg-acid" data-next-bar></span></span>
 				<span class="tabular-nums text-acid" data-next-pct>000%</span>
 			</p>
 			<svg class="thread mt-3 block h-5 w-full overflow-visible" viewBox="0 0 1000 24" preserveAspectRatio="none">
@@ -67,15 +67,23 @@ const total = String(projects.length).padStart(2, '0');
 	/* --p : la pousse, de 0 (contact et planche dans son cadre) à 1 (le hero suivant).
 	   Le premier cinquième du défilement ne fait rien pousser : on a le temps de lire.
 	   La planche : le hero entier réduit à --f, agrandi depuis le point (--ox, --oy) ;
-	   elle garde donc les proportions de l'écran. Étroit : en bas à droite, sous le
-	   contact. Large : à droite du contact, centrée en hauteur. */
+	   elle garde donc les proportions de l'écran. Étroit : en haut à droite, le
+	   contact dessous (le projet suivant ne passe pas après ce qui ressemble à un
+	   pied de page). Large : à droite du contact, centrée en hauteur. */
 	.next {
 		height: 300svh;
 		--p: 0;
 		--f: 0.36;
 		--ox: 0.906;
-		--oy: 0.875;
+		--oy: 0.34;
 		--s: calc(var(--f) + (1 - var(--f)) * var(--p));
+	}
+	/* Téléphone court : planche plus petite et un peu plus bas, hors de la barre */
+	@media (max-height: 640px) {
+		.next {
+			--f: 0.32;
+			--oy: 0.38;
+		}
 	}
 	@media (min-width: 768px) {
 		.next {
@@ -119,11 +127,12 @@ const total = String(projects.length).padStart(2, '0');
 	.frame i.border-b {
 		border-bottom-width: 1px;
 	}
-	/* La légende : à gauche de la planche sur mobile, au-dessus sur grand écran */
+	/* La légende : à gauche de la planche sur mobile (en haut, le bouton d'entrée
+	   en bas), au-dessus sur grand écran */
 	.cap {
 		position: absolute;
 		right: calc(100% + 1rem);
-		bottom: 0;
+		top: 0;
 		display: flex;
 		width: 11rem;
 		flex-direction: column;
@@ -140,6 +149,15 @@ const total = String(projects.length).padStart(2, '0');
 		}
 		.cap .more {
 			display: none;
+		}
+	}
+	/* Mobile : le bouton d'entrée se range à gauche de la planche, au pied, et
+	   s'efface avec la légende dès que ça pousse (en bas à droite il passerait sur
+	   le contact) */
+	@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+		.enter {
+			inset: calc((var(--oy) * (1 - var(--f)) + var(--f)) * 100% - 2.3rem) auto auto 1rem;
+			opacity: calc(1 - clamp(0, var(--p) * 9, 1));
 		}
 	}
 	/* Le fil se découvre de gauche à droite avec la pousse (un tracé en pointillés
@@ -172,6 +190,7 @@ const total = String(projects.length).padStart(2, '0');
 		}
 		.end {
 			position: relative;
+			inset: auto;
 			order: -1;
 			height: auto;
 			width: auto;
