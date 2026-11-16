@@ -4,12 +4,16 @@
 import { site } from '../data/site';
 
 const ticker = [...site.services.map((s) => s.name), 'Grown in ' + site.city, 'Open for projects'];
+// Le bandeau avance d'une série puis recommence : il faut assez de séries pour
+// couvrir l'écran pendant ce temps (deux laissaient un vide sur les écrans larges).
+// shortcut: six séries couvrent environ 7000 px de large, à augmenter au-delà
+const COPIES = 6;
 ---
 
 <div class="ticker meta relative z-[1] border-y border-dashed border-bone/15 bg-void py-3 text-bone/70" aria-hidden="true">
-	<div class="track">
+	<div class="track" style={`--n: ${COPIES}`}>
 		{
-			[0, 1].map(() => (
+			Array.from({ length: COPIES }, () => (
 				<span class="run">
 					{ticker.map((t) => (
 						<>
@@ -51,7 +55,7 @@ const ticker = [...site.services.map((s) => s.name), 'Grown in ' + site.city, 'O
 	}
 	@keyframes run {
 		to {
-			translate: -50% 0;
+			translate: calc(-100% / var(--n)) 0;
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
