@@ -1,5 +1,8 @@
-// Les projets du studio. Loum est réel (médias dans public/work/loum) ; les
-// autres sont FICTIFS, clients et chiffres inventés, à remplacer.
+// Les projets du studio. Loum et Farmlize sont réels (médias dans public/work) ;
+// les cinq autres sont FICTIFS, clients et chiffres inventés, à remplacer. Ils
+// portent `concept: true` : les données structurées ne les présentent pas comme
+// des réalisations livrées (voir lib/seo.ts). À retirer quand un vrai projet
+// prend la place.
 // Les noms passent en Parceh : lettres, espaces, virgules et points seulement.
 // Formats d'image : 16:9 et 4:5 uniquement.
 
@@ -32,6 +35,8 @@ export interface Project {
 	};
 	/** Adresse du site livré, sans protocole */
 	url?: string;
+	/** Projet fictif (étude du studio, pas une commande) */
+	concept?: boolean;
 	/** Vrais médias. Sans eux, les visuels sont générés (lib/generative). */
 	media?: {
 		/** Image 16:9 des cartes, spécimens et partages */
@@ -168,6 +173,7 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'lichen-archive',
+		concept: true,
 		tagline: 'Soil, as a landscape',
 		locality: 'Paris, FR',
 		name: 'Lichen Archive',
@@ -195,6 +201,7 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'nocturne',
+		concept: true,
 		tagline: 'A garden after dark',
 		locality: 'Grasse, FR',
 		name: 'Nocturne',
@@ -221,6 +228,7 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'strata',
+		concept: true,
 		tagline: 'Drawn from the ground',
 		locality: 'Lyon, FR',
 		name: 'Strata',
@@ -243,6 +251,7 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'spore-index',
+		concept: true,
 		tagline: 'Under the forest',
 		locality: 'Zurich, CH',
 		name: 'Spore Index',
@@ -269,6 +278,7 @@ export const projects: Project[] = [
 	},
 	{
 		slug: 'halo',
+		concept: true,
 		tagline: 'Light through stone',
 		locality: 'Antwerp, BE',
 		name: 'Halo',

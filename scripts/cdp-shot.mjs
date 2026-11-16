@@ -2,7 +2,11 @@
 // attente, défilement, survol, glisser, mobile. Sert à vérifier le rendu WebGL.
 //   1. lancer Chrome : chrome --headless=new --remote-debugging-port=9333 --user-data-dir=<dossier temporaire> --enable-gpu --ignore-gpu-blocklist
 //   2. node scripts/cdp-shot.mjs 9333 <dossier de sortie> <jobs.json>
-// jobs.json : [{ "name", "url", "w", "h", "mobile"?, "scale"?, "wait"?, "steps"?: [{ "eval" | "move" | "click" | "drag", "wait"? }] }]
+// jobs.json : [{ "name", "url", "w", "h", "mobile"?, "scale"?, "wait"?, "jpeg"?, "steps"?: [{ "eval" | "move" | "click" | "drag", "wait"? }] }]
+//   "jpeg" : qualité (0–100) ; la capture sort alors en .jpg plutôt qu'en .png
+// Les images de partage (public/og, 1200 × 630) se refont avec scripts/og-jobs.json,
+// site construit et servi par `astro preview --port 4322` :
+//   node scripts/cdp-shot.mjs 9333 public/og scripts/og-jobs.json
 import { readFile, writeFile } from 'node:fs/promises';
 const [port, out, jobsFile] = process.argv.slice(2);
 const jobs = JSON.parse(await readFile(jobsFile, 'utf8'));
@@ -49,8 +53,8 @@ for (const job of jobs) {
 		if (step.eval) await send('Runtime.evaluate', { expression: step.eval, awaitPromise: true });
 		await sleep(step.wait ?? 800);
 	}
-	const shot = await send('Page.captureScreenshot', { format: 'png' });
-	await writeFile(`${out}/${job.name}.png`, Buffer.from(shot.result.data, 'base64'));
+	const shot = await send('Page.captureScreenshot', job.jpeg ? { format: 'jpeg', quality: job.jpeg } : { format: 'png' });
+	await writeFile(`${out}/${job.name}.${job.jpeg ? 'jpg' : 'png'}`, Buffer.from(shot.result.data, 'base64'));
 	console.log('ok', job.name);
 }
 ws.close();

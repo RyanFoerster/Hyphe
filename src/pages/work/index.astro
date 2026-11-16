@@ -8,12 +8,17 @@ import Footer from '../../components/Footer.astro';
 import Figure from '../../components/Figure.astro';
 import Herbarium from '../../components/Herbarium.astro';
 import { coverOf, portraitOf, projects } from '../../data/projects';
+import { workSchema } from '../../lib/seo';
 
 const years = projects.map((p) => p.year);
 const pad = (n: number) => String(n).padStart(2, '0');
+// Pour les moteurs de recherche et les partages (rien de cela ne s'affiche)
+const title = 'Our work: websites, web apps and WebGL worlds — Studio Hyphe';
+const description =
+	'Websites, web apps and interactive WebGL worlds, designed and built by hand at Studio Hyphe, a small creative web studio in Belgium. Take a look around.';
 ---
 
-<Layout title="Work" description="Everything Studio Hyphe has grown so far: websites, apps and interactive worlds, all made by hand.">
+<Layout title={title} description={description} schema={workSchema(title, description)}>
 	<section class="relative z-[1] px-4 pb-16 pt-36 sm:px-6 md:pt-44" aria-labelledby="work-title">
 		<div class="grid gap-8 md:grid-cols-12">
 			<p class="meta text-mineral md:col-span-3" data-reveal>
@@ -45,7 +50,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 				projects.map((p, i) => (
 					<li data-reveal style={`--reveal-delay: ${(i % 4) * 100}ms`}>
 						<a href={`/work/${p.slug}`} data-portal class="card group block" aria-label={`${p.name} — ${p.category}, ${p.client}, ${p.year}`}>
-							<Figure src={portraitOf(p)} alt="" fig={pad(i + 1)} caption={p.category.toLowerCase()} ratio="4/5">
+							<Figure src={portraitOf(p)} alt={`${p.name}, ${p.category.toLowerCase()}`} fig={pad(i + 1)} caption={p.category.toLowerCase()} ratio="4/5">
 								<!-- L'étiquette d'herbier est posée dans la planche, comme sur une vraie feuille -->
 								<span class="label-shade" aria-hidden="true" />
 								<Herbarium project={p} inset class="label-in" />

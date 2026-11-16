@@ -1,0 +1,118 @@
+[
+	{
+		"name": "home",
+		"url": "http://localhost:4322/",
+		"w": 1200,
+		"h": 630,
+		"wait": 9000,
+		"jpeg": 88,
+		"steps": [
+			{
+				"eval": "document.querySelector('[data-enter=silent]')?.click()",
+				"wait": 6000
+			},
+			{
+				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div,.orbit,.scroll-cue,[data-hero]>.bottom-5{display:none!important}</style>')",
+				"wait": 800
+			}
+		]
+	},
+	{
+		"name": "loum",
+		"url": "http://localhost:4322/work/loum",
+		"w": 1200,
+		"h": 630,
+		"wait": 5000,
+		"jpeg": 88,
+		"steps": [
+			{
+				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div{display:none!important}</style>')",
+				"wait": 600
+			}
+		]
+	},
+	{
+		"name": "farmlize",
+		"url": "http://localhost:4322/work/farmlize",
+		"w": 1200,
+		"h": 630,
+		"wait": 5000,
+		"jpeg": 88,
+		"steps": [
+			{
+				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div{display:none!important}</style>')",
+				"wait": 600
+			}
+		]
+	},
+	{
+		"name": "lichen-archive",
+		"url": "http://localhost:4322/work/lichen-archive",
+		"w": 1200,
+		"h": 630,
+		"wait": 5000,
+		"jpeg": 88,
+		"steps": [
+			{
+				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div,.herbarium .more{display:none!important}</style>')",
+				"wait": 600
+			}
+		]
+	},
+	{
+		"name": "nocturne",
+		"url": "http://localhost:4322/work/nocturne",
+		"w": 1200,
+		"h": 630,
+		"wait": 5000,
+		"jpeg": 88,
+		"steps": [
+			{
+				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div,.herbarium .more{display:none!important}</style>')",
+				"wait": 600
+			}
+		]
+	},
+	{
+		"name": "strata",
+		"url": "http://localhost:4322/work/strata",
+		"w": 1200,
+		"h": 630,
+		"wait": 5000,
+		"jpeg": 88,
+		"steps": [
+			{
+				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div,.herbarium .more{display:none!important}</style>')",
+				"wait": 600
+			}
+		]
+	},
+	{
+		"name": "spore-index",
+		"url": "http://localhost:4322/work/spore-index",
+		"w": 1200,
+		"h": 630,
+		"wait": 5000,
+		"jpeg": 88,
+		"steps": [
+			{
+				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div,.herbarium .more{display:none!important}</style>')",
+				"wait": 600
+			}
+		]
+	},
+	{
+		"name": "halo",
+		"url": "http://localhost:4322/work/halo",
+		"w": 1200,
+		"h": 630,
+		"wait": 5000,
+		"jpeg": 88,
+		"steps": [
+			{
+				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div,.herbarium .more{display:none!important}</style>')",
+				"wait": 600
+			}
+		]
+	}
+]

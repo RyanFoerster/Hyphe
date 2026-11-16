@@ -1,0 +1,23 @@
+# En-têtes posés par Cloudflare sur les fichiers du site (Workers, static assets).
+# Sans ce fichier tout part avec « max-age=0 » : le navigateur redemande chaque
+# fichier à chaque page.
+
+# Fichiers d'Astro : leur nom change avec leur contenu, ils se gardent un an
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Police des titres : un mois (la renommer si elle change)
+/fonts/*
+  Cache-Control: public, max-age=2592000
+
+# Médias des projets et visuels générés : un jour, puis servis pendant que le
+# navigateur vérifie s'ils ont changé
+/work/:project/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/visuals/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# L'adresse technique du Worker (…workers.dev) et ses aperçus ne doivent pas
+# apparaître dans les moteurs de recherche : seul studiohyphe.com compte
+https://:worker.:account.workers.dev/*
+  X-Robots-Tag: noindex

@@ -95,6 +95,21 @@ npx astro build             # build statique dans dist/
   captures du site uniquement, jamais les projets de Loum) et Farmlize
   (farmlize.ryanfoerster.dev ; source sur le Mac dans
   `~/Documents/Dev/farmlize`). Les 5 autres sont fictifs.
+- `src/lib/seo.ts` : tout ce que lisent les moteurs et les réseaux — titres et
+  descriptions des fiches, textes alternatifs des couvertures, données
+  structurées JSON-LD (studio, site, page, fil d'Ariane, projet). Le `<head>`
+  est dans `Layout.astro` (props `title` complet, `description`, `image`,
+  `noindex`, `schema`). `src/pages/sitemap.xml.ts` et `robots.txt.ts` sont
+  écrits à la main ; `public/_headers` règle le cache chez Cloudflare.
+  **Honnêteté** : pas d'adresse postale, de téléphone, d'avis ni de client dans
+  le JSON-LD ; les projets fictifs portent `concept: true` (`projects.ts`) et
+  sortent en `creativeWorkStatus: Concept` ; les réseaux n'entrent dans
+  `sameAs` que lorsque `site.socials` pointe vers de vrais profils.
+- `public/og/*.jpg` : images de partage 1200 × 630 (l'accueil et chaque
+  projet), des captures du hero. À refaire quand un hero change :
+  `astro build`, `astro preview --port 4322`, Chrome sans interface, puis
+  `node scripts/cdp-shot.mjs 9333 public/og scripts/og-jobs.json` (ajouter le
+  projet dans `og-jobs.json`). Un projet sans son `.jpg` a une carte cassée.
 - `src/data/site.ts` : coordonnées (provisoires), savoir-faire avec texte et
   spécialités (affichés dans les fenêtres de la corolle du studio).
 - `src/scripts/world/` : le monde 3D du hero.

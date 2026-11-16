@@ -6,6 +6,7 @@
 // À p = 1 les deux sont pixel pour pixel les mêmes : le changement de page ne se voit pas.
 import Herbarium from './Herbarium.astro';
 import { coverOf, type Project } from '../data/projects';
+import { coverAlt } from '../lib/seo';
 
 interface Props {
 	project: Project;
@@ -42,7 +43,7 @@ const total = count;
 			</div>
 		) : (
 			<div class="grow absolute inset-0">
-				<img src={visual} alt="" class="absolute inset-0 size-full scale-105 object-cover" fetchpriority={next ? 'low' : 'high'} loading={next ? 'lazy' : 'eager'} />
+				<img src={visual} alt={next ? '' : coverAlt(p)} class="absolute inset-0 size-full scale-105 object-cover" fetchpriority={next ? 'low' : 'high'} loading={next ? 'lazy' : 'eager'} />
 				<div class="absolute inset-0 bg-gradient-to-b from-void/30 via-transparent to-void/60" />
 			</div>
 		)

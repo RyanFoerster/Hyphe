@@ -4,16 +4,23 @@ import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import { site } from '../data/site';
 import { pagePath } from '../lib/path';
+import { SHARE, abs, jsonLd } from '../lib/seo';
 
 interface Props {
+	/** Titre complet : l'onglet, le résultat de recherche, la carte de partage */
 	title?: string;
 	description?: string;
+	/** Image de partage, 1200 × 630, en JPG ou PNG (les réseaux ne lisent pas le SVG) */
 	image?: string;
+	imageAlt?: string;
+	/** Page à tenir hors des moteurs de recherche (la 404) */
+	noindex?: boolean;
+	/** Données structurées de la page : des nœuds schema.org (lib/seo.ts) */
+	schema?: object[];
 }
 
-const { title, description = site.description, image } = Astro.props;
-const fullTitle = title ? `${title} — ${site.name}` : `${site.name} — ${site.tagline}`;
-const canonical = new URL(pagePath(Astro.url), site.url);
+const { title = site.seoTitle, description = site.description, image = SHARE.src, imageAlt = site.shareAlt, noindex = false, schema } = Astro.props;
+const canonical = abs(pagePath(Astro.url));
 ---
 
 <html lang="en">
@@ -21,19 +28,44 @@ const canonical = new URL(pagePath(Astro.url), site.url);
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="theme-color" content="#090c0a" />
-		<title>{fullTitle}</title>
+		<title>{title}</title>
 		<meta name="description" content={description} />
-		<link rel="canonical" href={canonical} />
+		{
+			noindex ? (
+				<meta name="robots" content="noindex, follow" />
+			) : (
+				<>
+					<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+					<link rel="canonical" href={canonical} />
+				</>
+			)
+		}
 		<meta property="og:type" content="website" />
-		<meta property="og:title" content={fullTitle} />
+		<meta property="og:site_name" content={site.name} />
+		<meta property="og:locale" content="en_GB" />
+		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
-		<meta property="og:url" content={canonical} />
-		{image && <meta property="og:image" content={new URL(image, site.url)} />}
+		{!noindex && <meta property="og:url" content={canonical} />}
+		<meta property="og:image" content={abs(image)} />
+		<meta property="og:image:type" content={image.endsWith('.png') ? 'image/png' : 'image/jpeg'} />
+		<meta property="og:image:width" content={String(SHARE.width)} />
+		<meta property="og:image:height" content={String(SHARE.height)} />
+		<meta property="og:image:alt" content={imageAlt} />
 		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={abs(image)} />
+		<meta name="twitter:image:alt" content={imageAlt} />
+		<!-- Google ne lit pas le SVG pour l'icône des résultats : l'ICO et le PNG d'abord -->
+		<link rel="icon" href="/favicon.ico" sizes="32x32" />
+		<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<link rel="manifest" href="/site.webmanifest" />
+		<link rel="sitemap" type="application/xml" href="/sitemap.xml" />
 		<meta name="generator" content={Astro.generator} />
 		<link rel="preload" href="/fonts/Parceh.otf" as="font" type="font/otf" crossorigin />
+		{schema && !noindex && <script type="application/ld+json" is:inline set:html={jsonLd(schema)} />}
 
 		<!-- Transition en mosaïque : si on arrive d'un clic, la page reste voilée
 		     jusqu'à ce que les tuiles la révèlent (voile retiré seul après 2,5 s) -->
