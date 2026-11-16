@@ -98,6 +98,10 @@ npx astro build             # build statique dans dist/
   retirés en novembre 2026, à la demande de Ryan : ne pas en réinventer. La
   galerie de l'accueil montre les quatre premiers ; tant qu'il y en a moins,
   la fin de galerie dit « That was all of them, for now ».
+  Les images de la fiche Farmlize sont sept planches fixes composées (pages,
+  composants isolés, illustrations), dans l'esprit des références de Ryan : tout
+  vient de captures du site en ligne, sans texte ajouté. Leur source
+  (`cases/farmlize/planches.html` et ses pièces) reste hors git, comme `social/`.
 - `src/lib/seo.ts` : tout ce que lisent les moteurs et les réseaux — titres et
   descriptions des fiches, textes alternatifs des couvertures, données
   structurées JSON-LD (studio, site, page, fil d'Ariane, projet). Le `<head>`
