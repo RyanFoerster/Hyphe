@@ -148,7 +148,8 @@ const parts = (text: string, word: string) => {
 					))
 				}
 			</ul>
-			<div class="pointer-events-none relative flex h-full flex-col items-start justify-center px-4 text-left md:items-center md:text-center">
+			<!-- Mobile : calé en bas de l'écran, sinon un grand vide le sépare du studio -->
+			<div class="pointer-events-none relative flex h-full flex-col items-start justify-end px-4 pb-20 text-left md:items-center md:justify-center md:pb-0 md:text-center">
 				<p class="ex-in meta" style="--t: 0.1"><span class="kicker">That was {pad(selected.length)} of {pad(projects.length)} projects</span></p>
 				<a href="/work" data-portal class="all ex-in pointer-events-auto group mt-8 inline-flex items-baseline gap-[0.25em] max-md:items-end" style="--t: 0.2">
 					<span class="titre text-[clamp(3.6rem,8vw,8.5rem)] max-md:leading-[0.92]" data-frame-word>View all <br class="md:hidden" />projects</span>
