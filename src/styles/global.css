@@ -112,6 +112,37 @@
   }
 }
 
+/* ---------- Signature du studio : une barre de défilement fine et carrée ----------
+   Un fil acide le long du bord, qui s'épaissit quand on l'approche. Seulement à
+   la souris : les téléphones gardent leur barre, qui ne se règle pas. */
+@media (hover: hover) and (pointer: fine) {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: var(--color-void);
+  }
+  /* La poignée fait toute la largeur (facile à attraper), seul le fil est peint */
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-acid);
+    background-clip: content-box;
+    border: 3px solid transparent;
+  }
+  ::-webkit-scrollbar-thumb:hover,
+  ::-webkit-scrollbar-thumb:active {
+    border-width: 1px;
+  }
+  /* Firefox : couleur et finesse seulement, la forme est la sienne */
+  @supports not selector(::-webkit-scrollbar) {
+    html {
+      scrollbar-color: var(--color-acid) var(--color-void);
+      scrollbar-width: thin;
+    }
+  }
+}
+
 /* Grain minéral sur tout le site */
 body::after {
   content: "";

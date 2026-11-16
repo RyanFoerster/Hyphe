@@ -134,6 +134,15 @@ const canonical = abs(pagePath(Astro.url));
 				{ threshold: 0.01 },
 			);
 			document.querySelectorAll('[data-reveal], [data-split], [data-tiles], mark.hl').forEach((el) => io.observe(el));
+
+			// Signature du studio, pour qui regarde sous les feuilles (la console)
+			const mono = 'font: 12px/1.35 ui-monospace, Consolas, monospace;';
+			console.log(
+				"%c Studio Hyphe %c\n\n    .:*:.\n   :* o *:\n    ':*:'\n      |\n     \\|\n      |/\n      |\n\n%cGrown by hand. Looking under the leaves?\nSay hello: hello@studiohyphe.com",
+				`${mono} background: #c8f53c; color: #090c0a;`,
+				`${mono} color: #c8f53c;`,
+				`${mono} color: #e6e4dc;`,
+			);
 		</script>
 
 		<!-- Mesure d'audience Cloudflare, sans cookie. En ligne seulement : le
