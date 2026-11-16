@@ -85,6 +85,25 @@ npx astro build             # build statique dans dist/
   la planche du projet suivant en haut, le contact (réduit à une ligne de
   liens) dessous. `Ticker.astro` : le bandeau qui ouvre cet écran et le
   pied de page.
+- `src/pages/404.astro` + `src/scripts/lost.ts` : la page perdue est un jeu qui
+  prend toute la page (chargé sur cette page seulement), piloté à la souris.
+  **On dessine ses plantes** : on appuie sur le sol et on tire, la tige suit le
+  curseur, des feuilles sortent en chemin, la fleur s'ouvre quand on relâche.
+  Dans le ciel, « 4 0 4 » en blocs de caractères : une plante qui atteint un
+  chiffre le remplace par une fleur. La sève est comptée (le premier chiffre est
+  à portée, les deux autres demandent de passer par les grains de pollen, qui en
+  redonnent). Sans appuyer, la souris fait du **vent**, écrit en caractères
+  derrière le curseur : il pousse le pollen et couche les plantes. Chrono,
+  meilleur temps (`localStorage hyphe:lost-best`), puis on plante librement.
+  Clavier : flèches + espace (viseur à coins). Ryan a refusé une première
+  version à un seul bouton (« maintenir pour pousser ») : pas assez interactive.
+  La terre, les chiffres et le vent sont une couche de caractères calée sur la
+  grille de `createPost` ; le vent est un champ d'une case par caractère. Sons
+  composés avec `kit` (`sound.ts`). Sans WebGL, ou sous
+  `prefers-reduced-motion`, la page reste fixe (graine en caractères, mêmes
+  liens, bouton « Play anyway »). En dev, `window.__lost` (`auto`, `blow`,
+  `win`, `state`) pilote la partie pour les captures ; `cdp-shot.mjs` accepte
+  `"media"` pour simuler `prefers-reduced-motion`.
 - `src/pages/visuals/` : SVG génératifs calculés au build
   (`/visuals/<slug>.svg` et 6 déclinaisons `/visuals/<slug>/<n>.svg`), tracés
   par `src/lib/generative.ts` (familles topo, strata, bloom).

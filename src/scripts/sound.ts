@@ -463,6 +463,18 @@ export const sound = {
 	},
 };
 
+/** Les briques du synthé, pour qui compose ses propres sons sans alourdir ce
+ *  fichier (le jeu de la page perdue). `ctx` ne rend rien tant que le son est
+ *  coupé ou n'a pas démarré. */
+export const kit = {
+	bell,
+	whoosh,
+	ticks,
+	thump,
+	note: NOTE,
+	ctx: (): Pick<Ctx, 'ac' | 'duck' | 'verb'> | null => (enabled ? c : null),
+};
+
 // ------------------------------------------------------------ branchement
 
 const HOVER = 'a[href], button, [data-petal-label], [data-orbit-item], [role="button"]';

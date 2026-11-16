@@ -33,6 +33,8 @@ await send('Page.enable');
 for (const job of jobs) {
 	const { w, h, mobile = false, scale = 1 } = job;
 	await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: scale, mobile });
+	// "media" : réglages du système à simuler, ex. [{ "name": "prefers-reduced-motion", "value": "reduce" }]
+	await send('Emulation.setEmulatedMedia', { features: job.media ?? [] });
 	await send('Page.navigate', { url: job.url });
 	await sleep(job.wait ?? 6000);
 	for (const step of job.steps ?? []) {

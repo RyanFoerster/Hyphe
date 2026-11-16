@@ -1,23 +1,370 @@
 ---
+// La page perdue : rien n'y a poussé. On comprend tout de suite qu'on s'est
+// égaré, les liens de retour sont là sans rien faire ; et toute la page est un
+// jeu (src/scripts/lost.ts, chargé ici seulement) : on appuie sur le sol, on
+// tire, une plante pousse sous le curseur jusqu'aux chiffres de l'erreur.
+// Sans WebGL, ou si le système demande moins d'animations, la page reste fixe :
+// une graine dessinée en caractères, et les mêmes liens.
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="Page not found — Studio Hyphe" noindex>
-	<section class="relative grid min-h-[100svh] place-items-center overflow-hidden px-4">
-		<canvas
-			class="pointer-events-none absolute inset-0 size-full opacity-50"
-			data-ascii
-			data-ascii-kind="mycelium"
-			data-ascii-seed="404"
-			data-ascii-size="12"
-			aria-hidden="true"
-		></canvas>
-		<div class="relative text-center">
-			<p class="meta mb-6 text-mineral">Error 404 — wrong turn</p>
-			<h1 class="titre text-[clamp(3.5rem,10vw,9rem)]" data-split>Nothing grows here.</h1>
-			<a href="/" class="meta mt-10 inline-block border border-bone/20 px-5 py-3 transition hover:border-acid hover:text-acid">
-				Back to the start
-			</a>
+<Layout title="Page not found — Studio Hyphe" description="This page got lost, or never existed. The way back to Studio Hyphe is right here." noindex>
+	<section class="lost" data-lost aria-label="Page not found">
+		<canvas data-lost-canvas aria-hidden="true"></canvas>
+
+		<div class="words" data-lost-words>
+			<p class="meta"><span class="kicker" data-lost-kicker>[ Error 404 ]</span></p>
+			<div data-lost-title>
+				<h1 class="titre" data-split>Nothing grows here.</h1>
+			</div>
+			<p class="lede" data-lost-lede>This page got lost, or never existed. The ground is still good, though.</p>
+			<nav class="ways meta" aria-label="Ways back" data-lost-ways>
+				<a href="/">← Back to the start</a>
+				<a href="/work">See the work →</a>
+				<button type="button" class="again" data-lost-again hidden>Start over</button>
+			</nav>
+		</div>
+
+		<!-- Le jeu : appuyer sur le sol et tirer, la plante suit le curseur. Au clavier : les flèches et espace. -->
+		<div class="hud meta" aria-hidden="true">
+			<p class="hint"><span data-lost-hint>Press the ground and drag up</span></p>
+			<p class="gauges">
+				<span class="sap" data-lost-sap>sap <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+				<span class="marks" data-lost-marks><i>4</i><i>0</i><i>4</i></span>
+				<span class="time" data-lost-time>0.0 s</span>
+			</p>
+		</div>
+		<p class="sr-only">A small game fills this page: press the ground and drag up to grow a plant towards the 4, the 0 and the 4. With a keyboard, move with the arrow keys and hold space.</p>
+		<p class="meta invite" data-lost-invite aria-hidden="true"><span>Press here, drag up</span></p>
+		<div class="aim" data-lost-cursor hidden aria-hidden="true">
+			<span class="tick tl"></span><span class="tick tr"></span><span class="tick bl"></span><span class="tick br"></span>
+		</div>
+
+		<!-- La version fixe : la graine, en caractères -->
+		<div class="still">
+			<pre aria-hidden="true">{`        .
+      . * .
+- - - - ' - - - -
+       /|\\
+      ' | '`}</pre>
+			<p class="meta fig" aria-hidden="true">fig. a — the idea</p>
+			<button type="button" class="meta" data-lost-play hidden>Play anyway</button>
 		</div>
 	</section>
 </Layout>
+
+<style>
+	.lost {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		height: 100svh;
+		padding: 6.5rem 1rem 1rem;
+		overflow: hidden;
+	}
+	/* En jeu, toute la page est le terrain : un appui long ne sélectionne rien,
+	   le doigt qui tire ne fait pas défiler */
+	.lost[data-lost='live'] {
+		cursor: crosshair;
+		touch-action: none;
+		user-select: none;
+		-webkit-user-select: none;
+		-webkit-touch-callout: none;
+	}
+	canvas {
+		position: absolute;
+		inset: 0;
+		display: none;
+		width: 100%;
+		height: 100%;
+	}
+	.lost[data-lost='live'] canvas {
+		display: block;
+	}
+	.words {
+		z-index: 1;
+		/* Le texte laisse passer le geste : on plante aussi derrière lui */
+		pointer-events: none;
+	}
+	.words a,
+	.words button {
+		pointer-events: auto;
+	}
+
+	h1 {
+		margin-top: 0.9rem;
+		padding-bottom: 0.18em;
+		font-size: clamp(2.6rem, 12.5vw, 4rem);
+	}
+	.lede {
+		max-width: 27rem;
+		margin-top: 0.4rem;
+		font-size: 15px;
+		line-height: 1.45;
+		color: rgb(230 228 220 / 0.75);
+	}
+
+	/* Sur téléphone, les liens se rangent tout en bas, sous la ligne de sol */
+	.ways {
+		position: absolute;
+		right: 1rem;
+		bottom: 1rem;
+		left: 1rem;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+	.ways a,
+	.ways button,
+	.still button {
+		padding: 0.7rem 0.9rem;
+		border: 1px solid rgb(230 228 220 / 0.2);
+		background: color-mix(in oklab, var(--color-void) 80%, transparent);
+		text-transform: uppercase;
+		cursor: pointer;
+		transition:
+			border-color 0.3s,
+			color 0.3s,
+			background-color 0.3s;
+	}
+	.ways a:hover,
+	.ways a:focus-visible,
+	.still button:hover {
+		border-color: var(--color-acid);
+		color: var(--color-acid);
+	}
+	.ways .again {
+		border-color: var(--color-acid);
+		background: var(--color-acid);
+		color: var(--color-void);
+	}
+	.ways .again:hover {
+		background: var(--color-void);
+		color: var(--color-acid);
+	}
+	.ways [hidden],
+	.still [hidden] {
+		display: none;
+	}
+
+	/* Sous la ligne de sol : la consigne, la sève, les chiffres, le chrono */
+	.hud {
+		position: absolute;
+		right: 1rem;
+		bottom: calc(1.9rem + var(--ways-h, 2.7rem));
+		left: 1rem;
+		z-index: 1;
+		display: none;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.4rem 1.5rem;
+		color: rgb(230 228 220 / 0.85);
+		pointer-events: none;
+	}
+	.lost[data-lost='live'] .hud {
+		display: flex;
+	}
+	.hint {
+		white-space: nowrap;
+	}
+	.gauges {
+		display: flex;
+		align-items: center;
+		gap: 1.1rem;
+		color: var(--color-mineral);
+	}
+	.sap {
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+	}
+	.sap i {
+		display: block;
+		width: 5px;
+		height: 9px;
+		background: rgb(230 228 220 / 0.16);
+		transition: background-color 0.2s;
+	}
+	.sap i:first-child {
+		margin-left: 0.45rem;
+	}
+	.sap i[data-state='on'] {
+		background: var(--color-acid);
+	}
+	.marks {
+		display: inline-flex;
+		gap: 0.35em;
+		color: var(--color-bone);
+	}
+	.marks i {
+		font-style: normal;
+		transition: color 0.4s;
+	}
+	/* Un chiffre atteint est barré : une fleur l'a remplacé */
+	.marks i[data-state='done'] {
+		color: var(--color-acid);
+		text-decoration: line-through;
+	}
+	.time {
+		min-width: 3.6rem;
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* L'invitation : une étiquette posée sur le sol, là où appuyer pour commencer */
+	.invite {
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 1;
+		display: none;
+		pointer-events: none;
+		transition: opacity 0.5s;
+	}
+	.lost[data-lost='live'] .invite {
+		display: block;
+	}
+	.invite span {
+		display: block;
+		padding: 0.28em 0.5em 0.2em;
+		background: var(--color-acid);
+		color: var(--color-void);
+		line-height: 1.2;
+		white-space: nowrap;
+		translate: 14px -150%;
+	}
+	.invite[data-off='true'] {
+		opacity: 0;
+	}
+
+	/* Le viseur du clavier : quatre coins */
+	.aim {
+		position: absolute;
+		top: -12px;
+		left: -12px;
+		z-index: 1;
+		width: 24px;
+		height: 24px;
+		pointer-events: none;
+	}
+	.aim[hidden] {
+		display: none;
+	}
+	.tick {
+		position: absolute;
+		width: 7px;
+		height: 7px;
+		border: 0 solid var(--color-acid);
+	}
+	.tl {
+		top: 0;
+		left: 0;
+		border-top-width: 1px;
+		border-left-width: 1px;
+	}
+	.tr {
+		top: 0;
+		right: 0;
+		border-top-width: 1px;
+		border-right-width: 1px;
+	}
+	.bl {
+		bottom: 0;
+		left: 0;
+		border-bottom-width: 1px;
+		border-left-width: 1px;
+	}
+	.br {
+		right: 0;
+		bottom: 0;
+		border-right-width: 1px;
+		border-bottom-width: 1px;
+	}
+
+	/* La version fixe */
+	.still {
+		display: grid;
+		flex: 1;
+		place-content: center;
+		justify-items: center;
+		gap: 1rem;
+		padding-bottom: 4rem;
+	}
+	.still pre {
+		font: 400 14px/1.3 var(--font-mono);
+		color: rgb(230 228 220 / 0.7);
+	}
+	.still .fig {
+		color: var(--color-mineral);
+	}
+	.lost[data-lost='live'] .still {
+		display: none;
+	}
+
+	@media (min-width: 900px) {
+		.lost {
+			padding: 7rem 1.5rem 1.5rem;
+		}
+		.words {
+			max-width: 46vw;
+		}
+		h1 {
+			margin-top: 1.4rem;
+			font-size: clamp(3.4rem, 6.3vw, 7.4rem);
+		}
+		.lede {
+			margin-top: 0.9rem;
+		}
+		.ways {
+			position: static;
+			margin-top: 1.6rem;
+		}
+		.ways a,
+		.ways button,
+		.still button {
+			padding: 0.75rem 1.1rem;
+		}
+		.hud {
+			right: 1.5rem;
+			bottom: 1.4rem;
+			left: 1.5rem;
+		}
+		.invite span {
+			translate: 16px -160%;
+		}
+		/* La graine fixe se tient à droite, là où le jeu se joue */
+		.still {
+			position: absolute;
+			inset: 0 0 0 50%;
+			padding: 0;
+		}
+	}
+</style>
+
+<script>
+	const host = document.querySelector<HTMLElement>('[data-lost]');
+	if (host) {
+		const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const can = !!document.createElement('canvas').getContext('webgl2');
+		// three.js et le jeu ne sont chargés qu'ici, et seulement s'ils peuvent tourner
+		const play = () =>
+			import('../scripts/lost')
+				.then((m) => m.mountLost(host))
+				.catch(() => false);
+		const anyway = host.querySelector<HTMLButtonElement>('[data-lost-play]');
+		if (can && !still) void play();
+		else if (can && anyway) {
+			// Moins d'animations demandé : rien ne bouge, mais on peut choisir de jouer
+			anyway.hidden = false;
+			anyway.addEventListener(
+				'click',
+				() => {
+					anyway.hidden = true;
+					void play();
+				},
+				{ once: true },
+			);
+		}
+	}
+</script>
