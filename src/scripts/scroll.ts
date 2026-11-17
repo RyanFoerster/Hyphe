@@ -28,13 +28,3 @@ export function scrollToY(top: number) {
 	if (lenis) lenis.scrollTo(top, { duration: 1.6 });
 	else scrollTo({ top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
-
-/** Amener la page à une position et l'y tenir, le temps d'une scène qui se joue
- *  seule (le visiteur ne peut plus défiler) ; `releaseScroll` la lui rend */
-export function pinScrollAt(top: number, duration = 0.7) {
-	if (!lenis) return scrollTo({ top });
-	if (Math.abs(lenis.scroll - top) < 1) return lenis.stop();
-	lenis.scrollTo(top, { duration, lock: true, force: true, onComplete: () => lenis?.stop() });
-}
-
-export const releaseScroll = () => lenis?.start();

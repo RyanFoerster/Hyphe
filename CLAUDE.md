@@ -75,19 +75,19 @@ npx astro build             # build statique dans dist/
   année » dessous ; la dernière case est une planche vide « Yours? » qui mène au
   contact. Ryan a refusé une fleur 3D par projet et les grandes cartes larges.
   **Index** : liste, l'aperçu image suit le curseur (coins de visée, accroche du projet).
-- `src/pages/work/[slug].astro` : fiche projet (`ProjectHero` plein écran). Elle
-  se termine comme toutes les pages, sur le pied de page (`Footer.astro`), et
-  juste au-dessus, dans un bloc à part, sur le projet suivant
-  (`NextSpecimen.astro`) : à gauche son nom, une phrase et « Enter … → », à
-  droite sa planche en miniature dans son cadre (sur téléphone : la planche en
-  haut, le texte dessous). **Défiler ne change pas de page** : le bloc reste
-  épinglé un demi-écran, la planche respire un peu, puis le pied de page arrive.
-  C'est le **clic** (planche ou bouton) qui fait pousser la planche jusqu'à
+- `src/pages/work/[slug].astro` : fiche projet (`ProjectHero` plein écran). **Pas de
+  pied de page au fond d'un projet**, décidé par Ryan : la fiche se termine sur
+  `NextSpecimen.astro`, un seul écran épinglé avec, à gauche, le nom du projet
+  suivant, une phrase et « Enter … → », et à droite sa planche en miniature dans
+  son cadre (sur téléphone : la planche en haut, le texte dessous). En continuant
+  de défiler (« keep scrolling »), le texte s'efface, la planche grandit jusqu'à
   remplir l'écran (c'est le hero suivant, `ProjectHero` en mode `next`), puis on
-  change de page sans que rien ne bouge. Ryan a refusé la version d'avant (pas
-  de pied de page, le contact à gauche et le projet suivant à droite dans le
-  même écran, changement de page au défilement) : « bizarre, le projet dans le
-  footer ». `Ticker.astro` : le bandeau qui ouvre le pied de page.
+  change de page sans que rien ne bouge. Le bouton et la planche font défiler
+  jusque-là. Ryan a refusé deux autres fins : le contact à gauche et le projet
+  suivant à droite dans le même écran (« bizarre, le projet dans le footer »),
+  puis le vrai pied de page sous le bloc avec changement de page au clic (il
+  tient au changement de page au défilement). `Ticker.astro` : le bandeau qui
+  ouvre le pied de page des autres pages.
 - `src/pages/404.astro` + `src/scripts/lost.ts` : la page perdue est un jeu qui
   prend toute la page (chargé sur cette page seulement), piloté à la souris.
   **On dessine ses plantes** : on appuie sur le sol et on tire, la tige suit le

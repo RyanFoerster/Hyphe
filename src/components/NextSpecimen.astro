@@ -1,12 +1,11 @@
 ---
-// Fin de fiche projet : le projet suivant, dans un bloc à part posé au-dessus du
-// pied de page (le même que sur tout le site). À gauche, son nom et une phrase ;
-// à droite, sa planche en miniature dans son cadre.
-// Défiler ne change pas de page : la planche respire un peu au passage, puis le
-// pied de page arrive. C'est le clic (sur la planche ou sur le bouton) qui fait
-// pousser la planche jusqu'à remplir l'écran : c'est alors le hero de la page
-// suivante, rendu à l'identique (ProjectHero en mode next), et l'on change de
-// page sans que rien ne bouge.
+// Fin de fiche projet : il n'y a pas de pied de page ici, la fiche se termine sur
+// le projet suivant, en un seul écran. À gauche, son nom et une phrase ; à droite,
+// sa planche en miniature dans son cadre. Si l'on continue de défiler, le texte
+// s'efface et la planche grandit jusqu'à remplir l'écran : c'est le hero de la
+// page suivante, rendu à l'identique (ProjectHero en mode next), et au bout on
+// change de page sans que rien ne bouge. Le bouton et la planche font défiler
+// jusque-là.
 import ProjectHero from './ProjectHero.astro';
 import { projects, type Project } from '../data/projects';
 
@@ -34,8 +33,9 @@ const href = `/work/${next.slug}`;
 			<i class="bottom-0 left-0 border-b border-l"></i>
 			<i class="bottom-0 right-0 border-b border-r"></i>
 			<p class="cap meta text-mineral">
-				<span><span class="text-bone/85">fig. {no}</span><span class="hidden md:inline"> — project {no} / {total}</span></span>
-				<span class="text-bone/70">{next.category} — {next.year}</span>
+				<span class="text-bone/85">fig. {no}</span>
+				<span class="text-bone/70 md:hidden">{next.category} — {next.year}</span>
+				<span class="more text-acid">keep scrolling ↓</span>
 			</p>
 		</div>
 
@@ -51,10 +51,10 @@ const href = `/work/${next.slug}`;
 			</p>
 		</div>
 
-		<!-- L'interface de la pousse : elle n'existe que le temps d'entrer -->
+		<!-- L'interface de la pousse : elle s'efface avant la fin -->
 		<div class="ui pointer-events-none absolute inset-x-4 top-24 sm:inset-x-6" aria-hidden="true">
 			<p class="meta flex justify-between text-mineral">
-				<span>Entering — project {no} / {total}</span>
+				<span>Keep scrolling — project {no} / {total}</span>
 				<span class="hidden text-bone/70 sm:inline">{next.category} — {next.year}</span>
 			</p>
 			<p class="meta mt-3 flex items-center gap-4 text-bone/70">
@@ -70,42 +70,35 @@ const href = `/work/${next.slug}`;
 </section>
 
 <style>
-	/* --p : la pousse, de 0 (la planche dans son cadre) à 1 (le hero suivant). Elle
-	   ne se joue qu'au clic, dans le temps. --k : le passage du bloc à l'écran
-	   (0 à 1, au défilement), qui fait seulement respirer la planche (--ka).
+	/* --p : la pousse, de 0 (le texte et la planche dans son cadre) à 1 (le hero suivant).
+	   Le premier cinquième du défilement ne fait rien pousser : on a le temps de lire.
 	   La planche : le hero entier réduit à --f, agrandi depuis le point (--ox, --oy) ;
 	   elle garde donc les proportions de l'écran. Étroit : en haut à droite, le
-	   texte dessous. Large : à droite du texte, centrée en hauteur.
-	   Le bloc reste épinglé un demi-écran : on a le temps de le lire, et le clic
-	   trouve toujours la scène posée plein cadre. */
+	   texte dessous. Large : à droite du texte, centrée en hauteur. */
 	.next {
-		height: 150svh;
+		height: 300svh;
 		--p: 0;
-		--k: 0;
-		--f0: 0.36;
-		--ka: 0.05;
+		--f: 0.36;
 		--ox: 0.906;
 		--oy: 0.34;
-		--f: calc(var(--f0) * (1 + var(--ka) * var(--k)));
 		--s: calc(var(--f) + (1 - var(--f)) * var(--p));
 	}
 	/* Téléphone court : planche plus petite et un peu plus bas, hors de la barre */
 	@media (max-height: 640px) {
 		.next {
-			--f0: 0.32;
+			--f: 0.32;
 			--oy: 0.38;
 		}
 	}
 	@media (min-width: 768px) {
 		.next {
-			--f0: 0.44;
-			--ka: 0.14;
+			--f: 0.44;
 			--ox: 0.9286;
 			--oy: 0.5;
 		}
 	}
 	.ui {
-		opacity: calc(clamp(0, var(--p) * 14, 1) * (1 - clamp(0, (var(--p) - 0.82) * 7, 1)));
+		opacity: calc(1 - clamp(0, (var(--p) - 0.82) * 7, 1));
 	}
 	/* Le texte s'efface dès que la planche se met à pousser */
 	.lead {
@@ -170,6 +163,10 @@ const href = `/work/${next.slug}`;
 			justify-content: space-between;
 			gap: 1rem;
 		}
+		/* large : l'invitation est déjà écrite en haut de l'écran */
+		.cap .more {
+			display: none;
+		}
 	}
 	/* Le fil se découvre de gauche à droite avec la pousse (un tracé en pointillés
 	   étiré par le viewBox ne se referme pas juste) */
@@ -222,101 +219,78 @@ const href = `/work/${next.slug}`;
 </style>
 
 <script>
-	import { pinScrollAt, releaseScroll } from '../scripts/scroll';
+	import { scrollToY } from '../scripts/scroll';
 
 	const zone = document.querySelector<HTMLElement>('[data-next]');
 	if (zone && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
 		const href = zone.dataset.href!;
-		const stage = zone.querySelector<HTMLElement>('.stage')!;
 		const bar = zone.querySelector<HTMLElement>('[data-next-bar]')!;
 		const pct = zone.querySelector<HTMLElement>('[data-next-pct]')!;
 		const lead = zone.querySelector<HTMLElement>('[data-next-lead]')!;
-		// Durée de la pousse, du clic au hero suivant
-		const GROW = 1500;
-		const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
+		// Part du défilement où rien ne pousse encore : l'écran de fin se lit
+		const HOLD = 0.2;
 
-		let near = false;
-		let running = false;
-		let k = -1;
-		// Début de la pousse (0 : on n'entre pas) ; `gone` : la page suivante est demandée
-		let t0 = 0;
-		let gone = false;
-
-		const set = (p: number) => {
-			zone.style.setProperty('--p', p.toFixed(4));
-			bar.style.width = `${(p * 100).toFixed(1)}%`;
-			pct.textContent = `${String(Math.round(p * 100)).padStart(3, '0')}%`;
-			// Une fois effacé, le texte ne doit plus capter ni clic ni tabulation
-			lead.inert = p > 0.1;
-		};
-
-		const frame = (now: number) => {
-			const r = zone.getBoundingClientRect();
-			// Le passage du bloc : 0 quand il entre par le bas, 1 quand il est sorti par le haut
-			const raw = Math.min(1, Math.max(0, (innerHeight - r.top) / (r.height + innerHeight)));
-			k = k < 0 ? raw : k + (raw - k) * 0.15;
-			zone.style.setProperty('--k', k.toFixed(4));
-			if (t0) {
-				const g = Math.min(1, (now - t0) / GROW);
-				set(ease(g));
-				// On attend que la scène soit posée plein cadre pour que le passage soit invisible
-				if (g >= 1 && !gone && Math.abs(stage.getBoundingClientRect().top) < 1.5) {
-					gone = true;
-					// Passage en continu : la page suivante s'ouvre sans rejouer son entrée
-					sessionStorage.setItem('hyphe:continue', String(Date.now()));
-					location.href = href;
-				}
-			}
-			if (near || (t0 && !gone)) requestAnimationFrame(frame);
-			else running = false;
-		};
-		const wake = () => {
-			if (running) return;
-			running = true;
-			requestAnimationFrame(frame);
-		};
-
-		// La boucle ne tourne qu'à l'approche du bloc ; la page suivante est préchargée alors
-		let fetched = false;
+		// La page suivante est préchargée dès que la zone approche
 		new IntersectionObserver(
-			([e]) => {
-				near = e.isIntersecting;
-				if (!near) return;
-				wake();
-				if (fetched) return;
-				fetched = true;
+			([e], io) => {
+				if (!e.isIntersecting) return;
 				const link = document.createElement('link');
 				link.rel = 'prefetch';
 				link.href = href;
 				document.head.append(link);
+				io.disconnect();
 			},
-			{ rootMargin: '60% 0px' },
+			{ rootMargin: '100% 0px' },
 		).observe(zone);
 
-		// Entrer : la page se cale sur la scène, le défilement se fige, la planche pousse
-		const enter = (e: MouseEvent) => {
-			// Nouvel onglet, nouvelle fenêtre : le lien fait son travail de lien
-			if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-			e.preventDefault();
-			// Pas de mosaïque ici : c'est la planche qui fait la transition
-			e.stopPropagation();
-			if (t0) return;
-			const top = zone.getBoundingClientRect().top + scrollY;
-			const end = top + zone.offsetHeight - innerHeight;
-			pinScrollAt(Math.round(Math.min(Math.max(scrollY, top), end)));
-			t0 = performance.now();
-			wake();
+		// Passage en continu : la page suivante s'ouvre sans rejouer son entrée
+		const cross = () => {
+			sessionStorage.setItem('hyphe:continue', String(Date.now()));
+			location.href = href;
 		};
-		zone.querySelectorAll<HTMLElement>('[data-next-enter]').forEach((a) => a.addEventListener('click', enter));
+		// Le bouton et la planche font défiler jusqu'au bout plutôt que de couper la pousse
+		zone.querySelectorAll<HTMLElement>('[data-next-enter]').forEach((a) =>
+			a.addEventListener('click', (e) => {
+				// Nouvel onglet, nouvelle fenêtre : le lien fait son travail de lien
+				if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+				e.preventDefault();
+				// Pas de mosaïque ici : c'est la planche qui fait la transition
+				e.stopPropagation();
+				const top = zone.getBoundingClientRect().top + scrollY;
+				scrollToY(top + zone.offsetHeight - innerHeight);
+			}),
+		);
 
-		// Retour arrière depuis le cache : la planche a repris sa place dans son cadre
+		// On n'enchaîne que si le visiteur est vraiment descendu jusque-là
+		// (pas au retour arrière, qui ramène directement en bas de page)
+		let armed = false;
+		let gone = false;
+		let shown = 0;
+		const tick = () => {
+			const r = zone.getBoundingClientRect();
+			const raw = Math.min(1, Math.max(0, -r.top / (r.height - innerHeight)));
+			const p = Math.max(0, (raw - HOLD) / (1 - HOLD));
+			if (raw < 0.85) armed = true;
+			shown += (p - shown) * 0.2;
+			if (Math.abs(p - shown) < 0.001) shown = p;
+			zone.style.setProperty('--p', shown.toFixed(4));
+			bar.style.width = `${(shown * 100).toFixed(1)}%`;
+			pct.textContent = `${String(Math.round(shown * 100)).padStart(3, '0')}%`;
+			// Une fois effacé, le texte ne doit plus capter ni clic ni tabulation
+			lead.inert = shown > 0.1;
+			// On attend que la scène soit posée (shown = 1) pour que le passage soit invisible
+			if (armed && !gone && raw >= 0.995 && shown >= 0.999) {
+				gone = true;
+				cross();
+			}
+			requestAnimationFrame(tick);
+		};
+		requestAnimationFrame(tick);
 		addEventListener('pageshow', (e) => {
-			if (!e.persisted) return;
-			t0 = 0;
-			gone = false;
-			set(0);
-			releaseScroll();
-			if (near) wake();
+			if (e.persisted) {
+				armed = false;
+				gone = false;
+			}
 		});
 	}
 </script>
