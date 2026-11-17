@@ -129,7 +129,12 @@ npx astro build             # build statique dans dist/
   la fiche, en couverture sur la page des projets (recadrée en 4:5, à la place
   de la première planche haute : Ryan trouvait que les couvertures finissaient
   par se ressembler), et en **deuxième planche** de chaque fiche (`platesOf`
-  l'insère, légende `media.heroCaption`) : ne pas la remettre dans `gallery`. Les cinq projets fictifs du début ont été
+  l'insère, légende `media.heroCaption`) : ne pas la remettre dans `gallery`.
+  Quand le projet a **son film** (`media.reel` : teaser ou showreel monté par
+  Ryan), c'est lui qui prend la deuxième planche à la place de la vidéo du
+  hero. Loum a le sien (`teaser.mp4`, réencodé depuis
+  `Documents/loumv2/video/out/loum-teaser-hd-16x9.mp4` en 1600 × 900, sans
+  son, crf 27) ; Ryan fera ceux de Farmlize et de Road to Glory plus tard. Les cinq projets fictifs du début ont été
   retirés en novembre 2026, à la demande de Ryan : ne pas en réinventer. La
   galerie de l'accueil montre les quatre premiers ; tant qu'il y en a moins,
   la fin de galerie dit « That was all of them, for now ».

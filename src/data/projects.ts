@@ -48,6 +48,9 @@ export interface Project {
 		heroPoster?: string;
 		/** Légende de cette vidéo quand elle revient en deuxième planche */
 		heroCaption?: string;
+		/** Le film du projet (teaser, showreel), quand il existe : 16:9, muet à l'écran. Il prend la
+		 *  deuxième planche à la place de la vidéo du hero. */
+		reel?: { src: string; poster: string; caption: string };
 		gallery: Plate[];
 	};
 }
@@ -65,14 +68,17 @@ export interface Plate {
 /** Image de couverture : le vrai média ou le visuel généré */
 export const coverOf = (p: Project) => p.media?.cover ?? `/visuals/${p.slug}.svg`;
 
-/** Les planches d'un projet, dans l'ordre de la page. La grande vidéo du projet est toujours la
- *  deuxième : une image d'abord, puis le site en mouvement. */
+/** Les planches d'un projet, dans l'ordre de la page. La deuxième est toujours le projet en
+ *  mouvement : son film s'il en a un (`reel`), sinon la vidéo du hero. */
 export function platesOf(p: Project): Plate[] {
 	if (p.media) {
-		const { gallery, heroVideo, heroPoster, heroCaption } = p.media;
-		if (!heroVideo) return gallery;
-		const reel: Plate = { src: heroVideo, ratio: '16/9', caption: heroCaption ?? 'motion, the website, live', kind: 'video', poster: heroPoster };
-		return [...gallery.slice(0, 1), reel, ...gallery.slice(1)];
+		const { gallery, heroVideo, heroPoster, heroCaption, reel } = p.media;
+		const second: Plate | null = reel
+			? { src: reel.src, ratio: '16/9', caption: reel.caption, kind: 'video', poster: reel.poster }
+			: heroVideo
+				? { src: heroVideo, ratio: '16/9', caption: heroCaption ?? 'motion, the website, live', kind: 'video', poster: heroPoster }
+				: null;
+		return second ? [...gallery.slice(0, 1), second, ...gallery.slice(1)] : gallery;
 	}
 	const v = (n: number) => `/visuals/${p.slug}/${n}.svg`;
 	return [
@@ -117,7 +123,8 @@ export const projects: Project[] = [
 			cover: '/work/loum/home.webp',
 			heroVideo: '/work/loum/grid.mp4',
 			heroPoster: '/work/loum/grid-poster.webp',
-			heroCaption: 'motion, dragging the grid',
+			// Le teaser de lancement du site (monté par Ryan dans loumv2/video, réencodé ici en 1600 × 900, sans son)
+			reel: { src: '/work/loum/teaser.mp4', poster: '/work/loum/teaser-poster.webp', caption: 'film, the launch teaser' },
 			gallery: [
 				{ src: '/work/loum/home-drag.webp', ratio: '16/9', caption: 'index, the contact sheet' },
 				{ src: '/work/loum/m-home.webp', ratio: '4/5', caption: 'mobile, index' },
