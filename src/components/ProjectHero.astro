@@ -70,7 +70,7 @@ const total = count;
 			</p>
 			{
 				next ? (
-					<p class="titre text-[clamp(4rem,13vw,13rem)]" aria-hidden="true">
+					<p class="titre pb-[0.13em] text-[clamp(4rem,13vw,13rem)]" aria-hidden="true">
 						{words.map((w, k) => (
 							<>
 								{k > 0 && ' '}
@@ -81,10 +81,26 @@ const total = count;
 						))}
 					</p>
 				) : (
-					<h1 id="project-title" class="titre text-[clamp(4rem,13vw,13rem)]" data-split style="--split-delay: 700ms">{p.name}</h1>
+					<h1 id="project-title" class="titre pb-[0.13em] text-[clamp(4rem,13vw,13rem)]" data-split style="--split-delay: 700ms">{p.name}</h1>
 				)
 			}
 			<p class="late meta mt-5 max-w-xl text-bone/70">{p.summary}</p>
+			{
+				/* Le site lui-même, dans un nouvel onglet (en mode next : là pour l'image, sans rien capter) */
+				p.url && (
+					<p class="late mt-5" data-site-link aria-hidden={next ? 'true' : undefined}>
+						<a
+							href={`https://${p.url}`}
+							target="_blank"
+							rel="noopener"
+							tabindex={next ? -1 : undefined}
+							class:list={['meta inline-flex items-center gap-3 border border-bone/30 bg-void/50 px-4 py-3 text-bone backdrop-blur-sm transition hover:border-acid hover:text-acid', next && 'pointer-events-none']}
+						>
+							See website <span class="text-acid" aria-hidden="true">↗</span>
+						</a>
+					</p>
+				)
+			}
 		</div>
 		<Herbarium project={p} class="late w-full shrink-0 md:w-[340px]" />
 	</div>

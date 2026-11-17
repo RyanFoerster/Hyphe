@@ -26,7 +26,7 @@
 		"jpeg": 88,
 		"steps": [
 			{
-				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div{display:none!important}</style>')",
+				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div{display:none!important}[data-site-link]{visibility:hidden!important}</style>')",
 				"wait": 600
 			}
 		]
@@ -40,7 +40,7 @@
 		"jpeg": 88,
 		"steps": [
 			{
-				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div{display:none!important}</style>')",
+				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div{display:none!important}[data-site-link]{visibility:hidden!important}</style>')",
 				"wait": 600
 			}
 		]
@@ -54,7 +54,7 @@
 		"jpeg": 88,
 		"steps": [
 			{
-				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div{display:none!important}</style>')",
+				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div{display:none!important}[data-site-link]{visibility:hidden!important}</style>')",
 				"wait": 600
 			}
 		]

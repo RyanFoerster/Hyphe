@@ -79,7 +79,7 @@ const parts = (text: string, word: string) => {
 										<p class="meta text-mineral">
 											<span data-scramble>{pad(i + 1)} / {pad(selected.length)} — {p.category}</span>
 										</p>
-										<h3 id={`chapter-${p.slug}`} class="titre mt-4 text-[clamp(2.9rem,5vw,5rem)]" data-split>
+										<h3 id={`chapter-${p.slug}`} class="titre mt-4 pb-[0.1em] text-[clamp(2.9rem,5vw,5rem)]" data-split>
 											{p.name}
 										</h3>
 										<p class="meta mt-2 text-bone/60">{p.tagline} — {p.locality}</p>
@@ -166,7 +166,7 @@ const parts = (text: string, word: string) => {
 							<li class="ex-in" style={`--t: ${0.26 + i * 0.05}`}>
 								<a href={`/work/${p.slug}`} data-portal class="flex items-baseline gap-4 border-t border-dashed border-bone/15 py-3">
 									<span class="meta tabular-nums text-acid">{pad(selected.length + i + 1)}</span>
-									<span class="titre min-w-0 flex-1 truncate pb-1 text-[1.9rem]">{p.name}</span>
+									<span class="titre min-w-0 flex-1 truncate pb-[0.24em] text-[1.9rem]">{p.name}</span>
 									<span class="meta tabular-nums text-mineral">{p.year}</span>
 								</a>
 							</li>

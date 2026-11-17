@@ -42,9 +42,12 @@ export interface Project {
 	media?: {
 		/** Image 16:9 des cartes, spécimens et partages */
 		cover: string;
-		/** Vidéo 16:9 du hero, avec son image d'attente */
+		/** Vidéo 16:9 du hero, avec son image d'attente : la grande vidéo du projet. Elle sert aussi de
+		 *  couverture sur la page des projets et revient en deuxième planche de la fiche (platesOf). */
 		heroVideo?: string;
 		heroPoster?: string;
+		/** Légende de cette vidéo quand elle revient en deuxième planche */
+		heroCaption?: string;
 		gallery: Plate[];
 	};
 }
@@ -62,9 +65,15 @@ export interface Plate {
 /** Image de couverture : le vrai média ou le visuel généré */
 export const coverOf = (p: Project) => p.media?.cover ?? `/visuals/${p.slug}.svg`;
 
-/** Les planches d'un projet, dans l'ordre de la page */
+/** Les planches d'un projet, dans l'ordre de la page. La grande vidéo du projet est toujours la
+ *  deuxième : une image d'abord, puis le site en mouvement. */
 export function platesOf(p: Project): Plate[] {
-	if (p.media) return p.media.gallery;
+	if (p.media) {
+		const { gallery, heroVideo, heroPoster, heroCaption } = p.media;
+		if (!heroVideo) return gallery;
+		const reel: Plate = { src: heroVideo, ratio: '16/9', caption: heroCaption ?? 'motion, the website, live', kind: 'video', poster: heroPoster };
+		return [...gallery.slice(0, 1), reel, ...gallery.slice(1)];
+	}
 	const v = (n: number) => `/visuals/${p.slug}/${n}.svg`;
 	return [
 		{ src: v(1), ratio: '16/9', caption: 'key visual' },
@@ -108,6 +117,7 @@ export const projects: Project[] = [
 			cover: '/work/loum/home.webp',
 			heroVideo: '/work/loum/grid.mp4',
 			heroPoster: '/work/loum/grid-poster.webp',
+			heroCaption: 'motion, dragging the grid',
 			gallery: [
 				{ src: '/work/loum/home-drag.webp', ratio: '16/9', caption: 'index, the contact sheet' },
 				{ src: '/work/loum/m-home.webp', ratio: '4/5', caption: 'mobile, index' },
@@ -116,7 +126,6 @@ export const projects: Project[] = [
 				{ src: '/work/loum/m-project.webp', ratio: '4/5', caption: 'mobile, project' },
 				{ src: '/work/loum/m-scroll.webp', ratio: '4/5', caption: 'mobile, figures' },
 				{ src: '/work/loum/m-lire.webp', ratio: '4/5', caption: 'mobile, project file' },
-				{ src: '/work/loum/grid.mp4', ratio: '16/9', caption: 'motion, dragging the grid', kind: 'video', poster: '/work/loum/grid-poster.webp' },
 				{ src: '/work/loum/project-scroll.webp', ratio: '16/9', caption: 'project page, Lire le rap' },
 				{ src: '/work/loum/m-about.webp', ratio: '4/5', caption: 'mobile, studio file' },
 				{ src: '/work/loum/m-info.webp', ratio: '4/5', caption: 'mobile, project sheet' },
@@ -150,11 +159,12 @@ export const projects: Project[] = [
 			{ value: '57', label: 'Belgian communes in the search' },
 		],
 		visual: { kind: 'bloom', seed: 11, bg: '#fcfaf2', line: '#352200', accent: '#f07a2a' },
-		url: 'farmlize.ryanfoerster.dev',
+		url: 'farmlize.studiohyphe.com',
 		media: {
 			cover: '/work/farmlize/home.webp',
 			heroVideo: '/work/farmlize/home.mp4',
 			heroPoster: '/work/farmlize/home-poster.webp',
+			heroCaption: 'motion, the home page comes alive',
 			// Sept planches fixes, composées à partir du site en ligne (pages, composants
 			// isolés, illustrations) : sources et pièces dans cases/farmlize, hors git
 			gallery: [
@@ -198,7 +208,7 @@ export const projects: Project[] = [
 			{ value: '15', label: 'sticker shapes, drawn in code' },
 		],
 		visual: { kind: 'strata', seed: 18, bg: '#f5f3ee', line: '#080808', accent: '#e52b32' },
-		url: 'belgium.ryanfoerster.dev',
+		url: 'roadtoglory.studiohyphe.com',
 		// Les photos visibles dans les images et les vidéos de la fiche (27, relevées vue par
 		// vue : cases/belgium/credits.json) : quatre photographes et un ministère
 		credits:
@@ -207,6 +217,7 @@ export const projects: Project[] = [
 			cover: '/work/belgium-2018/home.webp',
 			heroVideo: '/work/belgium-2018/home.mp4',
 			heroPoster: '/work/belgium-2018/home-poster.webp',
+			heroCaption: 'motion, the poster opens on chapter one',
 			// Sept planches fixes et trois courtes boucles, composées à partir du site en ligne
 			// (pages, composants isolés, dessins) : sources et pièces dans cases/belgium, hors git
 			gallery: [

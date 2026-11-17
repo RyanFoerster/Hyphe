@@ -115,10 +115,21 @@ npx astro build             # build statique dans dist/
   planche), `os/Window.astro` (fenêtres de la galerie).
 - `src/data/projects.ts` : les projets, **tous réels** : Loum (studioloum.com,
   captures du site uniquement, jamais les projets de Loum), Farmlize
-  (farmlize.ryanfoerster.dev ; source sur le Mac dans
-  `~/Documents/Dev/farmlize`) et Road to Glory (belgium.ryanfoerster.dev,
-  « Belgium 2018 », slug `belgium-2018` ; source sur le PC dans
-  `Documents/EditoBelgique`, lecture seule). Les cinq projets fictifs du début ont été
+  (source sur le Mac dans `~/Documents/Dev/farmlize`) et Road to Glory
+  (« Belgium 2018 », slug `belgium-2018` ; source sur le PC dans
+  `Documents/EditoBelgique`, lecture seule). **Adresses** (`url`), données par
+  Ryan en novembre 2026 : `studioloum.com`, `farmlize.studiohyphe.com` et
+  `roadtoglory.studiohyphe.com`. Les deux sous-domaines du studio n'existaient
+  pas encore ce jour-là (Ryan les crée) ; les captures des fiches ont été faites
+  aux anciennes adresses, `farmlize.ryanfoerster.dev` et
+  `belgium.ryanfoerster.dev`. `url` alimente le bouton « See website » du haut
+  de fiche (`ProjectHero`), la barre de navigateur des planches et `sameAs` dans
+  le JSON-LD.
+  **La grande vidéo du projet** (`media.heroVideo`) sert trois fois : en haut de
+  la fiche, en couverture sur la page des projets (recadrée en 4:5, à la place
+  de la première planche haute : Ryan trouvait que les couvertures finissaient
+  par se ressembler), et en **deuxième planche** de chaque fiche (`platesOf`
+  l'insère, légende `media.heroCaption`) : ne pas la remettre dans `gallery`. Les cinq projets fictifs du début ont été
   retirés en novembre 2026, à la demande de Ryan : ne pas en réinventer. La
   galerie de l'accueil montre les quatre premiers ; tant qu'il y en a moins,
   la fin de galerie dit « That was all of them, for now ».
@@ -199,6 +210,9 @@ npx astro build             # build statique dans dist/
   propre opacité) ou une toile opaque.
 - `scramble()` garde le texte final en cache (`data-scramble-text`) : le
   mettre à jour avant de rappeler `scramble` avec un nouveau texte.
+- Parceh a des jambages longs (y, g, p) et une ligne à 75 % du corps : un nom
+  comme « Road to Glory » déborde sous sa ligne. Sous un masque (`truncate`), il
+  lui faut `pb-[0.24em]` ; avant un texte, `pb-[0.13em]` sur le titre.
 - Les styles scopés Astro l'emportent sur les utilitaires Tailwind
   (`md:hidden` sur un élément qui a un `display` dans `<style>` ne marche pas).
 - Le hero attend `html.is-unveiling` (fin des tuiles du loader) pour germer.
