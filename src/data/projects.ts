@@ -43,13 +43,13 @@ export interface Project {
 		/** Image 16:9 des cartes, spécimens et partages */
 		cover: string;
 		/** Vidéo 16:9 du hero, avec son image d'attente : la grande vidéo du projet. Elle sert aussi de
-		 *  couverture sur la page des projets et revient en deuxième planche de la fiche (platesOf). */
+		 *  couverture sur la page des projets et ouvre les planches de la fiche, juste après le hero (platesOf). */
 		heroVideo?: string;
 		heroPoster?: string;
-		/** Légende de cette vidéo quand elle revient en deuxième planche */
+		/** Légende de cette vidéo quand elle ouvre les planches */
 		heroCaption?: string;
 		/** Le film du projet (teaser, showreel), quand il existe : 16:9, muet à l'écran. Il prend la
-		 *  deuxième planche à la place de la vidéo du hero. */
+		 *  première planche à la place de la vidéo du hero. */
 		reel?: { src: string; poster: string; caption: string };
 		gallery: Plate[];
 	};
@@ -68,17 +68,17 @@ export interface Plate {
 /** Image de couverture : le vrai média ou le visuel généré */
 export const coverOf = (p: Project) => p.media?.cover ?? `/visuals/${p.slug}.svg`;
 
-/** Les planches d'un projet, dans l'ordre de la page. La deuxième est toujours le projet en
- *  mouvement : son film s'il en a un (`reel`), sinon la vidéo du hero. */
+/** Les planches d'un projet, dans l'ordre de la page. La première, juste après le hero, est
+ *  toujours le projet en mouvement : son film s'il en a un (`reel`), sinon la vidéo du hero. */
 export function platesOf(p: Project): Plate[] {
 	if (p.media) {
 		const { gallery, heroVideo, heroPoster, heroCaption, reel } = p.media;
-		const second: Plate | null = reel
+		const film: Plate | null = reel
 			? { src: reel.src, ratio: '16/9', caption: reel.caption, kind: 'video', poster: reel.poster }
 			: heroVideo
 				? { src: heroVideo, ratio: '16/9', caption: heroCaption ?? 'motion, the website, live', kind: 'video', poster: heroPoster }
 				: null;
-		return second ? [...gallery.slice(0, 1), second, ...gallery.slice(1)] : gallery;
+		return film ? [film, ...gallery] : gallery;
 	}
 	const v = (n: number) => `/visuals/${p.slug}/${n}.svg`;
 	return [

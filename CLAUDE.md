@@ -128,10 +128,12 @@ npx astro build             # build statique dans dist/
   **La grande vidéo du projet** (`media.heroVideo`) sert trois fois : en haut de
   la fiche, en couverture sur la page des projets (recadrée en 4:5, à la place
   de la première planche haute : Ryan trouvait que les couvertures finissaient
-  par se ressembler), et en **deuxième planche** de chaque fiche (`platesOf`
-  l'insère, légende `media.heroCaption`) : ne pas la remettre dans `gallery`.
+  par se ressembler), et en **première planche** de chaque fiche, juste après
+  le hero (`platesOf` l'insère, légende `media.heroCaption`) : ne pas la
+  remettre dans `gallery`. Ryan parle de « la vidéo en deuxième » : le hero est
+  pour lui la première image.
   Quand le projet a **son film** (`media.reel` : teaser ou showreel monté par
-  Ryan), c'est lui qui prend la deuxième planche à la place de la vidéo du
+  Ryan), c'est lui qui prend cette première planche à la place de la vidéo du
   hero. Loum a le sien (`teaser.mp4`, réencodé depuis
   `Documents/loumv2/video/out/loum-teaser-hd-16x9.mp4` en 1600 × 900, sans
   son, crf 27) ; Ryan fera ceux de Farmlize et de Road to Glory plus tard. Les cinq projets fictifs du début ont été
