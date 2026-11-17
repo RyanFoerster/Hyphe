@@ -37,7 +37,7 @@ const total = count;
 				{next ? (
 					<img src={media.poster} alt="" loading="lazy" class="absolute inset-0 size-full object-cover" />
 				) : (
-					<video src={media.video} poster={media.poster} muted loop playsinline autoplay class="absolute inset-0 size-full object-cover" data-motion aria-label={`${p.name} website, live`} />
+					<video src={media.video} poster={media.poster} muted loop playsinline class="absolute inset-0 size-full object-cover" data-motion aria-label={`${p.name} website, live`} />
 				)}
 				<div class="shade absolute inset-0" />
 			</div>

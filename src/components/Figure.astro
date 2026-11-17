@@ -51,7 +51,6 @@ const tiles = Array.from({ length: COLS * ROWS }, (_, i) => {
 					muted
 					loop
 					playsinline
-					autoplay
 					preload="metadata"
 					aria-label={alt}
 					class="absolute inset-0 size-full object-cover"
@@ -77,16 +76,6 @@ const tiles = Array.from({ length: COLS * ROWS }, (_, i) => {
 		<span><span class="text-bone/85">fig. {fig}</span> — {caption}</span>
 	</figcaption>
 </figure>
-
-<script>
-	// Mouvement réduit : les vidéos restent sur leur première image
-	if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-		document.querySelectorAll<HTMLVideoElement>('video[data-motion]').forEach((v) => {
-			v.removeAttribute('autoplay');
-			v.pause();
-		});
-	}
-</script>
 
 <style>
 	.frame {

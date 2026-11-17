@@ -135,14 +135,34 @@ const canonical = abs(pagePath(Astro.url));
 			);
 			document.querySelectorAll('[data-reveal], [data-split], [data-tiles], mark.hl').forEach((el) => io.observe(el));
 
-			// Quand le téléphone refuse la lecture automatique (économie d'énergie,
-			// navigateur d'une appli), les vidéos restent sur leur image d'attente :
-			// le premier toucher les relance, un geste suffit à l'autoriser
-			if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-				const wake = () =>
-					document.querySelectorAll<HTMLVideoElement>('video[data-motion]').forEach((v) => {
-						if (v.paused) v.play().catch(() => {});
-					});
+			// Les vidéos n'ont pas l'attribut « autoplay » : sur un iPhone en économie
+			// d'énergie, Safari pose un bouton de lecture sur toute vidéo qui le porte.
+			// C'est ce script qui les lance, quand elles entrent dans la vue, et les
+			// arrête quand elles en sortent. Si le téléphone refuse (économie d'énergie,
+			// navigateur d'une appli), elles restent sur leur image d'attente et le
+			// premier toucher les relance : un geste suffit à l'autoriser.
+			// Mouvement réduit : rien ne part, elles gardent leur première image.
+			const motion = document.querySelectorAll<HTMLVideoElement>('video[data-motion]');
+			if (motion.length && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+				const inView = new Set<HTMLVideoElement>();
+				const start = (v: HTMLVideoElement) => v.play().catch(() => {});
+				const watch = new IntersectionObserver(
+					(entries) => {
+						for (const entry of entries) {
+							const v = entry.target as HTMLVideoElement;
+							if (entry.isIntersecting) {
+								inView.add(v);
+								start(v);
+							} else {
+								inView.delete(v);
+								v.pause();
+							}
+						}
+					},
+					{ rootMargin: '200px 0px' },
+				);
+				motion.forEach((v) => watch.observe(v));
+				const wake = () => inView.forEach((v) => v.paused && start(v));
 				addEventListener('pointerdown', wake, { passive: true });
 				addEventListener('touchend', wake, { passive: true });
 			}
