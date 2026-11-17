@@ -1,13 +1,13 @@
 ---
-// Fin de fiche projet, en un seul écran : il n'y a pas de pied de page ici.
-// À gauche, l'invitation et l'adresse (le contact du pied de page, en serré) ;
-// à droite, la planche du spécimen suivant en miniature dans son cadre. Si l'on
-// continue de défiler, le contact s'efface et la planche grandit jusqu'à remplir
-// l'écran : c'est le hero de la page suivante, rendu à l'identique (ProjectHero en mode next), et
-// au bout on change de page sans que rien ne bouge.
+// Fin de fiche projet : le projet suivant, dans un bloc à part posé au-dessus du
+// pied de page (le même que sur tout le site). À gauche, son nom et une phrase ;
+// à droite, sa planche en miniature dans son cadre.
+// Défiler ne change pas de page : la planche respire un peu au passage, puis le
+// pied de page arrive. C'est le clic (sur la planche ou sur le bouton) qui fait
+// pousser la planche jusqu'à remplir l'écran : c'est alors le hero de la page
+// suivante, rendu à l'identique (ProjectHero en mode next), et l'on change de
+// page sans que rien ne bouge.
 import ProjectHero from './ProjectHero.astro';
-import ContactBlock from './ContactBlock.astro';
-import Ticker from './Ticker.astro';
 import { projects, type Project } from '../data/projects';
 
 interface Props {
@@ -17,12 +17,15 @@ interface Props {
 const { next } = Astro.props;
 const no = String(projects.indexOf(next) + 1).padStart(2, '0');
 const total = String(projects.length).padStart(2, '0');
+const href = `/work/${next.slug}`;
 ---
 
-<Ticker />
-<section class="next relative" aria-label={`Contact, then the next project: ${next.name}`} data-next data-href={`/work/${next.slug}`}>
+<section class="next relative" aria-labelledby="next-title" data-next data-href={href}>
 	<div class="stage sticky top-0 h-[100svh] overflow-hidden">
 		<ProjectHero project={next} mode="next" />
+
+		<!-- La planche se clique en entier -->
+		<a href={href} class="plate absolute" tabindex="-1" aria-hidden="true" data-next-enter></a>
 
 		<!-- Le cadre de la planche : il suit la pousse, puis s'efface -->
 		<div class="frame pointer-events-none absolute" aria-hidden="true">
@@ -31,21 +34,27 @@ const total = String(projects.length).padStart(2, '0');
 			<i class="bottom-0 left-0 border-b border-l"></i>
 			<i class="bottom-0 right-0 border-b border-r"></i>
 			<p class="cap meta text-mineral">
-				<span><span class="text-bone/85">fig. {no}</span> — next project</span>
-				<span class="text-bone/70">{next.name}</span>
-				<span class="more text-acid">keep scrolling ↓</span>
+				<span><span class="text-bone/85">fig. {no}</span><span class="hidden md:inline"> — project {no} / {total}</span></span>
+				<span class="text-bone/70">{next.category} — {next.year}</span>
 			</p>
 		</div>
 
-		<!-- La fin de la fiche : le contact -->
-		<div class="end absolute inset-x-0 bottom-0 top-[60%] flex flex-col justify-start px-4 sm:px-6 md:inset-y-0 md:w-[48%] md:justify-center md:pt-16" data-next-end>
-			<ContactBlock compact titleId="end-title" />
+		<!-- Ce qui vient ensuite : le nom, une phrase, la porte -->
+		<div class="lead absolute inset-x-0 bottom-0 top-[61%] flex flex-col justify-start px-4 sm:px-6 md:inset-y-0 md:w-[46%] md:justify-center md:pt-16" data-next-lead>
+			<p class="meta mb-4" data-reveal><span class="kicker" data-scramble>[ Next project ]</span></p>
+			<h2 id="next-title" class="titre text-balance text-[clamp(3rem,7vw,8rem)]" data-split>{next.name}</h2>
+			<p class="mt-4 max-w-md text-[15px] leading-relaxed text-bone/80 md:mt-6 md:text-lg" data-reveal>{next.summary}</p>
+			<p class="mt-6 md:mt-9" data-reveal style="--reveal-delay: 120ms">
+				<a href={href} class="enter meta inline-block border border-bone/25 px-4 py-3 text-bone transition hover:border-acid hover:text-acid" data-next-enter>
+					Enter {next.name} →
+				</a>
+			</p>
 		</div>
 
-		<!-- L'interface de la pousse : elle s'efface avant la fin -->
+		<!-- L'interface de la pousse : elle n'existe que le temps d'entrer -->
 		<div class="ui pointer-events-none absolute inset-x-4 top-24 sm:inset-x-6" aria-hidden="true">
 			<p class="meta flex justify-between text-mineral">
-				<span>Keep scrolling — project {no} / {total}</span>
+				<span>Entering — project {no} / {total}</span>
 				<span class="hidden text-bone/70 sm:inline">{next.category} — {next.year}</span>
 			</p>
 			<p class="meta mt-3 flex items-center gap-4 text-bone/70">
@@ -57,53 +66,58 @@ const total = String(projects.length).padStart(2, '0');
 				<path d="M220 12 l 10 -10 M430 13 l -8 9 M640 11 l 9 -9 M860 12 l -7 9" pathLength="1" class="twig" />
 			</svg>
 		</div>
-		<a href={`/work/${next.slug}`} class="enter meta absolute bottom-6 right-4 border border-bone/20 bg-void/60 px-3 py-2 text-bone backdrop-blur transition hover:border-acid hover:text-acid sm:right-6" data-next-enter>
-			Enter {next.name} →
-		</a>
 	</div>
 </section>
 
 <style>
-	/* --p : la pousse, de 0 (contact et planche dans son cadre) à 1 (le hero suivant).
-	   Le premier cinquième du défilement ne fait rien pousser : on a le temps de lire.
+	/* --p : la pousse, de 0 (la planche dans son cadre) à 1 (le hero suivant). Elle
+	   ne se joue qu'au clic, dans le temps. --k : le passage du bloc à l'écran
+	   (0 à 1, au défilement), qui fait seulement respirer la planche (--ka).
 	   La planche : le hero entier réduit à --f, agrandi depuis le point (--ox, --oy) ;
 	   elle garde donc les proportions de l'écran. Étroit : en haut à droite, le
-	   contact dessous (le projet suivant ne passe pas après ce qui ressemble à un
-	   pied de page). Large : à droite du contact, centrée en hauteur. */
+	   texte dessous. Large : à droite du texte, centrée en hauteur.
+	   Le bloc reste épinglé un demi-écran : on a le temps de le lire, et le clic
+	   trouve toujours la scène posée plein cadre. */
 	.next {
-		height: 300svh;
+		height: 150svh;
 		--p: 0;
-		--f: 0.36;
+		--k: 0;
+		--f0: 0.36;
+		--ka: 0.05;
 		--ox: 0.906;
 		--oy: 0.34;
+		--f: calc(var(--f0) * (1 + var(--ka) * var(--k)));
 		--s: calc(var(--f) + (1 - var(--f)) * var(--p));
 	}
 	/* Téléphone court : planche plus petite et un peu plus bas, hors de la barre */
 	@media (max-height: 640px) {
 		.next {
-			--f: 0.32;
+			--f0: 0.32;
 			--oy: 0.38;
 		}
 	}
 	@media (min-width: 768px) {
 		.next {
-			--f: 0.44;
+			--f0: 0.44;
+			--ka: 0.14;
 			--ox: 0.9286;
 			--oy: 0.5;
 		}
 	}
-	.ui,
-	.enter {
-		opacity: calc(1 - clamp(0, (var(--p) - 0.82) * 7, 1));
+	.ui {
+		opacity: calc(clamp(0, var(--p) * 14, 1) * (1 - clamp(0, (var(--p) - 0.82) * 7, 1)));
 	}
-	/* Le contact s'efface dès que la planche se met à pousser */
-	.end {
+	/* Le texte s'efface dès que la planche se met à pousser */
+	.lead {
 		opacity: calc(1 - clamp(0, var(--p) * 9, 1));
 		translate: 0 calc(var(--p) * -3rem);
 	}
+	.plate,
 	.frame {
 		inset: calc(var(--oy) * (1 - var(--s)) * 100%) calc((1 - var(--ox)) * (1 - var(--s)) * 100%) calc((1 - var(--oy)) * (1 - var(--s)) * 100%)
 			calc(var(--ox) * (1 - var(--s)) * 100%);
+	}
+	.frame {
 		opacity: calc(1 - clamp(0, (var(--p) - 0.55) * 4, 1));
 	}
 	.frame i {
@@ -114,6 +128,16 @@ const total = String(projects.length).padStart(2, '0');
 		border-color: var(--color-acid);
 		border-style: solid;
 		border-width: 0;
+		transition:
+			width 0.45s var(--ease-organic),
+			height 0.45s var(--ease-organic);
+	}
+	/* La planche répond au survol : ses coins de visée s'allongent */
+	.plate:hover + .frame i,
+	.next:has(.enter:hover) .frame i,
+	.next:has(.enter:focus-visible) .frame i {
+		width: 30px;
+		height: 30px;
 	}
 	.frame i.border-l {
 		border-left-width: 1px;
@@ -127,8 +151,7 @@ const total = String(projects.length).padStart(2, '0');
 	.frame i.border-b {
 		border-bottom-width: 1px;
 	}
-	/* La légende : à gauche de la planche sur mobile (en haut, le bouton d'entrée
-	   en bas), au-dessus sur grand écran */
+	/* La légende : à gauche de la planche sur mobile, au-dessus sur grand écran */
 	.cap {
 		position: absolute;
 		right: calc(100% + 1rem);
@@ -147,18 +170,6 @@ const total = String(projects.length).padStart(2, '0');
 			justify-content: space-between;
 			gap: 1rem;
 		}
-		.cap .more {
-			display: none;
-		}
-	}
-	/* Mobile : le bouton d'entrée se range à gauche de la planche, au pied, et
-	   s'efface avec la légende dès que ça pousse (en bas à droite il passerait sur
-	   le contact) */
-	@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
-		.enter {
-			inset: calc((var(--oy) * (1 - var(--f)) + var(--f)) * 100% - 2.3rem) auto auto 1rem;
-			opacity: calc(1 - clamp(0, var(--p) * 9, 1));
-		}
 	}
 	/* Le fil se découvre de gauche à droite avec la pousse (un tracé en pointillés
 	   étiré par le viewBox ne se referme pas juste) */
@@ -176,7 +187,8 @@ const total = String(projects.length).padStart(2, '0');
 		stroke: rgb(230 228 220 / 0.6);
 	}
 	@media (prefers-reduced-motion: reduce) {
-		/* Sans mouvement : le contact, puis le hero suivant, l'un sous l'autre */
+		/* Sans mouvement : le texte, puis le hero suivant, l'un sous l'autre ; le
+		   lien mène à la page comme n'importe quel lien */
 		.next {
 			height: auto;
 			--p: 1;
@@ -188,7 +200,7 @@ const total = String(projects.length).padStart(2, '0');
 			flex-direction: column;
 			overflow: visible;
 		}
-		.end {
+		.lead {
 			position: relative;
 			inset: auto;
 			order: -1;
@@ -198,6 +210,10 @@ const total = String(projects.length).padStart(2, '0');
 			opacity: 1;
 			translate: none;
 		}
+		.plate {
+			inset: auto 0 0;
+			height: max(100svh, 600px);
+		}
 		.frame,
 		.ui {
 			display: none;
@@ -206,73 +222,101 @@ const total = String(projects.length).padStart(2, '0');
 </style>
 
 <script>
-	import { scrollToY } from '../scripts/scroll';
+	import { pinScrollAt, releaseScroll } from '../scripts/scroll';
 
 	const zone = document.querySelector<HTMLElement>('[data-next]');
 	if (zone && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
 		const href = zone.dataset.href!;
+		const stage = zone.querySelector<HTMLElement>('.stage')!;
 		const bar = zone.querySelector<HTMLElement>('[data-next-bar]')!;
 		const pct = zone.querySelector<HTMLElement>('[data-next-pct]')!;
-		const end = zone.querySelector<HTMLElement>('[data-next-end]')!;
-		// Part du défilement où rien ne pousse encore : l'écran de fin se lit
-		const HOLD = 0.2;
+		const lead = zone.querySelector<HTMLElement>('[data-next-lead]')!;
+		// Durée de la pousse, du clic au hero suivant
+		const GROW = 1500;
+		const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
 
-		// La page suivante est préchargée dès que la zone approche
+		let near = false;
+		let running = false;
+		let k = -1;
+		// Début de la pousse (0 : on n'entre pas) ; `gone` : la page suivante est demandée
+		let t0 = 0;
+		let gone = false;
+
+		const set = (p: number) => {
+			zone.style.setProperty('--p', p.toFixed(4));
+			bar.style.width = `${(p * 100).toFixed(1)}%`;
+			pct.textContent = `${String(Math.round(p * 100)).padStart(3, '0')}%`;
+			// Une fois effacé, le texte ne doit plus capter ni clic ni tabulation
+			lead.inert = p > 0.1;
+		};
+
+		const frame = (now: number) => {
+			const r = zone.getBoundingClientRect();
+			// Le passage du bloc : 0 quand il entre par le bas, 1 quand il est sorti par le haut
+			const raw = Math.min(1, Math.max(0, (innerHeight - r.top) / (r.height + innerHeight)));
+			k = k < 0 ? raw : k + (raw - k) * 0.15;
+			zone.style.setProperty('--k', k.toFixed(4));
+			if (t0) {
+				const g = Math.min(1, (now - t0) / GROW);
+				set(ease(g));
+				// On attend que la scène soit posée plein cadre pour que le passage soit invisible
+				if (g >= 1 && !gone && Math.abs(stage.getBoundingClientRect().top) < 1.5) {
+					gone = true;
+					// Passage en continu : la page suivante s'ouvre sans rejouer son entrée
+					sessionStorage.setItem('hyphe:continue', String(Date.now()));
+					location.href = href;
+				}
+			}
+			if (near || (t0 && !gone)) requestAnimationFrame(frame);
+			else running = false;
+		};
+		const wake = () => {
+			if (running) return;
+			running = true;
+			requestAnimationFrame(frame);
+		};
+
+		// La boucle ne tourne qu'à l'approche du bloc ; la page suivante est préchargée alors
+		let fetched = false;
 		new IntersectionObserver(
-			([e], io) => {
-				if (!e.isIntersecting) return;
+			([e]) => {
+				near = e.isIntersecting;
+				if (!near) return;
+				wake();
+				if (fetched) return;
+				fetched = true;
 				const link = document.createElement('link');
 				link.rel = 'prefetch';
 				link.href = href;
 				document.head.append(link);
-				io.disconnect();
 			},
-			{ rootMargin: '100% 0px' },
+			{ rootMargin: '60% 0px' },
 		).observe(zone);
 
-		// Passage en continu : la page suivante s'ouvre sans rejouer son entrée
-		const cross = () => {
-			sessionStorage.setItem('hyphe:continue', String(Date.now()));
-			location.href = href;
-		};
-		// Le bouton fait défiler jusqu'au bout plutôt que de couper la pousse
-		zone.querySelector('[data-next-enter]')?.addEventListener('click', (e) => {
+		// Entrer : la page se cale sur la scène, le défilement se fige, la planche pousse
+		const enter = (e: MouseEvent) => {
+			// Nouvel onglet, nouvelle fenêtre : le lien fait son travail de lien
+			if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 			e.preventDefault();
+			// Pas de mosaïque ici : c'est la planche qui fait la transition
 			e.stopPropagation();
+			if (t0) return;
 			const top = zone.getBoundingClientRect().top + scrollY;
-			scrollToY(top + zone.offsetHeight - innerHeight);
-		});
-
-		// On n'enchaîne que si le visiteur est vraiment descendu jusque-là
-		// (pas au retour arrière, qui ramène directement en bas de page)
-		let armed = false;
-		let gone = false;
-		let shown = 0;
-		const tick = () => {
-			const r = zone.getBoundingClientRect();
-			const raw = Math.min(1, Math.max(0, -r.top / (r.height - innerHeight)));
-			const p = Math.max(0, (raw - HOLD) / (1 - HOLD));
-			if (raw < 0.85) armed = true;
-			shown += (p - shown) * 0.2;
-			if (Math.abs(p - shown) < 0.001) shown = p;
-			zone.style.setProperty('--p', shown.toFixed(4));
-			bar.style.width = `${(shown * 100).toFixed(1)}%`;
-			pct.textContent = `${String(Math.round(shown * 100)).padStart(3, '0')}%`;
-			// Une fois effacé, le contact ne doit plus capter ni clic ni tabulation
-			end.inert = shown > 0.1;
-			// On attend que la scène soit posée (shown = 1) pour que le passage soit invisible
-			if (armed && !gone && raw >= 0.995 && shown >= 0.999) {
-				gone = true;
-				cross();
-			}
-			requestAnimationFrame(tick);
+			const end = top + zone.offsetHeight - innerHeight;
+			pinScrollAt(Math.round(Math.min(Math.max(scrollY, top), end)));
+			t0 = performance.now();
+			wake();
 		};
-		requestAnimationFrame(tick);
+		zone.querySelectorAll<HTMLElement>('[data-next-enter]').forEach((a) => a.addEventListener('click', enter));
+
+		// Retour arrière depuis le cache : la planche a repris sa place dans son cadre
 		addEventListener('pageshow', (e) => {
-			if (e.persisted) {
-				armed = false;
-				gone = false;
-			}
+			if (!e.persisted) return;
+			t0 = 0;
+			gone = false;
+			set(0);
+			releaseScroll();
+			if (near) wake();
 		});
 	}
 </script>

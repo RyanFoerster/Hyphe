@@ -4,6 +4,7 @@ import Layout from '../../layouts/Layout.astro';
 import Figure from '../../components/Figure.astro';
 import ProjectHero from '../../components/ProjectHero.astro';
 import NextSpecimen from '../../components/NextSpecimen.astro';
+import Footer from '../../components/Footer.astro';
 import { platesOf, projects, type Plate, type Project } from '../../data/projects';
 import { projectDescription, projectSchema, projectTitle, shareAltOf, shareImageOf } from '../../lib/seo';
 
@@ -206,8 +207,9 @@ const palette = [
 		}
 	</section>
 
-	<!-- Pas de pied de page ici : la fiche se termine sur le contact et le spécimen suivant -->
+	<!-- Le projet suivant, dans son bloc, puis le pied de page de tout le site -->
 	<NextSpecimen next={next} />
+	<Footer />
 </Layout>
 
 <style>
