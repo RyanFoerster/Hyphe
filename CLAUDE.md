@@ -136,9 +136,10 @@ npx astro build             # build statique dans dist/
   Ryan), c'est lui qui prend cette première planche à la place de la vidéo du
   hero. Loum a le sien (`teaser.mp4`, réencodé depuis
   `Documents/loumv2/video/out/loum-teaser-hd-16x9.mp4` en 1600 × 900, sans
-  son, crf 27). Farmlize aussi (`teaser.mp4`, depuis
-  `Documents/Farmlize/teaser/out/farmlize-case-16x9.mp4`, ramené à 30 i/s,
-  crf 30 : son grain pèse lourd). Celui de Road to Glory reste à faire. Les cinq projets fictifs du début ont été
+  son, crf 27). Farmlize aussi (`teaser-hd.mp4`, depuis
+  `Documents/Farmlize/teaser/out/farmlize-case-16x9-hd.mp4`, ramené à 30 i/s,
+  crf 27 ; un film remplacé change de nom de fichier, les médias restent un
+  jour en cache). Celui de Road to Glory reste à faire. Les cinq projets fictifs du début ont été
   retirés en novembre 2026, à la demande de Ryan : ne pas en réinventer. La
   galerie de l'accueil montre les quatre premiers ; tant qu'il y en a moins,
   la fin de galerie dit « That was all of them, for now ».

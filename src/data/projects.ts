@@ -173,7 +173,7 @@ export const projects: Project[] = [
 			heroPoster: '/work/farmlize/home-poster.webp',
 			heroCaption: 'motion, the home page comes alive',
 			// Le film du projet (monté par Ryan dans Farmlize/teaser, réencodé ici en 1600 × 900, sans son)
-			reel: { src: '/work/farmlize/teaser.mp4', poster: '/work/farmlize/teaser-poster.webp', caption: 'film, the project in thirty seconds' },
+			reel: { src: '/work/farmlize/teaser-hd.mp4', poster: '/work/farmlize/teaser-poster.webp', caption: 'film, the project in thirty seconds' },
 			// Sept planches fixes, composées à partir du site en ligne (pages, composants
 			// isolés, illustrations) : sources et pièces dans cases/farmlize, hors git
 			gallery: [
