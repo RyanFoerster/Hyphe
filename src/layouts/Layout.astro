@@ -135,6 +135,18 @@ const canonical = abs(pagePath(Astro.url));
 			);
 			document.querySelectorAll('[data-reveal], [data-split], [data-tiles], mark.hl').forEach((el) => io.observe(el));
 
+			// Quand le téléphone refuse la lecture automatique (économie d'énergie,
+			// navigateur d'une appli), les vidéos restent sur leur image d'attente :
+			// le premier toucher les relance, un geste suffit à l'autoriser
+			if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+				const wake = () =>
+					document.querySelectorAll<HTMLVideoElement>('video[data-motion]').forEach((v) => {
+						if (v.paused) v.play().catch(() => {});
+					});
+				addEventListener('pointerdown', wake, { passive: true });
+				addEventListener('touchend', wake, { passive: true });
+			}
+
 			// Signature du studio, pour qui regarde sous les feuilles (la console)
 			const mono = 'font: 12px/1.35 ui-monospace, Consolas, monospace;';
 			console.log(

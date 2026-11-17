@@ -143,6 +143,18 @@
   }
 }
 
+/* iPhone en économie d'énergie : la lecture automatique est refusée et Safari pose
+   un gros bouton de lecture sur chaque vidéo. Aucune vidéo du site n'a de
+   commandes : on les retire toutes, l'image d'attente reste en place, et la
+   vidéo part au premier toucher (voir Layout.astro). */
+video::-webkit-media-controls,
+video::-webkit-media-controls-panel,
+video::-webkit-media-controls-play-button,
+video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
+
 /* Grain minéral sur tout le site */
 body::after {
   content: "";
