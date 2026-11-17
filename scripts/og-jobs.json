@@ -44,5 +44,19 @@
 				"wait": 600
 			}
 		]
+	},
+	{
+		"name": "belgium-2018",
+		"url": "http://localhost:4322/work/belgium-2018",
+		"w": 1200,
+		"h": 630,
+		"wait": 5000,
+		"jpeg": 88,
+		"steps": [
+			{
+				"eval": "document.head.insertAdjacentHTML('beforeend', '<style>.site-nav,.brand>div{display:none!important}</style>')",
+				"wait": 600
+			}
+		]
 	}
 ]

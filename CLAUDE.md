@@ -114,9 +114,11 @@ npx astro build             # build statique dans dist/
   projet), `Figure.astro` (image qui se recompose en tuiles, légende de
   planche), `os/Window.astro` (fenêtres de la galerie).
 - `src/data/projects.ts` : les projets, **tous réels** : Loum (studioloum.com,
-  captures du site uniquement, jamais les projets de Loum) et Farmlize
+  captures du site uniquement, jamais les projets de Loum), Farmlize
   (farmlize.ryanfoerster.dev ; source sur le Mac dans
-  `~/Documents/Dev/farmlize`). Les cinq projets fictifs du début ont été
+  `~/Documents/Dev/farmlize`) et Road to Glory (belgium.ryanfoerster.dev,
+  « Belgium 2018 », slug `belgium-2018` ; source sur le PC dans
+  `Documents/EditoBelgique`, lecture seule). Les cinq projets fictifs du début ont été
   retirés en novembre 2026, à la demande de Ryan : ne pas en réinventer. La
   galerie de l'accueil montre les quatre premiers ; tant qu'il y en a moins,
   la fin de galerie dit « That was all of them, for now ».
@@ -124,6 +126,19 @@ npx astro build             # build statique dans dist/
   composants isolés, illustrations), dans l'esprit des références de Ryan : tout
   vient de captures du site en ligne, sans texte ajouté. Leur source
   (`cases/farmlize/planches.html` et ses pièces) reste hors git, comme `social/`.
+  **Road to Glory** est un projet du studio, pas une commande : `client:
+  'Ourselves'`, aucun client à inventer. Son nom s'écrit sans « 2018 » parce que
+  Parceh n'a pas de chiffres. Sa fiche a sept planches du même style et trois
+  courtes boucles vidéo (l'écran enregistré, posé sur le même aplat que les
+  planches), plus la vidéo du haut de page. Sources dans `cases/belgium/` (hors
+  git) : `pick.mjs` isole un élément du site sur fond transparent, `pages.mjs`
+  capture des vues, `rec.mjs` enregistre une séquence, `planches.html` compose,
+  `export.mjs` puis `finals.mjs` exportent en webp avec `sharp`, `montage.sh`
+  monte les vidéos avec `ffmpeg`. Le site montre des photos de Wikimedia Commons
+  (CC BY-SA 3.0 et CC BY 4.0) : celles que l'on voit dans les images de la fiche
+  sont relevées dans `cases/belgium/credits.json` et créditées par le champ
+  `credits` du projet, affiché sous « What we did ». **À refaire si une planche
+  ou une vidéo change.**
 - `src/lib/seo.ts` : tout ce que lisent les moteurs et les réseaux — titres et
   descriptions des fiches, textes alternatifs des couvertures, données
   structurées JSON-LD (studio, site, page, fil d'Ariane, projet). Le `<head>`
@@ -202,8 +217,12 @@ npx astro build             # build statique dans dist/
 
 ## À relire / ouvert
 
-- Textes rédigés par Claude à valider : fiches Farmlize, savoir-faire du
-  studio (`site.ts`), coordonnées provisoires.
+- Textes rédigés par Claude à valider : fiches Farmlize et Road to Glory (et
+  son nom, choisi faute de chiffres en Parceh), savoir-faire du studio
+  (`site.ts`), coordonnées provisoires.
+- Road to Glory : les photos des planches sont sous CC BY-SA (partage à
+  l'identique). Elles sont créditées sur la fiche ; à Ryan de dire s'il veut
+  aller plus loin (planches sans photo, ou mention de licence sur les images).
 - Les fenêtres de la galerie (`os/Window.astro`) gardent de petits coins
   arrondis : à rendre carrés si Ryan le souhaite.
 - Les volumes du son sont un premier réglage (Claude ne peut pas écouter).

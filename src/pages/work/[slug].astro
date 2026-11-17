@@ -189,6 +189,15 @@ const palette = [
 			<ul class="meta flex flex-wrap gap-x-3 gap-y-2 text-bone/85">
 				{p.services.map((s) => <li><span class="text-mineral-dim">[</span> {s} <span class="text-mineral-dim">]</span></li>)}
 			</ul>
+			{
+				/* Ce que l'on doit à d'autres pour les images de la fiche (photos sous licence libre) */
+				p.credits && (
+					<p class="mt-8 max-w-sm text-[13px] leading-relaxed text-mineral">
+						{p.credits}
+						{p.url && <> <a href={`https://${p.url}`} target="_blank" rel="noopener" class="text-bone/80 underline decoration-acid/60 underline-offset-4 transition hover:text-acid">{p.url} ↗</a></>}
+					</p>
+				)
+			}
 		</div>
 		{
 			p.results && (

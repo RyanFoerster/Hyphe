@@ -36,6 +36,8 @@ export interface Project {
 	url?: string;
 	/** Projet fictif (étude du studio, pas une commande) */
 	concept?: boolean;
+	/** Crédits dus pour ce que montrent les images de la fiche (photos sous licence libre, par exemple) */
+	credits?: string;
 	/** Vrais médias. Sans eux, les visuels sont générés (lib/generative). */
 	media?: {
 		/** Image 16:9 des cartes, spécimens et partages */
@@ -163,6 +165,61 @@ export const projects: Project[] = [
 				{ src: '/work/farmlize/farm-pieces.webp', ratio: '16/9', caption: 'components, a farm page in pieces' },
 				{ src: '/work/farmlize/produce.webp', ratio: '16/9', caption: 'illustrations, produce, seasons and farm covers' },
 				{ src: '/work/farmlize/pages-2.webp', ratio: '16/9', caption: 'the pages, farm, seasons, onboarding, producers' },
+			],
+		},
+	},
+	{
+		// Belgium 2018, The Road to Glory : un projet du studio, pas une commande (pas de
+		// client à inventer). Le nom s'écrit sans « 2018 » : Parceh n'a pas de chiffres.
+		// Tout ce qui est chiffré ici se vérifie dans le code du projet (EditoBelgique).
+		slug: 'belgium-2018',
+		tagline: 'Seven matches, one summer',
+		locality: 'Belgium',
+		name: 'Road to Glory',
+		client: 'Ourselves',
+		year: 2026,
+		category: 'Editorial story',
+		services: ['Art direction', 'Editorial design', 'Illustration', 'Creative development'],
+		summary: 'Belgium at the 2018 World Cup, told as a scrolling fanzine of stickers, tickets and cut paper.',
+		highlight: 'fanzine',
+		intro:
+			'Russia, summer 2018. Belgium play seven matches, win six and come home third. Nobody asked us for this one: we made it for ourselves, to keep that month the way supporters do, in a box of stickers, tickets and newspaper cuttings. It became an unofficial fanzine you read by scrolling.',
+		challenge:
+			'Tell seven matches without a second of match footage, make free photographs from Wikimedia Commons look like they were printed for the same fanzine, and hold a reader through more than sixty screens of scrolling.',
+		approach: [
+			'Eight chapters, from the dream to third place. Every match has its ticket, which turns over to show the goals, and two goals are replayed step by step on a drawn pitch: Chadli against Japan in six steps, De Bruyne against Brazil in three.',
+			'Everything that looks printed is drawn in code: fifteen sticker shapes, fourteen doodles, the tickets, the flags and the newspapers. A seeded random sets every tilt and every cut, so the page is the same on each visit.',
+			'The photographs come from Wikimedia Commons, under free licences. The browser redraws each one as a screen print in the colours of the fanzine, and each is credited at the end of the story.',
+			'The scroll engine is our own, with no animation library: sections pinned in CSS and three kinds of motion, one that follows the scroll, one that plays once, one that snaps from state to state.',
+		],
+		results: [
+			{ value: '8', label: 'chapters for seven matches' },
+			{ value: '75', label: 'objects pinned on the last wall' },
+			{ value: '15', label: 'sticker shapes, drawn in code' },
+		],
+		visual: { kind: 'strata', seed: 18, bg: '#f5f3ee', line: '#080808', accent: '#e52b32' },
+		url: 'belgium.ryanfoerster.dev',
+		// Les photos visibles dans les images et les vidéos de la fiche (27, relevées vue par
+		// vue : cases/belgium/credits.json) : quatre photographes et un ministère
+		credits:
+			'Photographs seen in these images: Kirill Venediktov, Svetlana Beketova, Dmitry Sadovnikov and Edgar Breshchanov / soccer.ru (CC BY-SA 3.0) and the Ministry of Sport of the Republic of Tatarstan (CC BY 4.0), from Wikimedia Commons, reprinted in one or two inks by the site. Each one is credited at the end of the story.',
+		media: {
+			cover: '/work/belgium-2018/home.webp',
+			heroVideo: '/work/belgium-2018/home.mp4',
+			heroPoster: '/work/belgium-2018/home-poster.webp',
+			// Sept planches fixes et trois courtes boucles, composées à partir du site en ligne
+			// (pages, composants isolés, dessins) : sources et pièces dans cases/belgium, hors git
+			gallery: [
+				{ src: '/work/belgium-2018/pages.webp', ratio: '16/9', caption: 'the pages, the poster, Japan and four minutes' },
+				{ src: '/work/belgium-2018/m-pages.webp', ratio: '4/5', caption: 'mobile, the screens' },
+				{ src: '/work/belgium-2018/stickers.webp', ratio: '4/5', caption: 'components, forty stickers' },
+				{ src: '/work/belgium-2018/tickets.webp', ratio: '4/5', caption: 'components, the seven tickets' },
+				{ src: '/work/belgium-2018/scroll.mp4', ratio: '16/9', caption: 'motion, the Japan chapter scrolls sideways', kind: 'video', poster: '/work/belgium-2018/scroll-poster.webp' },
+				{ src: '/work/belgium-2018/doodles.webp', ratio: '16/9', caption: 'illustrations, doodles, scores and pencil marks' },
+				{ src: '/work/belgium-2018/board.webp', ratio: '16/9', caption: 'components, a goal replay in pieces' },
+				{ src: '/work/belgium-2018/replay.mp4', ratio: '16/9', caption: 'motion, the scroll replays a goal', kind: 'video', poster: '/work/belgium-2018/replay-poster.webp' },
+				{ src: '/work/belgium-2018/pages-2.webp', ratio: '16/9', caption: 'the pages, four more screens' },
+				{ src: '/work/belgium-2018/stickers.mp4', ratio: '16/9', caption: 'motion, the squad lands sticker by sticker', kind: 'video', poster: '/work/belgium-2018/stickers-poster.webp' },
 			],
 		},
 	},
